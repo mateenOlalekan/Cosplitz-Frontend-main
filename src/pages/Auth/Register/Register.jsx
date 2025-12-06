@@ -1,6 +1,6 @@
-/* CLEANED + API INTEGRATED VERSION */
-import { useState} from "react";
-import { Eye, EyeOff} from "lucide-react";
+/* CLEANED + FIXED + API INTEGRATED VERSION */
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
 import { FcGoogle } from "react-icons/fc";
@@ -11,17 +11,18 @@ import EmailVerificationStep from "./EmailVerificationStep";
 import PasswordValidation from "./PasswordValidation";
 import { useRegisterStore } from "../../../store/registerStore";
 
-/* ================= MAIN LOGIN ================= */
-export default function Login() {
+export default function Register() {
   const navigate = useNavigate();
-  const {
-  registerUser,
-  currentStep,
-  setStep,
-  error,
-  clearError,
-} = useRegisterStore();
 
+  const {
+    registerUser,
+    currentStep,
+    setStep,
+    error,
+    clearError,
+  } = useRegisterStore();
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -39,22 +40,28 @@ export default function Login() {
   ];
 
   /* ================= HANDLE STEP 1 (REGISTER) ================= */
-const handleFormSubmit = (e) => {
-  e.preventDefault();
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
 
-  const valid =
-    formData.password.length >= 8 &&
-    /[A-Z]/.test(formData.password) &&
-    /\d/.test(formData.password);
+    const valid =
+      formData.password.length >= 8 &&
+      /[A-Z]/.test(formData.password) &&
+      /\d/.test(formData.password);
 
-  if (!valid) return alert("Password does not meet requirements.");
+    if (!valid) return alert("Password does not meet requirements.");
+    if (!formData.agreeToTerms) return alert("You must agree to the terms.");
 
-  clearError();
-  registerUser(formData);
-};
+    clearError();
+
+    try {
+      await registerUser(formData);  // Store handles setting step 2
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] max-md:bg-none overflow-hidden lg:px-6 lg:py-4 rounded-2xl">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] overflow-hidden lg:px-6 lg:py-4 rounded-2xl">
 
       {/* LEFT IMAGE SIDE */}
       <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
@@ -72,8 +79,8 @@ const handleFormSubmit = (e) => {
       </div>
 
       {/* RIGHT FORM SIDE */}
-      <div className="flex flex-1 flex-col items-center rounded-xl bg-white max-md:bg-none  p-3 sm:p-5 overflow-y-auto">
-        
+      <div className="flex flex-1 flex-col items-center rounded-xl bg-white p-3 sm:p-5 overflow-y-auto">
+
         <div className="w-full mb-4">
           <img src={logo} className="h-10 md:h-12" />
         </div>
@@ -223,7 +230,12 @@ const handleFormSubmit = (e) => {
 
           {/* ================= STEP 2 ================= */}
           {currentStep === 2 && (
-            <EmailVerificationStep/>
+            <EmailVerificationStep
+              email={formData.email}
+              onVerify={() => setStep(3)}
+              onBack={() => setStep(1)}
+              error={error}
+            />
           )}
 
           {/* ================= STEP 3 ================= */}
