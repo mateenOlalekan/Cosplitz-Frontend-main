@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import "./App.css";
 
-import { AuthProvider } from "./context/AuthContext";
+
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 
@@ -45,7 +45,7 @@ const AdminSplits = lazy(() => import("./pages/Admin/AdminSplits"));
 
 export default function App() {
   return (
-    <AuthProvider>
+
       <Suspense fallback={<SplashLogo />}>
         <Routes>
           {/* PUBLIC ROUTES */}
@@ -116,6 +116,6 @@ export default function App() {
           />
         </Routes>
       </Suspense>
-    </AuthProvider>
+
   );
 }
