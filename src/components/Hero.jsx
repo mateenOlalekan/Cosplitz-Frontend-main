@@ -33,9 +33,9 @@ export default function WaveBackground() {
     <>
       <section
         id="home"
-        className="relative w-full pt-16 sm:pt-20 md:pt-24 lg:pt-28 bg-white overflow-hidden"
+        className="relative w-full pt-20 sm:pt-20 md:pt-24 lg:pt-28 bg-white overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 h-full">
           <div className="w-full flex max-md:flex-col  items-center justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)]">
 
             {/* ====== Left Content ====== */}
@@ -77,7 +77,7 @@ export default function WaveBackground() {
               data-aos="fade-left"
               data-aos-delay="200"
             >
-              <div className="relative w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[400px] md:max-w-[450px] lg:max-w-[550px] xl:max-w-[650px]">
+              <div className="relative w-full max-w-[320px] xs:max-w-[350px] sm:max-w-[450px] md:max-w-[550px] lg:max-w-[650px] xl:max-w-[750px]">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#1F8225]/10 to-transparent rounded-2xl blur-2xl -z-10" />
                 <img
                   src={Hero}
