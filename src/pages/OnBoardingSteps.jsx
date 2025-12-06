@@ -24,7 +24,9 @@ import {
   Hotel,
   Truck,
 } from "lucide-react";
-import Loading from "../components/Loading";
+import { lazy, Suspense } from "react";
+
+const Loading = lazy(() => import("../components/Loading"));
 
 const steps = [
   {
