@@ -60,14 +60,14 @@ export default function Why() {
 
         {/* ===== Cards Grid ===== */}
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 md:grid-cols-2 gap-6 md:gap-8 w-full"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 md:grid-cols-2 md:grid-cols-2 gap-2 md:gap-3 w-full"
           data-aos="fade-up"
           data-aos-delay="200"
         >
           {whydata.map((data, index) => (
             <div
               key={index}
-              className="flex flex-col bg-[#E8F7E3] rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-100 h-full"
+              className="flex flex-col bg-[#E8F7E3] rounded-2xl p-2 sm:p-2 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-gray-100 h-full"
             >
               {/* Image Container */}
               <div className="w-full h-48 sm:h-56 md:h-64 rounded-xl overflow-hidden mb-5 sm:mb-6 flex items-center justify-center bg-white flex-shrink-0">
