@@ -23,7 +23,8 @@
     "react-router-dom": "^7.9.6",
     "swiper.js": "^1.0.0",
     "tailwindcss": "^4.1.17",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

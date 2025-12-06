@@ -7,9 +7,10 @@ import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import Checknow from "../../../assets/Check.svg";
 import { Link, useNavigate } from "react-router-dom";
+import EmailVerificationStep from "./EmailVerificationStep";
 
 /* ================= API BASE ================= */
-const API_BASE = "https://your-backend-url.com";
+const API_BASE = "https://cosplitz-backend.onrender.com";
 
 /* ================= TIMER ================= */
 function TimerDisplay({ onResend }) {
@@ -87,7 +88,7 @@ function EmailVerificationStep({ onVerify, onBack, error, email }) {
 
   const verifyOTP = async () => {
     try {
-      const res = await fetch(`${API_BASE}/auth/verify-email`, {
+      const res = await fetch(`${API_BASE}/api/verify_otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: emailOtp }),
@@ -111,8 +112,8 @@ function EmailVerificationStep({ onVerify, onBack, error, email }) {
   /* RESEND API */
   const handleResend = async () => {
     try {
-      await fetch(`${API_BASE}/auth/resend-otp`, {
-        method: "POST",
+      await fetch(`${API_BASE}/api/verify_otp`, {
+        method: "get",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
@@ -231,7 +232,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/auth/register`, {
+      const res = await fetch(`${API_BASE}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -247,7 +248,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] overflow-hidden md:px-6 md:py-4 rounded-2xl">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] max-md:bg-none overflow-hidden lg:px-6 lg:py-4 rounded-2xl">
 
       {/* LEFT IMAGE SIDE */}
       <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
@@ -265,13 +266,13 @@ export default function Login() {
       </div>
 
       {/* RIGHT FORM SIDE */}
-      <div className="flex flex-1 flex-col items-center bg-white p-3 sm:p-5 overflow-y-auto">
+      <div className="flex flex-1 flex-col items-center rounded-xl bg-white max-md:bg-none  p-3 sm:p-5 overflow-y-auto">
         
         <div className="w-full mb-4">
           <img src={logo} className="h-10 md:h-12" />
         </div>
 
-        <div className="w-full max-w-2xl bg-white p-5 rounded-xl shadow-md border border-gray-100">
+        <div className="w-full max-w-2xl bg-white p-5 rounded-xl">
 
           {/* STEP INDICATOR */}
           <div className="w-full flex justify-center items-center py-4">
