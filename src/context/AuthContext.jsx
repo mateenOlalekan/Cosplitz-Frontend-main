@@ -1,60 +1,49 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { getUserInfo, loginUser } from "../api/api";
-
+import { getUserInfo } from "../api/authApi";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-function AuthProvider({ children }) {
-const [user, setUser] = useState(null);
-const [loading, setLoading] = useState(true);
-
-
-const login = async (credentials) => {
-  try {
-    const res = await loginUser(credentials);
-      localStorage.setItem("token", res.data.access);
-      await fetchUser();
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
-    }
-  };
-
-
-const logout = () => {
-  localStorage.removeItem("token");
-  setUser(null);
-};
-
-
-const fetchUser = async () => {
-  try {
-    const res = await getUserInfo();
-    setUser(res.data.user || res.data);
-    } catch (err) {
-    console.warn("User fetch failed:", err);
-    setUser(null);
-  }
-};
-
-
-useEffect(() => {
-const token = localStorage.getItem("token");
-  const init = async () => {
-      if (token) await fetchUser();
+  // Auto login when refreshing page
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
       setLoading(false);
-    };
-    init();
+      return;
+    }
+
+    getUserInfo()
+      .then((res) => {
+        setUser(res.data);
+        setRole(res.data.role);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
+  const login = (data) => {
+    localStorage.setItem("token", data.access);
+    localStorage.setItem("refresh", data.refresh);
 
-return (
-<AuthContext.Provider value={{ user, loading, login, logout }}>
-  {children}
-</AuthContext.Provider>
-);}
+    return getUserInfo().then((res) => {
+      setUser(res.data);
+      setRole(res.data.role);
+    });
+  };
 
+  const logout = () => {
+    localStorage.clear();
+    setUser(null);
+    setRole(null);
+  };
 
-export default AuthProvider;
+  return (
+    <AuthContext.Provider value={{ user, role, loading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}

@@ -70,7 +70,7 @@ export default function Navbar() {
           isScrolled ? "shadow-md" : ""
         }`}
       >
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between max-md:px-3 py-3">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between px-6 max-md:px-10 py-3">
           {/* Logo */}
           <Link
             to="/"

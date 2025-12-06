@@ -1,14 +1,28 @@
 // src/components/Layout/Sidebar.jsx
 import { NavLink } from "react-router-dom";
-import {  Home,  Share2,  MessageSquare,  Wallet,  MapPin,  BarChart3,  X,} from "lucide-react";
+import {
+  Home,
+  Share2,
+  MessageSquare,
+  Wallet,
+  MapPin,
+  BarChart3,
+  X,
+  LogOut,
+} from "lucide-react";
+
 import logo from "../../assets/logo.svg";
-import user from "../../assets/user.svg";
+import userImg from "../../assets/user.svg";
+import { useAuth } from "../../context/AuthContext";
 
 const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
+  const { user, logout } = useAuth(); // logged-in user data
+
   const handleOverlayClick = () => {
     if (isMobile) setSidebarOpen(false);
   };
 
+  // User navigation links only
   const navItems = [
     { icon: Home, label: "Home", url: "/dashboard" },
     { icon: Share2, label: "My Splitz", url: "/dashboard/create-split", count: 3 },
@@ -20,7 +34,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
 
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Mobile overlay */}
       {sidebarOpen && isMobile && (
         <div
           className="fixed inset-0 bg-black/40 z-40 lg:hidden"
@@ -31,12 +45,13 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 transition-transform duration-300 z-50
-          ${isMobile ? "w-2/3" : "w-64"}
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:static lg:z-auto`}
+        ${isMobile ? "w-2/3" : "w-64"}
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:translate-x-0 lg:static lg:z-auto`}
       >
         <div className="p-4 lg:p-6 h-full flex flex-col relative">
-          {/* Close button (mobile only) */}
+
+          {/* Close btn (mobile only) */}
           {isMobile && (
             <button
               onClick={() => setSidebarOpen(false)}
@@ -47,15 +62,15 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
           )}
 
           {/* Logo */}
-            <div className="w-full mb-4 flex justify-start">
-              <img
-                src={logo}
-                alt="Logo"
-                className="h-10 md:h-12 object-cover w-auto select-none pointer-events-none"
-              />
-            </div>
+          <div className="w-full mb-6 flex justify-start">
+            <img
+              src={logo}
+              alt="Logo"
+              className="h-10 md:h-12 object-cover w-auto select-none pointer-events-none"
+            />
+          </div>
 
-          {/* Navigation Links */}
+          {/* Navigation */}
           <nav className="space-y-1 flex-1">
             {navItems.map((item, i) => (
               <NavLink
@@ -75,6 +90,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
                   <item.icon size={18} />
                   <span className="font-medium">{item.label}</span>
                 </div>
+
                 {item.count && (
                   <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
                     {item.count}
@@ -84,38 +100,53 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
             ))}
           </nav>
 
-          {/* Community Bonding Card */}
+          {/* Community Card */}
           <div className="mt-6 p-4 bg-[#1F8225] rounded-xl text-white">
             <div className="flex items-center gap-1 mb-2">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="w-1 h-1 bg-white rounded-full" />
               ))}
             </div>
+
             <h3 className="font-bold text-sm mb-1">Community Bonding</h3>
             <p className="text-xs mb-1">Level 4</p>
             <p className="text-xs mb-2">23 completed split</p>
+
             <div className="w-full h-1 bg-green-700 rounded-full overflow-hidden">
               <div className="h-full w-3/4 bg-white" />
             </div>
+
             <p className="text-xs mt-2">Reliability Score: 87%</p>
           </div>
 
-          {/* Profile */}
-          <button className="w-full mt-6 flex items-center gap-3 py-2 hover:bg-gray-50 rounded-lg">
-            <img
-              src={user}
-              alt="Profile"
-              className="w-12 h-12 rounded-full"
-            />
-            <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                Alice Badmus
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                View Profile & Settings
-              </p>
+          {/* Logged-in User */}
+          <div className="mt-6">
+            <div className="w-full flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded-lg">
+              <img
+                src={user?.avatar || userImg}
+                alt="Profile"
+                className="w-12 h-12 rounded-full"
+              />
+
+              <div className="text-left">
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {user?.name || "User name"}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user?.email || "User email"}
+                </p>
+              </div>
             </div>
-          </button>
+
+            {/* Logout Btn */}
+            <button
+              onClick={logout}
+              className="mt-3 w-full flex items-center gap-2 text-red-600 text-sm p-2 rounded-lg hover:bg-red-50"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
         </div>
       </aside>
     </>
