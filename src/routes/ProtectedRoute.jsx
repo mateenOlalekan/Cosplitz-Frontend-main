@@ -1,11 +1,11 @@
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuthStore } from "../store/authStore";
 import { lazy, Suspense } from "react";
 
 const LoadingScreen = lazy(() => import("../components/Loading"));
 
 export default function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthStore();
 
   if (loading) {
     return (
@@ -15,5 +15,5 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  return user ? children : <Navigate to="/login" />;
+  return user ? children : <Navigate to="/login" replace />;
 }

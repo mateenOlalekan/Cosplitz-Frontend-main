@@ -1,4 +1,4 @@
-/* CLEANED + FIXED + API INTEGRATED VERSION */
+/* REGISTER PAGE — CLEANED + FULLY FIXED */
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import loginlogo from "../../../assets/login.jpg";
@@ -39,7 +39,7 @@ export default function Register() {
     { id: 3, label: "Success" },
   ];
 
-  /* ================= HANDLE STEP 1 (REGISTER) ================= */
+  /* ================= HANDLE SUBMIT ================= */
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
@@ -54,7 +54,7 @@ export default function Register() {
     clearError();
 
     try {
-      await registerUser(formData);  // Store handles setting step 2
+      await registerUser(formData); // Store handles moving to step 2
     } catch (err) {
       console.error(err);
     }
@@ -63,7 +63,7 @@ export default function Register() {
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] overflow-hidden lg:px-6 lg:py-4 rounded-2xl">
 
-      {/* LEFT IMAGE SIDE */}
+      {/* LEFT SIDE */}
       <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
         <div className="max-w-md w-full flex flex-col items-center">
           <img src={loginlogo} className="rounded-lg" />
@@ -78,7 +78,7 @@ export default function Register() {
         </div>
       </div>
 
-      {/* RIGHT FORM SIDE */}
+      {/* RIGHT SIDE */}
       <div className="flex flex-1 flex-col items-center rounded-xl bg-white p-3 sm:p-5 overflow-y-auto">
 
         <div className="w-full mb-4">
@@ -87,25 +87,21 @@ export default function Register() {
 
         <div className="w-full max-w-2xl bg-white p-5 rounded-xl">
 
-          {/* STEP INDICATOR */}
+          {/* STEPS INDICATOR */}
           <div className="w-full flex justify-center items-center py-4">
             <div className="flex items-center gap-2 justify-center">
               {steps.map((s, i) => (
                 <div key={s.id} className="flex items-center">
                   <div
                     className={`w-4 h-4 rounded-full ${
-                      currentStep >= s.id
-                        ? "bg-green-600 shadow-md"
-                        : "bg-gray-300"
+                      currentStep >= s.id ? "bg-green-600 shadow-md" : "bg-gray-300"
                     }`}
                   ></div>
 
                   {i < steps.length - 1 && (
                     <div
                       className={`w-28 sm:w-32 border-t-2 mx-2 ${
-                        currentStep > s.id
-                          ? "border-green-600"
-                          : "border-gray-300"
+                        currentStep > s.id ? "border-green-600" : "border-gray-300"
                       }`}
                     ></div>
                   )}
@@ -222,7 +218,9 @@ export default function Register() {
 
                 <p className="text-center text-sm text-gray-600">
                   Already have an account?{" "}
-                  <Link className="text-green-600" to="/login">Log In</Link>
+                  <Link className="text-green-600" to="/login">
+                    Log In
+                  </Link>
                 </p>
               </form>
             </div>
@@ -230,12 +228,7 @@ export default function Register() {
 
           {/* ================= STEP 2 ================= */}
           {currentStep === 2 && (
-            <EmailVerificationStep
-              email={formData.email}
-              onVerify={() => setStep(3)}
-              onBack={() => setStep(1)}
-              error={error}
-            />
+            <EmailVerificationStep email={formData.email} />
           )}
 
           {/* ================= STEP 3 ================= */}
@@ -254,7 +247,7 @@ export default function Register() {
                 className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg"
                 onClick={() => navigate("/onboarding-steps")}
               >
-                Continue to Login
+                Continue
               </button>
             </div>
           )}

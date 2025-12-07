@@ -56,15 +56,30 @@ export const useAuthStore = create((set, get) => ({
   },
 
   /** OTP VERIFY */
-  verifyOtp: async ({ email, otp }) => {
-    const res = await api.verifyOtp({ email, otp });
+verifyOtp: async (otp) => {
+  const email = get().emailForOtp;
 
-    if (res.status === "success") {
-      return { success: true };
-    }
+  set({ loading: true, error: "" });
 
-    return { success: false, message: res.message };
-  },
+  try {
+    const res = await fetch(`${API_BASE}/api/verify_otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok)
+      return set({ error: data.message || "Invalid OTP", loading: false });
+
+    set({ currentStep: 2, loading: false });
+
+  } catch (err) {
+    set({ error: "Network error.", loading: false });
+  }
+},
+
 
   /** LOGOUT */
   logout: () => {
