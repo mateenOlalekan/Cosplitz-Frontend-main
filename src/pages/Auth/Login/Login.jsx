@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { useNavigate, Link } from "react-router-dom";
-import { loginUser } from "../../../api/authApi";
+
 import loginlogo from "../../../assets/loginmain.jpg";
 import logo from "../../../assets/logo.svg";
 import { useForm } from "react-hook-form";

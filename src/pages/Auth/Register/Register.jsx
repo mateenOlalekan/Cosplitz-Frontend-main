@@ -1,28 +1,193 @@
-/* REGISTER PAGE — CLEANED + FULLY FIXED */
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+/* CLEANED + API INTEGRATED VERSION */
+import { useState, useEffect } from "react";
+import { Eye, EyeOff, Mail, ChevronLeft, Check, X } from "lucide-react";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import Checknow from "../../../assets/Check.svg";
 import { Link, useNavigate } from "react-router-dom";
-import EmailVerificationStep from "./EmailVerificationStep";
-import PasswordValidation from "./PasswordValidation";
-import { useRegisterStore } from "../../../store/registerStore";
 
-export default function Register() {
-  const navigate = useNavigate();
+/* ================= API BASE ================= */
+const API_BASE = "https://your-backend-url.com";
 
-  const {
-    registerUser,
-    currentStep,
-    setStep,
-    error,
-    clearError,
-  } = useRegisterStore();
+/* ================= TIMER ================= */
+function TimerDisplay({ onResend }) {
+  const [timeLeft, setTimeLeft] = useState(120);
 
+  useEffect(() => {
+    if (timeLeft === 0) return;
+    const timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+  return (
+    <div className="text-center">
+      {timeLeft > 0 ? (
+        <p className="text-gray-600 text-sm mt-3">
+          Resend available in{" "}
+          <span className="text-green-600 font-semibold">
+            {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+          </span>
+        </p>
+      ) : (
+        <button
+          onClick={onResend}
+          className="text-green-600 font-semibold text-sm mt-3"
+        >
+          Resend OTP
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ================= PASSWORD VALIDATION ================= */
+function PasswordValidation({ password }) {
+  const validations = [
+    { label: "8+ characters", isValid: password.length >= 8 },
+    { label: "Uppercase letter", isValid: /[A-Z]/.test(password) },
+    { label: "Digit", isValid: /\d/.test(password) },
+  ];
+
+  return (
+    <div className="flex flex-col gap-2 mt-2">
+      {validations.map((v, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div
+            className={`w-5 h-5 rounded-full flex items-center justify-center ${
+              v.isValid ? "bg-green-100" : "bg-gray-100"
+            }`}
+          >
+            {v.isValid ? (
+              <Check size={14} className="text-green-600" />
+            ) : (
+              <X size={14} className="text-gray-400" />
+            )}
+          </div>
+          <span
+            className={`text-xs ${
+              v.isValid ? "text-green-600" : "text-gray-500"
+            }`}
+          >
+            {v.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ================= EMAIL OTP STEP ================= */
+function EmailVerificationStep({ onVerify, onBack, error, email }) {
+  const [emailOtp, setEmailOtp] = useState("");
+
+  const verifyOTP = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: emailOtp }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return alert(data.message || "Invalid OTP");
+
+      onVerify();
+    } catch {
+      alert("Network error.");
+    }
+  };
+
+  useEffect(() => {
+    if (emailOtp.length === 6) {
+      verifyOTP();
+    }
+  }, [emailOtp]);
+
+  /* RESEND API */
+  const handleResend = async () => {
+    try {
+      await fetch(`${API_BASE}/auth/resend-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      alert("OTP Resent!");
+    } catch {
+      alert("Could not resend OTP.");
+    }
+  };
+
+  const handleChange = (index, value) => {
+    const otp = emailOtp.split("");
+    otp[index] = value;
+    setEmailOtp(otp.join(""));
+
+    if (value && index < 5) {
+      document.getElementById(`email-otp-${index + 1}`).focus();
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-5 py-8 relative w-full">
+      <button
+        onClick={onBack}
+        className="absolute left-4 top-4 text-gray-600 hover:text-green-600 transition"
+      >
+        <ChevronLeft size={28} />
+      </button>
+
+      <h2 className="text-xl font-bold text-gray-800 mt-8">
+        Verify Your Email
+      </h2>
+
+      <p className="text-gray-500 text-sm text-center max-w-xs">
+        Enter the code sent to your <span className="text-green-600">email</span>.
+      </p>
+
+      <div className="bg-[#1F82250D] rounded-full w-14 h-14 flex items-center justify-center">
+        <Mail className="text-[#1F8225]" />
+      </div>
+
+      <div className="flex gap-2 mt-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <input
+            key={i}
+            type="text"
+            maxLength={1}
+            inputMode="numeric"
+            value={emailOtp[i] || ""}
+            onChange={(e) =>
+              handleChange(i, e.target.value.replace(/\D/g, ""))
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Backspace" && !emailOtp[i] && i > 0) {
+                document.getElementById(`email-otp-${i - 1}`).focus();
+              }
+            }}
+            id={`email-otp-${i}`}
+            className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none"
+          />
+        ))}
+      </div>
+
+      <TimerDisplay onResend={handleResend} />
+
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+    </div>
+  );
+}
+
+/* ================= MAIN LOGIN ================= */
+export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -39,31 +204,52 @@ export default function Register() {
     { id: 3, label: "Success" },
   ];
 
-  /* ================= HANDLE SUBMIT ================= */
+  /* ================= HANDLE STEP 1 (REGISTER) ================= */
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
+    // password check
     const valid =
       formData.password.length >= 8 &&
       /[A-Z]/.test(formData.password) &&
       /\d/.test(formData.password);
 
-    if (!valid) return alert("Password does not meet requirements.");
-    if (!formData.agreeToTerms) return alert("You must agree to the terms.");
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.password
+    )
+      return setError("Please fill out all fields.");
 
-    clearError();
+    if (!valid)
+      return setError("Your password does not meet all requirements.");
+
+    if (!formData.agreeToTerms)
+      return setError("Please agree to the terms & conditions.");
+
+    setError("");
 
     try {
-      await registerUser(formData); // Store handles moving to step 2
-    } catch (err) {
-      console.error(err);
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return setError(data.message || "Registration failed.");
+
+      setCurrentStep(2);
+    } catch {
+      setError("Network error. Try again.");
     }
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] overflow-hidden lg:px-6 lg:py-4 rounded-2xl">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] overflow-hidden md:px-6 md:py-4 rounded-2xl">
 
-      {/* LEFT SIDE */}
+      {/* LEFT IMAGE SIDE */}
       <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
         <div className="max-w-md w-full flex flex-col items-center">
           <img src={loginlogo} className="rounded-lg" />
@@ -78,30 +264,34 @@ export default function Register() {
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex flex-1 flex-col items-center rounded-xl bg-white p-3 sm:p-5 overflow-y-auto">
-
+      {/* RIGHT FORM SIDE */}
+      <div className="flex flex-1 flex-col items-center bg-white p-3 sm:p-5 overflow-y-auto">
+        
         <div className="w-full mb-4">
           <img src={logo} className="h-10 md:h-12" />
         </div>
 
-        <div className="w-full max-w-2xl bg-white p-5 rounded-xl">
+        <div className="w-full max-w-2xl bg-white p-5 rounded-xl shadow-md border border-gray-100">
 
-          {/* STEPS INDICATOR */}
+          {/* STEP INDICATOR */}
           <div className="w-full flex justify-center items-center py-4">
             <div className="flex items-center gap-2 justify-center">
               {steps.map((s, i) => (
                 <div key={s.id} className="flex items-center">
                   <div
                     className={`w-4 h-4 rounded-full ${
-                      currentStep >= s.id ? "bg-green-600 shadow-md" : "bg-gray-300"
+                      currentStep >= s.id
+                        ? "bg-green-600 shadow-md"
+                        : "bg-gray-300"
                     }`}
                   ></div>
 
                   {i < steps.length - 1 && (
                     <div
                       className={`w-28 sm:w-32 border-t-2 mx-2 ${
-                        currentStep > s.id ? "border-green-600" : "border-gray-300"
+                        currentStep > s.id
+                          ? "border-green-600"
+                          : "border-gray-300"
                       }`}
                     ></div>
                   )}
@@ -218,9 +408,7 @@ export default function Register() {
 
                 <p className="text-center text-sm text-gray-600">
                   Already have an account?{" "}
-                  <Link className="text-green-600" to="/login">
-                    Log In
-                  </Link>
+                  <Link className="text-green-600" to="/login">Log In</Link>
                 </p>
               </form>
             </div>
@@ -228,7 +416,12 @@ export default function Register() {
 
           {/* ================= STEP 2 ================= */}
           {currentStep === 2 && (
-            <EmailVerificationStep email={formData.email} />
+            <EmailVerificationStep
+              email={formData.email}
+              onVerify={() => setCurrentStep(3)}
+              onBack={() => setCurrentStep(1)}
+              error={error}
+            />
           )}
 
           {/* ================= STEP 3 ================= */}
@@ -247,7 +440,7 @@ export default function Register() {
                 className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg"
                 onClick={() => navigate("/onboarding-steps")}
               >
-                Continue
+                Continue to Login
               </button>
             </div>
           )}

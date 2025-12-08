@@ -1,19 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { lazy, Suspense } from "react";
-
-const LoadingScreen = lazy(() => import("../components/Loading"));
+import Loading from "../components/Loading";
 
 export default function ProtectedRoute({ children }) {
-  const { user, loading } = useAuthStore();
+  const { user,token, loading } = useAuthStore();
 
-  if (loading) {
-    return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <LoadingScreen />
-      </Suspense>
-    );
-  }
+  if (loading) return <Loading />;
+  if (!token || !user) return <Navigate to="/login" replace />;
 
-  return user ? children : <Navigate to="/login" replace />;
+  return children;
 }

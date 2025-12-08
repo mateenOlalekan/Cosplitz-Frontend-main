@@ -1,89 +1,84 @@
-// src/store/authStore.js
 import { create } from "zustand";
-import { api } from "../services/api";
+import axios from "axios";
 
-export const useAuthStore = create((set, get) => ({
-  user: null,
-  token: localStorage.getItem("token") || null,
+export const useRegisterStore = create((set, get) => ({
+  currentStep: 1,
   loading: false,
   error: null,
+  userEmail: "",   // store email to resend OTP
 
-  /** REGISTER */
-  register: async (formData) => {
-    set({ loading: true, error: null });
+  setStep: (step) => set({ currentStep: step }),
 
-    const res = await api.register(formData);
+  clearError: () => set({ error: null }),
 
-    if (res.status === "error") {
-      set({ loading: false, error: res.message });
-      return { success: false, message: res.message };
+  /* ================= REGISTER USER ================= */
+  registerUser: async (formData) => {
+    try {
+      set({ loading: true, error: null });
+
+      const res = await axios.post("/api/auth/register", formData);
+
+      if (res.data.success) {
+        set({
+          currentStep: 2,
+          userEmail: formData.email,
+        });
+      } else {
+        set({ error: res.data.message || "Registration failed." });
+      }
+    } catch (err) {
+      set({
+        error: err?.response?.data?.message || "Registration error.",
+      });
+    } finally {
+      set({ loading: false });
     }
-
-    set({ loading: false });
-    return { success: true };
   },
 
-  /** LOGIN */
-  login: async (credentials) => {
-    set({ loading: true, error: null });
+  /* ================= VERIFY OTP ================= */
+  verifyOtp: async (otp) => {
+    try {
+      set({ loading: true, error: null });
 
-    const res = await api.login(credentials);
+      const res = await axios.post("/api/auth/verify-otp", {
+        email: get().userEmail,
+        otp,
+      });
 
-    if (!res.token) {
-      set({ loading: false, error: res.message || "Login failed" });
-      return { success: false };
+      if (res.data.success) {
+        set({ currentStep: 3 });
+      } else {
+        set({ error: res.data.message || "Invalid code." });
+      }
+    } catch (err) {
+      set({
+        error: err?.response?.data?.message || "OTP verification failed.",
+      });
+    } finally {
+      set({ loading: false });
     }
-
-    localStorage.setItem("token", res.token);
-    set({ token: res.token, loading: false });
-
-    return { success: true };
   },
 
-  /** USER INFO */
-  fetchUserInfo: async () => {
-    const token = get().token;
-    if (!token) return;
+  /* ================= RESEND OTP ================= */
+  resendOtp: async () => {
+    try {
+      set({ loading: true, error: null });
 
-    const res = await api.getUserInfo(token);
-    set({ user: res?.data });
-  },
+      const res = await axios.post("/api/auth/resend-otp", {
+        email: get().userEmail,
+      });
 
-  /** OTP SEND */
-  sendOtp: async (emailOrId) => {
-    const res = await api.sendOtp(emailOrId);
-    return res;
-  },
-
-  /** OTP VERIFY */
-verifyOtp: async (otp) => {
-  const email = get().emailForOtp;
-
-  set({ loading: true, error: "" });
-
-  try {
-    const res = await fetch(`${API_BASE}/api/verify_otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok)
-      return set({ error: data.message || "Invalid OTP", loading: false });
-
-    set({ currentStep: 2, loading: false });
-
-  } catch (err) {
-    set({ error: "Network error.", loading: false });
-  }
-},
-
-
-  /** LOGOUT */
-  logout: () => {
-    localStorage.removeItem("token");
-    set({ token: null, user: null });
+      if (!res.data.success) {
+        set({ error: res.data.message || "Failed to resend OTP." });
+      }
+    } catch (err) {
+      set({
+        error:
+          err?.response?.data?.message ||
+          "Something went wrong while resending OTP.",
+      });
+    } finally {
+      set({ loading: false });
+    }
   },
 }));

@@ -1,13 +1,11 @@
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { lazy, Suspense } from "react";
-
-const LoadingScreen = lazy(() => import("../components/Loading"));
 
 export default function AdminRoute({ children }) {
-  const { role, loading } = useAuthStore();
+  const { token, role } = useAuthStore();
 
-  if (loading) return <LoadingScreen />;
+  if (!token) return <Navigate to="/admin/login" replace />;
+  if (role !== "admin") return <Navigate to="/dashboard" replace />;
 
-  return role === "admin" ? children : <Navigate to="/admin/login" replace />;
+  return children;
 }
