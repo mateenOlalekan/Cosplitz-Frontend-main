@@ -13,10 +13,10 @@ import {
 
 import logo from "../../assets/logo.svg";
 import userImg from "../../assets/user.svg";
-import { useAuth } from "../../context/AuthContext";
+
 
 const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
-  const { user, logout } = useAuth(); // logged-in user data
+// logged-in user data
 
   const handleOverlayClick = () => {
     if (isMobile) setSidebarOpen(false);

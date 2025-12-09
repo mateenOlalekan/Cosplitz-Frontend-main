@@ -1,11 +1,25 @@
-import { Navigate } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
-export default function RoleRoute({ children, allowedRoles }) {
-  const { role, token } = useAuthStore();
+const RoleRoute = ({ allowedRoles = [] }) => {
+  const { isAuthenticated, isLoading, user } = useAuthStore();
 
-  if (!token) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(role)) return <Navigate to="/" replace />;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  return children;
-}
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles.length > 0) {
+    const userRole = user?.role || 'user';
+    if (!allowedRoles.includes(userRole)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  return <Outlet />;
+};
+
+export default RoleRoute;

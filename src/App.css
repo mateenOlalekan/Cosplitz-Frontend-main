@@ -1,54 +1,109 @@
-/* -----------------------------------------------------------
-   🌐 Import Google Font — Raleway
-   ----------------------------------------------------------- */
-@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+/* === Tailwind Base === */
+@import "tailwindcss";
 
+/* === Google Font === */
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+/* === Global Styles === */
 html {
   scroll-behavior: smooth;
 }
 
 body {
+  margin: 0;
   font-family: 'Raleway', sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
   background-color: #f9f9f9;
-  color: #222; 
+  color: #222;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+/* === Custom Scrollbar === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
-.no-scrollbar {
-  -ms-overflow-style: none; 
-  scrollbar-width: none;     
-} 
-
-* {
-  transition:
-    background-color 0.2s ease-in-out,
-    color 0.2s ease-in-out,
-    border-color 0.2s ease-in-out,
-    box-shadow 0.2s ease-in-out;
+/* === Animations === */
+.fade-enter { opacity: 0; }
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
+.fade-exit { opacity: 1; }
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
 }
 
-/* -----------------------------------------------------------
-   ✨ Fade-In Page Transition Animation
-   ----------------------------------------------------------- */
-.fade-in {
-  animation: fadeIn 0.6s ease-in-out both;
-}
+/* === Custom Theme === */
+@theme {
+  --color-primary-green: #1F8225;
+  --color-primary-light: #E8F5E9;
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-green-900: #14532d;
+
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-25%); }
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
   }
+
+  --animate-bounce-slow: bounce-slow 2s infinite;
+  --animate-pulse-slow: pulse-slow 3s infinite;
+
+  --shadow-soft: 0 2px 15px -3px rgba(0,0,0,.07),
+                 0 10px 20px -2px rgba(0,0,0,.04);
 }
+
+/* === Custom Utilities === */
+@utility btn-primary {
+  @apply bg-green-600 text-white font-semibold py-3 px-6 rounded-lg 
+         hover:bg-green-700 transition-colors duration-200 
+         focus:outline-none focus:ring-2 focus:ring-green-500/50;
+}
+
+@utility btn-secondary {
+  @apply bg-gray-100 text-gray-800 font-semibold py-3 px-6 rounded-lg 
+         hover:bg-gray-200 transition-colors duration-200 
+         focus:outline-none focus:ring-2 focus:ring-gray-300/50;
+}
+
+@utility form-input {
+  @apply w-full px-4 py-3 border border-gray-300 rounded-lg 
+         focus:ring-2 focus:ring-green-500/50 focus:border-transparent 
+         outline-none transition-all duration-200;
+}
+
+@utility form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+@utility card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-100 
+         hover:shadow-md transition-shadow duration-200;
+}
+

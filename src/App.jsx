@@ -1,95 +1,117 @@
-import { Routes, Route } from "react-router-dom";
-import { Suspense, lazy } from "react";
-import "./App.css";
+import  { Suspense, lazy, useEffect } from 'react';
+import {Routes, Route } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+import './App.css';
 
-
-// Loading
-const SplashLogo = lazy(() => import("./components/Loading"));
+// Loading Component
+const Loading = lazy(() => import('./components/Loading'));
 
 // Public Pages
-const Home = lazy(() => import("./pages/Home"));
-const Login = lazy(() => import("./pages/Auth/Login/Login"));
-const Register = lazy(() => import("./pages/Auth/Register/Register"));
-const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Identify = lazy(() => import("./pages/Identification/PersonalInfo"));
-const IdentifyProof = lazy(() => import("./pages/Identification/ProofOfAddress"));
-const IdentifyDocument = lazy(() => import("./pages/Identification/UploadDocument"));
-const Forget = lazy(() => import("./pages/ForgetPassword"));
-const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
-const ConfirmPassword = lazy(() => import("./pages/ConfirmPassword"));
-const PasswordResetSuccess = lazy(() =>  import("./pages/PasswordResetSuccess"));
-const OnboardingSteps = lazy(() => import("./pages/OnBoardingSteps"));
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Auth/Login'));
+const Register = lazy(() => import('./pages/Auth/Register'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Forget = lazy(() => import('./pages/Auth/ForgetPassword'));
+const VerifyEmail = lazy(() => import('./pages/Auth/EmailVerification'));
+const ConfirmPassword = lazy(() => import('./pages/Auth/ConfirmPassword'));
+const PasswordResetSuccess = lazy(() => import('./pages/Auth/PasswordReset'));
+const OnboardingSteps = lazy(() => import('./pages/OnboardingSteps'));
+const KYCFlow = lazy(() => import('./pages/Identification/KYCFlow'));
 
-// Dashboard
-const DashboardLayout = lazy(() =>  import("./components/Layout/DashboardLayout"));
-const Overview = lazy(() => import("./pages/Dashboard/DashHome"));
-const Analytics = lazy(() => import("./pages/Dashboard/Analytics"));
-const SettingsLayout = lazy(() =>  import("./pages/Dashboard/Settings/SettingsLayout"));
-const MyProfile = lazy(() => import("./pages/Dashboard/Settings/MyProfile"));
-const NotificationSettings = lazy(() =>  import("./pages/Dashboard/Settings/Notifications"));
-const Verification = lazy(() =>  import("./pages/Dashboard/Settings/Verification"));
-const Support = lazy(() => import("./pages/Dashboard/Settings/Support"));
-const Payment = lazy(() => import("./pages/Dashboard/Payment"));
-const Successful = lazy(() => import("./pages/Dashboard/SplitzSuccessful"));
-const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
-const CreateSplitzPage = lazy(() =>  import("./pages/Dashboard/CreateSplitz"));
-const NotificationPage = lazy(() =>  import("./pages/Dashboard/Notification"));
-const Filter = lazy(() => import("./pages/Dashboard/Filter"));
-const KYCFlow = lazy(() => import("./pages/Identification/KYCFlow"));
+// Dashboard Pages
+const DashboardLayout = lazy(() => import('./components/Layout/DashboardLayout'));
+const Overview = lazy(() => import('./pages/Dashboard/DashHome'));
+const Analytics = lazy(() => import('./pages/Dashboard/Analytics'));
+const SettingsLayout = lazy(() => import('./pages/Dashboard/Settings/SettingsLayout'));
+const MyProfile = lazy(() => import('./pages/Dashboard/Settings/MyProfile'));
+const NotificationSettings = lazy(() => import('./pages/Dashboard/Settings/Notifications'));
+const Verification = lazy(() => import('./pages/Dashboard/Settings/Verification'));
+const Support = lazy(() => import('./pages/Dashboard/Settings/Support'));
+const Payment = lazy(() => import('./pages/Dashboard/Payment'));
+const Successful = lazy(() => import('./pages/Dashboard/SplitzSuccessful'));
+const Wallet = lazy(() => import('./pages/Dashboard/Wallet'));
+const CreateSplitzPage = lazy(() => import('./pages/Dashboard/CreateSplitz'));
+const NotificationPage = lazy(() => import('./pages/Dashboard/Notification'));
+const Filter = lazy(() => import('./pages/Dashboard/Filter'));
 
 // Admin Pages
-const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
-const AdminDashboard = lazy(() =>  import("./pages/Admin/AdminDashboard"));
-const AdminUsers = lazy(() => import("./pages/Admin/AdminUsers"));
-const AdminSplits = lazy(() => import("./pages/Admin/AdminSplits"));
+const AdminLogin = lazy(() => import('./pages/Admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/Admin/AdminUsers'));
+const AdminSplits = lazy(() => import('./pages/Admin/AdminSplits'));
 
-export default function App() {
-  return (
-  
-      <Suspense fallback={<SplashLogo />}>
-        <Routes>
-          {/* PUBLIC ROUTES */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+// Route Components
+const ProtectedRoute = lazy(() => import('./routes/ProtectedRoute'));
+const AdminProtectedRoute = lazy(() => import('./routes/AdminRoute'));
+const RoleRoute = lazy(() => import('./routes/RoleRoute'));
 
-          <Route path="/onboard" element={<Onboarding />} />
-          <Route path="/identify" element={<Identify />} />
-          <Route path="/onboarding-steps" element={<OnboardingSteps />} />
+// Error Pages
+const NotFound = lazy(() => import('./pages/NotFound'));
+const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 
-          <Route path="/forgot-password" element={<Forget />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/confirm-password" element={<ConfirmPassword />} />
-          <Route path="/kyc-flow" element={<KYCFlow />} />
+function App() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
 
-          <Route
-            path="/password-reset-success"
-            element={<PasswordResetSuccess />}
-          />
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+return (
+  <Suspense fallback={<Loading />}>
+    <Routes>
+      {/* PUBLIC ROUTES */}
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/onboard" element={<Onboarding />} />
+      <Route path="/onboarding-steps" element={<OnboardingSteps />} />
+      <Route path="/forgot-password" element={<Forget />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/confirm-password" element={<ConfirmPassword />} />
+      <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+      <Route path="/kyc-flow" element={<KYCFlow />} />
 
-          {/* PROTECTED USER DASHBOARD */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Overview />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="create-split" element={<CreateSplitzPage />} />
-            <Route path="wallet" element={<Wallet />} />
-            <Route path="payment" element={<Payment />} />
-            <Route path="notification" element={<NotificationPage />} />
-            <Route path="filter" element={<Filter />} />
-            <Route path="splitz-success" element={<Successful />} />
+      {/* PROTECTED USER DASHBOARD */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Overview />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="create-split" element={<CreateSplitzPage />} />
+          <Route path="wallet" element={<Wallet />} />
+          <Route path="payment" element={<Payment />} />
+          <Route path="notification" element={<NotificationPage />} />
+          <Route path="filter" element={<Filter />} />
+          <Route path="splitz-success" element={<Successful />} />
 
-            <Route path="settings" element={<SettingsLayout />}>
-              <Route index element={<MyProfile />} />
-              <Route path="profile" element={<MyProfile />} />
-              <Route path="notifications"  element={<NotificationSettings />}              />
-              <Route path="verification" element={<Verification />} />
-              <Route path="support" element={<Support />} />
-            </Route>
+          <Route path="settings" element={<SettingsLayout />}>
+            <Route index element={<MyProfile />} />
+            <Route path="profile" element={<MyProfile />} />
+            <Route path="notifications" element={<NotificationSettings />} />
+            <Route path="verification" element={<Verification />} />
+            <Route path="support" element={<Support />} />
           </Route>
+        </Route>
+      </Route>
 
-        </Routes>
-       
-      </Suspense>
-    
-  );
+      {/* ADMIN ROUTES */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route element={<AdminProtectedRoute />}>
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/splits" element={<AdminSplits />} />
+      </Route>
+
+      {/* ROLE ROUTES */}
+      <Route element={<RoleRoute allowedRoles={['admin', 'moderator']} />}>
+        <Route path="/moderation" element={<div>Moderation Panel</div>} />
+      </Route>
+
+      {/* ERRORS */}
+      <Route path="/unauthorized" element={<Unauthorized />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
+);
+
 }
+
+export default App;
