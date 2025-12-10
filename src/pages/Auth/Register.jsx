@@ -136,28 +136,33 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
     }
   };
 
-  const handleResendOTP = async () => {
-    try {
-      setLocalError("");
-      clearError();
-      
-      // In a real app, you would have the user ID from registration response
-      // For now, we'll call a generic endpoint or use email
-      // Since we don't have user ID yet, we might need a different endpoint
-      // Let's assume we have a /otp/request endpoint that accepts email
-      const response = await authService.getOTP({ email });
-      
-      if (response.status === 200 || response.status === 201) {
-        setTimeLeft(120);
-        setLocalError("");
-      } else {
-        setLocalError("Failed to resend OTP. Please try again.");
-      }
-    } catch (error) {
-      console.error("Resend OTP error:", error);
-      setLocalError("Failed to resend OTP. Please try again.");
+const handleResendOTP = async () => {
+  try {
+    setLocalError("");
+    clearError();
+
+    const { user } = useAuthStore.getState();
+
+    if (!user?.email) {
+      setLocalError("Unable to resend OTP. Email not found.");
+      return;
     }
-  };
+
+    // Call the correct endpoint with email
+    const response = await authService.getOTP({ email: user.email });
+
+    if (response.status === 200 || response.status === 201) {
+      // Reset timer (if your UI uses it)
+      setTimeLeft(120);
+      return;
+    }
+
+    setLocalError(response.data?.message || "Failed to resend OTP.");
+  } catch (error) {
+    console.error("Resend OTP Error:", error);
+    setLocalError("Failed to resend OTP. Try again.");
+  }
+};
 
   return (
     <div className="flex flex-col items-center gap-5 py-8 relative w-full">

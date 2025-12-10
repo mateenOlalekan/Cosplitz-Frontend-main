@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://cosplitz-backend.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://cosplitz-backend.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -35,6 +35,8 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+setUser:(email,id)=>set({email,userData:id})
 
 export const authService = {
   // Register

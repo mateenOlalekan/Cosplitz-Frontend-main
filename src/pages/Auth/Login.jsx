@@ -143,34 +143,37 @@ export default function Login() {
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-2 rounded-2xl">
 
 <div className="flex max-w-screen-2xl w-full h-full bg-white rounded-xl  overflow-hidden">
-      <div className="hidden lg:block lg:w-1/2 lg:h-screen">
-        <motion.div
-          initial={{ opacity: 0, x: -60 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="relative w-full h-full"
-        >
-          <img
-            src={loginlogo}
-            alt="Illustration"
-            className="w-full h-full object-cover"
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="absolute bottom-10 left-0 right-0 mx-6 bg-white/40 backdrop-blur-xl rounded-2xl p-6 max-w-lg shadow-xl text-center"
-          >
-            <h1 className="text-3xl lg:text-4xl font-semibold text-[#2D0D23] mb-2">
-              Share Expenses & Resources in Real Time
-            </h1>
-            <p className="text-base lg:text-[18px] text-[#4B4B4B] leading-relaxed">
-              Connect with students, travelers, and locals to effortlessly manage costs
-              and resources — anonymously and securely.
-            </p>
-          </motion.div>
-        </motion.div>
-      </div>
+{/* // LEFT IMAGE SIDE */}
+<div className="hidden lg:block lg:w-1/2 lg:h-screen">
+  <motion.div
+    initial={{ opacity: 0, x: -60 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 0.8 }}
+    className="relative w-full h-full flex items-center justify-center"
+  >
+    {/* Background Image */}
+    <img
+      src={loginlogo}
+      alt="Illustration"
+      className="w-full h-full object-cover"
+    />
+
+    {/* Floating Card - Bottom Center */}
+    <div className="absolute bottom-6  bg-transparent backdrop-blur-2xl mt-4 p-4 rounded-2xl shadow-sm text-center
+                     max-w-lg lg:max-w-lg mb-4">
+      <h1 className="text-3xl font-semibold text-[#2D0D23] mb-2">
+        Share Expenses & Resources in Real Time
+      </h1>
+      <p className="text-xl font-medium text-[#4B4B4B] leading-6">
+        Connect with students, travelers, and locals to effortlessly manage costs 
+        and resources, anonymously and securely.
+      </p>
+    </div>
+
+  </motion.div>
+</div>
+
+{/* //Right FORM SIDE */}
       <motion.div
         initial={{ opacity: 0, x: 60 }}
         animate={{ opacity: 1, x: 0 }}
