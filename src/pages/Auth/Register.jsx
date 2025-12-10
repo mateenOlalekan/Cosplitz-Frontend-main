@@ -371,7 +371,7 @@ Connect with students, travelers, and locals to effortlessly manage costs and re
 
       {/* RIGHT FORM SIDE */}
       <div className="flex flex-1 flex-col items-center  p-3 sm:p-5 overflow-y-auto">
-<div className="w-full  mb-4 flex justify-start items-start">
+<div className="w-full  mb-4 flex justify-center md:justify-start items-center md:items-start">
   <img src={logo} alt="Logo" className="h-10 md:h-12" />
 </div>
 

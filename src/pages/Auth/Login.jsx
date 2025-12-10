@@ -179,7 +179,7 @@ export default function Login() {
       >
         <div className="w-full lg:max-w-xl">
           {/* Logo */}
-<div className="w-full  mb-4 flex justify-start items-start">
+<div className="w-full  mb-4 flex justify-center md:justify-start items-center md:items-start">
   <img src={logo} alt="Logo" className="h-10 md:h-12" />
 </div>
 
