@@ -54,7 +54,7 @@ export default function Navbar() {
   // Removed setTimeout - navigates immediately
   const handleSignupClick = () => {
     setMenu(false);
-    navigate("/onboard");
+    navigate("/register");
   };
 
   // LOGIN → go directly to onboard

@@ -10,7 +10,7 @@ import loginlogo from "../../assets/loginmain.jpg";
 import logo from "../../assets/logo.svg";
 import { authService } from "../../services/api";
 import { useAuthStore } from "../../store/authStore";
-import { loginSchema } from "./Schema";
+import { loginSchema } from "../../schemas/authSchemas";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
