@@ -63,7 +63,7 @@ export const authService = {
 
     // If identifier is primitive (id), call endpoint by id
     if (typeof identifier === 'string' || typeof identifier === 'number') {
-      return api.get(`/otp/${identifier}/`);
+      return api.get(`/otp/11/${identifier}/`);
     }
 
     // If identifier is an object (likely contains email), call endpoint with query or body as needed
