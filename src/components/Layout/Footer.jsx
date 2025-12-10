@@ -4,25 +4,25 @@ import logo from "../../assets/logo.svg";
 
 export default function Footer() {
   return (
-    <footer className="w-full flex flex-col bg-[#F7F5F9]">
+    <footer className="w-full flex flex-col bg-[#F7F5F9] mt-10">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 w-full">
         {/* Top Section - Logo, Links & Social */}
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-8 mb-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-8 mb-4">
           {/* Logo and Tagline */}
           <div className="flex flex-col gap-3">
             <img 
               src={logo} 
               alt="Cosplitz Logo" 
-              className="w-48 select-none pointer-events-none"
+              className="w-36 select-none pointer-events-none"
             />
-            <p className="text-2xl font-semibold text-gray-700 leading-tight">
+            <p className=" text-lg font-normal md:text-2xl md:font-semibold text-gray-700 leading-tight">
               Split Smarter, Spend Together
             </p>
           </div>
           
           {/* Navigation Links and Social */}
-          <div className="flex flex-col md:flex-row gap-12">
+          <div className="flex flex-col  gap-1">
             {/* Navigation Links */}
             <div className="flex flex-wrap gap-6 text-xl text-[#1A051D] font-semibold">
               <Link to="/home" className="hover:text-green-600 transition-colors duration-200">
@@ -40,7 +40,7 @@ export default function Footer() {
             </div>
 
             {/* Social Icons */}
-            <div className="flex gap-4">
+            <div className="flex flex-col justify-end items-end gap-2">
               <a 
                 href="https://facebook.com" 
                 className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-green-50 transition-all duration-200 group"
@@ -53,18 +53,7 @@ export default function Footer() {
               >
                 <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </a>
-              <a 
-                href="https://twitter.com" 
-                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-green-50 transition-all duration-200 group"
-              >
-                <Twitter className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              </a>
-              <a 
-                href="mailto:contact@cosplitz.com" 
-                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-green-50 transition-all duration-200 group"
-              >
-                <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              </a>
+            
             </div>
           </div>
         </div>

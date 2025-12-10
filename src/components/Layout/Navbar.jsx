@@ -70,7 +70,7 @@ export default function Navbar() {
           isScrolled ? "shadow-md" : ""
         }`}
       >
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between md:px-6 px-4 py-3">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between  max-md:px-4 py-3">
           {/* Logo */}
           <Link
             to="/"
@@ -81,7 +81,7 @@ export default function Navbar() {
             <img
               src={NavbarLogo}
               alt="CoSplitz logo"
-              className="h-10 md:h-12 w-auto select-none pointer-events-none"
+              className="w-36 select-none pointer-events-none"
             />
           </Link>
 
