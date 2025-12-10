@@ -4,8 +4,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
-import loginlogo from "../assets/loginmain.jpg";
-import logo from "../assets/newlogo.svg";
+import loginlogo from "../../assets/loginmain.jpg";
+import logo from "../../assets/newlogo.svg";
 
 // === ZOD VALIDATION SCHEMA ===
 const schema = z

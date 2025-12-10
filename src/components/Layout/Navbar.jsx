@@ -81,7 +81,7 @@ export default function Navbar() {
             <img
               src={NavbarLogo}
               alt="CoSplitz logo"
-              className="w-36 select-none pointer-events-none"
+              className=" w-28 lg:w-36 md:w-28 select-none pointer-events-none"
             />
           </Link>
 

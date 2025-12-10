@@ -22,3 +22,5 @@ function TimerDisplay({ onResend, timeLeft }) {
     </div>
   );
 }
+
+export default TimerDisplay;

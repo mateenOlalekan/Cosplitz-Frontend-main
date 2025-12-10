@@ -32,3 +32,4 @@ function PasswordValidation({ password }) {
     </div>
   );
 }
+export default PasswordValidation;

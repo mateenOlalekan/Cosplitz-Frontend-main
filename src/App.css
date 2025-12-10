@@ -16,6 +16,9 @@ body {
   color: #222;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+   font-family: "Jost", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
 }
 
 /* === Custom Scrollbar === */
