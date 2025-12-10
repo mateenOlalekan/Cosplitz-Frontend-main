@@ -4,11 +4,11 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Link, useNavigate } from "react-router-dom";
-import loginlogo from "../../../assets/loginmain.jpg";
-import logo from "../../../assets/logo.svg";
-import Checknow from "../../../assets/Check.svg";
-import { authService } from "../../../services/api";
-import { useAuthStore } from "../../../store/authStore";
+import loginlogo from "../../assets/loginmain.jpg";
+import logo from "../../assets/logo.svg";
+import Checknow from "../../assets/Check.svg";
+import { authService } from "../../services/api";
+import { useAuthStore } from "../../store/authStore";
 
 // Timer Component
 function TimerDisplay({ onResend, timeLeft }) {
