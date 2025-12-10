@@ -15,7 +15,7 @@ const Forget = lazy(() => import('./pages/Auth/ForgetPassword'));
 const VerifyEmail = lazy(() => import('./pages/Auth/EmailVerification'));
 const ConfirmPassword = lazy(() => import('./pages/Auth/ConfirmPassword'));
 const PasswordResetSuccess = lazy(() => import('./pages/Auth/PasswordReset'));
-const OnboardingSteps = lazy(() => import('./pages/OnboardingSteps'));
+const OnboardingSteps = lazy(() => import('./pages/OnBoardingSteps'));
 const KYCFlow = lazy(() => import('./pages/Identification/KYCFlow'));
 
 // Dashboard Pages
