@@ -140,8 +140,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-white">
-      {/* LEFT IMAGE PANEL */}
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-2 rounded-2xl">
+
+<div className="flex max-w-screen-2xl w-full h-full bg-white rounded-xl  overflow-hidden">
       <div className="hidden lg:block lg:w-1/2 lg:h-screen">
         <motion.div
           initial={{ opacity: 0, x: -60 }}
@@ -170,19 +171,17 @@ export default function Login() {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* RIGHT LOGIN PANEL */}
       <motion.div
         initial={{ opacity: 0, x: 60 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
-        className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 xl:p-12"
+        className="flex-1 flex flex-col items-center h-screen overflow-y-auto justify-center p-4 sm:p-6 lg:p-8 xl:p-12"
       >
-        <div className="w-full max-w-md">
+        <div className="w-full lg:max-w-xl">
           {/* Logo */}
-          <div className="w-full mb-6 flex justify-center lg:justify-start">
-            <img src={logo} alt="Logo" className="h-10 md:h-12 w-auto" />
-          </div>
+<div className="w-full  mb-4 flex justify-start items-start">
+  <img src={logo} alt="Logo" className="h-10 md:h-12" />
+</div>
 
           {/* Header */}
           <div className="w-full text-center lg:text-left mb-6">
@@ -195,13 +194,13 @@ export default function Login() {
           </div>
 
           {/* Social Buttons */}
-          <div className="grid grid-cols-1 gap-3 my-4 w-full">
+          <div className="grid grid-cols-1 gap-2 mb-3">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={() => handleSocialLogin('google')}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <FcGoogle size={22} />
               <span className="text-gray-700 font-medium text-sm sm:text-base">
@@ -214,7 +213,7 @@ export default function Login() {
               whileTap={{ scale: 0.98 }}
               type="button"
               onClick={() => handleSocialLogin('apple')}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <PiAppleLogoBold size={22} />
               <span className="text-gray-700 font-medium text-sm sm:text-base">
@@ -238,7 +237,7 @@ export default function Login() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg"
+              className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg"
             >
               <p className="text-red-600 text-sm text-center">{apiError}</p>
             </motion.div>
@@ -249,7 +248,7 @@ export default function Login() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+              className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg"
             >
               <p className="text-blue-600 text-sm text-center">
                 You are browsing in guest mode with limited features.
@@ -258,7 +257,7 @@ export default function Login() {
           )}
 
           {/* FORM */}
-          <form className="w-full space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <form className="w-full space-y-2" onSubmit={handleSubmit(onSubmit)}>
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -334,7 +333,7 @@ export default function Login() {
               whileTap={{ scale: 0.98 }}
               disabled={loading}
               type="submit"
-              className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold transition-all duration-200 ${
+              className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold transition-all mt-4 duration-200 ${
                 loading ? "opacity-60 cursor-not-allowed" : "hover:bg-green-700"
               }`}
             >
@@ -377,33 +376,13 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Terms and Privacy */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              By continuing, you agree to our{" "}
-              <a href="/terms" className="text-green-600 hover:underline">Terms</a>,{" "}
-              <a href="/privacy" className="text-green-600 hover:underline">Privacy Policy</a>, and{" "}
-              <a href="/fees" className="text-green-600 hover:underline">Fee Structure</a>.
-            </p>
-          </div>
+
         </div>
 
-        {/* Mobile Image for smaller screens */}
-        <div className="lg:hidden w-full mt-8 max-w-sm">
-          <div className="relative rounded-xl overflow-hidden">
-            <img
-              src={loginlogo}
-              alt="Illustration"
-              className="w-full h-48 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex items-end p-4">
-              <p className="text-white text-sm">
-                Share expenses with friends, travelers, and locals
-              </p>
-            </div>
-          </div>
-        </div>
+
       </motion.div>
+</div>
+
     </div>
   );
 }

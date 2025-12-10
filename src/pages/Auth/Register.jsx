@@ -351,29 +351,32 @@ export default function Register() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#F7F5F9] overflow-hidden md:px-6 md:py-4 rounded-2xl">
-      {/* LEFT IMAGE SIDE */}
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
+
+<div className="flex max-w-screen-2xl w-full h-full  rounded-xl overflow-hidden">
+          {/* LEFT IMAGE SIDE */}
       <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
-        <div className="max-w-md w-full flex flex-col items-center">
-          <img src={loginlogo} alt="Register" className="rounded-lg w-full h-auto max-h-[400px] object-cover" />
-          <div className="bg-gradient-to-br from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
+        <div className=" w-full flex flex-col items-center">
+          <img src={loginlogo} alt="Register" className="rounded-lg w-full h-auto max-h-[400px] object-contain" />
+          <div className="bg-gradient-to-br max-w-lg bottom-0 from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
             <h1 className="text-3xl font-semibold text-[#2D0D23] mb-1">
               Share Expenses & Resources in Real Time
             </h1>
-            <p className="text-sm text-[#4B4B4B] leading-relaxed">
-              Connect with students, travelers, and locals securely.
+            <p className="text-xl font-medium text-[#4B4B4B] leading-relaxed">
+Connect with students, travelers, and locals to effortlessly manage costs and resources, anonymously and securely.
             </p>
           </div>
         </div>
       </div>
 
       {/* RIGHT FORM SIDE */}
-      <div className="flex flex-1 flex-col items-center bg-white p-3 sm:p-5 overflow-y-auto">
-        <div className="w-full mb-4">
-          <img src={logo} alt="Logo" className="h-10 md:h-12 mx-auto" />
-        </div>
+      <div className="flex flex-1 flex-col items-center  p-3 sm:p-5 overflow-y-auto">
+<div className="w-full  mb-4 flex justify-start items-start">
+  <img src={logo} alt="Logo" className="h-10 md:h-12" />
+</div>
 
-        <div className="w-full max-w-2xl bg-white p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
+
+        <div className="w-full max-w-2xl  p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
           {/* STEP INDICATOR */}
           <div className="w-full flex justify-center items-center py-4">
             <div className="flex items-center gap-2 justify-center">
@@ -448,7 +451,7 @@ export default function Register() {
                 <div className="flex-grow border-t border-gray-300"></div>
               </div>
 
-              <form onSubmit={handleFormSubmit} className="space-y-3">
+              <form onSubmit={handleFormSubmit} className="space-y-2">
                 {[
                   { key: "firstName", label: "First Name", type: "text" },
                   { key: "lastName", label: "Last Name", type: "text" },
@@ -597,6 +600,8 @@ export default function Register() {
           )}
         </div>
       </div>
+</div>
+
     </div>
   );
 }
