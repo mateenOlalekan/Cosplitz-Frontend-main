@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Link, useNavigate } from "react-router-dom";
-import loginlogo from "../../assets/loginmain.jpg";
+import loginlogo from "../../assets/login.jpg";
 import logo from "../../assets/logo.svg";
 import Checknow from "../../assets/Check.svg";
 import { authService } from "../../services/api";
