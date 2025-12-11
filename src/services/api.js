@@ -71,10 +71,10 @@ export const authService = {
     if (identifier.email) {
       // Try POST first (common pattern), fallback to GET with query param
       try {
-        return await api.post('/otp/resend/', { email: identifier.email });
+        return await api.post('/otp/11/', { email: identifier.email });
       } catch (err) {
         // fallback to GET with query param
-        return api.get('/otp/', { params: { email: identifier.email } });
+        return api.get('/otp/11', { params: { email: identifier.email } });
       }
     }
 
