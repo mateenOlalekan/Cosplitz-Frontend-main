@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; 
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import NavbarLogo from "../../assets/logo.svg";
 import { Menu, X } from "lucide-react";
@@ -51,13 +51,11 @@ export default function Navbar() {
     if (section) section.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Removed setTimeout - navigates immediately
   const handleSignupClick = () => {
     setMenu(false);
     navigate("/register");
   };
 
-  // LOGIN → go directly to onboard
   const handleLoginClick = () => {
     setMenu(false);
     navigate("/login");
@@ -70,7 +68,7 @@ export default function Navbar() {
           isScrolled ? "shadow-md" : ""
         }`}
       >
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between  max-md:px-4 py-3">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between max-lg:px-4 py-3">
           {/* Logo */}
           <Link
             to="/"
@@ -81,12 +79,12 @@ export default function Navbar() {
             <img
               src={NavbarLogo}
               alt="CoSplitz logo"
-              className=" w-28 lg:w-36 md:w-28 select-none pointer-events-none"
+              className="w-28 lg:w-36 select-none pointer-events-none"
             />
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8 lg:gap-12 mx-8">
+          <nav className="hidden lg:flex items-center gap-8 lg:gap-12">
             {navItems.map((item) => (
               <button
                 key={item.to}
@@ -99,7 +97,7 @@ export default function Navbar() {
           </nav>
 
           {/* Desktop Buttons */}
-          <div className="hidden md:flex items-center gap-4 text-[16px]">
+          <div className="hidden lg:flex items-center gap-4 text-[16px]">
             <button
               onClick={handleSignupClick}
               className="px-5 py-2.5 rounded-sm border-2 border-green-600 bg-white text-green-600 hover:bg-green-50 transition-colors font-medium"
@@ -119,7 +117,7 @@ export default function Navbar() {
           <button
             onClick={toggleMenu}
             aria-label={menu ? "Close menu" : "Open menu"}
-            className="md:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="lg:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
             {menu ? <X size={26} /> : <Menu size={26} />}
           </button>
@@ -151,7 +149,7 @@ export default function Navbar() {
               <button
                 key={item.to}
                 onClick={() => handleNavClick(item.to)}
-                className="text-lg font-medium text-gray-700 hover:text-green-600 transition-colors text-left py-2"
+                className="text-sm md:text-lg font-medium text-gray-700 hover:text-green-600 transition-colors text-left py-2"
               >
                 {item.title}
               </button>
