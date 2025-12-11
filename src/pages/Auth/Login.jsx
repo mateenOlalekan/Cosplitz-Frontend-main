@@ -157,7 +157,7 @@ export default function Login() {
   };
 
   return (
-    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-2 rounded-2xl">
+    <div className="h-screen flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-2 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full bg-white rounded-xl overflow-hidden">
         {/* LEFT IMAGE SIDE */}
         <div className="hidden lg:block lg:w-1/2 lg:h-screen">

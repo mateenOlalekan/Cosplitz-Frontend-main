@@ -377,7 +377,7 @@ export default function Register() {
   ];
 
   return (
-    <div className="flex bg-[#F7F5F9] w-full min-h-screen justify-center overflow-auto md:px-6 md:py-4 rounded-2xl">
+    <div className="h-screen flex bg-[#F7F5F9] w-full min-h-screen justify-center overflow-auto md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
         {/* LEFT IMAGE SIDE */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
