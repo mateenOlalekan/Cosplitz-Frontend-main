@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import loginlogo from "../../assets/login.jpg";
 import logo from "../../assets/logo.svg";
 import Checknow from "../../assets/Check.svg";
+import { authService } from "../../services/api";
 import { useAuthStore } from "../../store/authStore";
 
 // Timer Component
@@ -26,9 +27,8 @@ function TimerDisplay({ onResend, timeLeft }) {
         </p>
       ) : (
         <button
-          type="button"
           onClick={onResend}
-          className="text-green-600 font-semibold text-sm mt-3 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-green-600 font-semibold text-sm mt-3 hover:underline"
         >
           Resend OTP
         </button>
@@ -74,18 +74,13 @@ function PasswordValidation({ password }) {
 }
 
 // Email Verification Step Component
-function EmailVerificationStep({ email, onVerify, onBack }) {
+function EmailVerificationStep({ email, onVerify, onBack, error }) {
   const [emailOtp, setEmailOtp] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(120);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [localError, setLocalError] = useState("");
-  
-  // Get Zustand actions
-  const verifyOTP = useAuthStore((state) => state.verifyOTP);
-  const resendOTP = useAuthStore((state) => state.resendOTP);
+  const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
-  const error = useAuthStore((state) => state.error);
-  const isLoading = useAuthStore((state) => state.isLoading);
 
   // Timer effect
   useEffect(() => {
@@ -94,7 +89,6 @@ function EmailVerificationStep({ email, onVerify, onBack }) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // Handle OTP input changes
   const handleChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
 
@@ -104,10 +98,7 @@ function EmailVerificationStep({ email, onVerify, onBack }) {
 
     // Auto-focus next input
     if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-input-${index + 1}`);
-      if (nextInput) {
-        nextInput.focus();
-      }
+      document.getElementById(`otp-input-${index + 1}`)?.focus();
     }
 
     // Auto-submit when all digits are filled
@@ -128,59 +119,59 @@ function EmailVerificationStep({ email, onVerify, onBack }) {
     clearError();
 
     try {
-      const result = await verifyOTP(email, otp);
+      const response = await authService.verifyOTP({
+        email,
+        otp_code: otp
+      });
 
-      if (result.success) {
+      if (response.status === 200 || response.status === 201) {
         onVerify();
       } else {
-        setLocalError(result.message || "Invalid OTP. Please try again.");
-        // Reset OTP on error
-        setEmailOtp(["", "", "", "", "", ""]);
-        document.getElementById("otp-input-0")?.focus();
+        setLocalError(response.data?.message || "Invalid OTP. Please try again.");
       }
     } catch (error) {
       console.error("OTP verification error:", error);
-      setLocalError(error.message || "Invalid OTP. Please try again.");
-      // Reset OTP on error
-      setEmailOtp(["", "", "", "", "", ""]);
-      document.getElementById("otp-input-0")?.focus();
+      setLocalError(error.response?.data?.message || "Invalid OTP. Please try again.");
     } finally {
       setVerificationLoading(false);
     }
   };
 
   const handleResendOTP = async () => {
-    if (timeLeft > 0) return;
-    
     try {
       setLocalError("");
       clearError();
 
-      const result = await resendOTP(email);
+      const { user } = useAuthStore.getState();
 
-      if (result.success) {
+      const emailToUse = email || user?.email;
+
+      if (!emailToUse) {
+        setLocalError("Unable to resend OTP. Email not found.");
+        return;
+      }
+
+      // Call getOTP with object containing email
+      const response = await authService.getOTP({ email: emailToUse });
+
+      if (response?.status === 200 || response?.status === 201) {
         // Reset timer
         setTimeLeft(120);
-        // Reset OTP inputs
-        setEmailOtp(["", "", "", "", "", ""]);
-        document.getElementById("otp-input-0")?.focus();
-      } else {
-        setLocalError(result.message || "Failed to resend OTP.");
+        return;
       }
+
+      setLocalError(response?.data?.message || "Failed to resend OTP.");
     } catch (error) {
       console.error("Resend OTP Error:", error);
-      setLocalError(error.message || "Failed to resend OTP. Try again.");
+      setLocalError("Failed to resend OTP. Try again.");
     }
   };
-
-  const displayError = localError || error;
 
   return (
     <div className="flex flex-col items-center gap-5 py-8 relative w-full">
       <button
-        type="button"
         onClick={onBack}
-        className="absolute left-4 top-4 text-gray-600 hover:text-green-600 transition disabled:opacity-50"
+        className="absolute left-4 top-4 text-gray-600 hover:text-green-600 transition"
         disabled={verificationLoading}
       >
         <ChevronLeft size={28} />
@@ -201,48 +192,34 @@ function EmailVerificationStep({ email, onVerify, onBack }) {
             key={index}
             id={`otp-input-${index}`}
             type="text"
-            inputMode="numeric"
             maxLength="1"
             value={digit}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            disabled={verificationLoading || isLoading}
-            className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none disabled:opacity-50 transition-colors"
-            autoFocus={index === 0}
+            disabled={verificationLoading}
+            className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none disabled:opacity-50"
           />
         ))}
       </div>
 
       <TimerDisplay onResend={handleResendOTP} timeLeft={timeLeft} />
 
-      {displayError && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-3 bg-red-50 border border-red-200 rounded-lg max-w-xs"
-        >
-          <p className="text-red-600 text-sm text-center">{displayError}</p>
-        </motion.div>
+      {(localError || error) && (
+        <p className="text-red-600 text-sm text-center max-w-xs">
+          {localError || error}
+        </p>
       )}
 
       <button
-        type="button"
         onClick={() => handleVerify(emailOtp.join(""))}
-        disabled={verificationLoading || isLoading || emailOtp.some(digit => digit === "")}
-        className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-4 transition-colors duration-200 ${
-          verificationLoading || isLoading || emailOtp.some(digit => digit === "")
+        disabled={verificationLoading || emailOtp.some(digit => digit === "")}
+        className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-4 ${
+          verificationLoading || emailOtp.some(digit => digit === "")
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-green-700"
         }`}
       >
-        {verificationLoading ? (
-          <span className="flex items-center justify-center gap-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Verifying...
-          </span>
-        ) : (
-          "Verify Email"
-        )}
+        {verificationLoading ? "Verifying..." : "Verify Email"}
       </button>
     </div>
   );
@@ -252,19 +229,14 @@ function EmailVerificationStep({ email, onVerify, onBack }) {
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const navigate = useNavigate();
-  
-  // Get Zustand state and actions
-  const { 
-    isLoading, 
-    error, 
-    clearError, 
-    register: registerStore,
-    requestOTP
-  } = useAuthStore();
+  const setError = useAuthStore((state) => state.setError);
+  const clearError = useAuthStore((state) => state.clearError);
+  const error = useAuthStore((state) => state.error);
+  const registerStore = useAuthStore((state) => state.register);
 
-  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -282,6 +254,7 @@ export default function Register() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     clearError();
 
     // Validation
@@ -290,34 +263,39 @@ export default function Register() {
       /\d/.test(formData.password);
 
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      useAuthStore.getState().setError("Please fill out all required fields.");
+      setError("Please fill out all required fields.");
+      setLoading(false);
       return;
     }
 
     if (!formData.nationality) {
-      useAuthStore.getState().setError("Please select your nationality.");
+      setError("Please select your nationality.");
+      setLoading(false);
       return;
     }
 
     if (!validPassword) {
-      useAuthStore.getState().setError("Your password does not meet all requirements.");
+      setError("Your password does not meet all requirements.");
+      setLoading(false);
       return;
     }
 
     if (!formData.agreeToTerms) {
-      useAuthStore.getState().setError("Please agree to the terms & conditions.");
+      setError("Please agree to the terms & conditions.");
+      setLoading(false);
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      useAuthStore.getState().setError("Please enter a valid email address.");
+      setError("Please enter a valid email address.");
+      setLoading(false);
       return;
     }
 
     try {
-      const result = await registerStore({
+      const response = await authService.register({
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
         email: formData.email.toLowerCase().trim(),
@@ -325,28 +303,50 @@ export default function Register() {
         password: formData.password,
       });
 
-      if (result.success) {
+      if (response.status === 201 || response.status === 200) {
+        // Store user data in auth store
+        registerStore({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          nationality: formData.nationality
+        });
+
         setRegistrationSuccess(true);
         setCurrentStep(2);
-        
-        // Request OTP after successful registration
+
+        // Try to request OTP
         try {
-          await requestOTP({ email: formData.email });
+          const userId = response.data?.user?.id || response.data?.id;
+          if (userId) {
+            await authService.getOTP(userId);
+          } else {
+            // Fallback: try to get OTP with email
+            await authService.getOTP({ email: formData.email });
+          }
         } catch (otpError) {
           console.warn("OTP request failed:", otpError);
-          // Continue anyway - user can request OTP manually in verification step
+          // Continue anyway - user can request OTP manually
         }
+      } else {
+        setError(response.data?.message || "Registration failed. Please try again.");
       }
     } catch (error) {
-      // Error is already set by the store
       console.error("Registration error:", error);
+      setError(
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Network error. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSocialRegister = (provider) => {
     console.log(`Register with ${provider}`);
     // Implement social registration
-    useAuthStore.getState().setError(`${provider} registration is not available yet.`);
+    setError(`${provider} registration is not available yet.`);
   };
 
   const handleInputChange = (field, value) => {
@@ -357,36 +357,13 @@ export default function Register() {
     }
   };
 
-  const handleVerifySuccess = () => {
-    setCurrentStep(3);
-  };
-
-  const handleBackToRegistration = () => {
-    if (registrationSuccess) {
-      setCurrentStep(1);
-    } else {
-      navigate("/register");
-    }
-  };
-
-  const nationalities = [
-    "American", "British", "Canadian", "Australian", "Indian", 
-    "Chinese", "German", "French", "Japanese", "Brazilian",
-    "Mexican", "Spanish", "Italian", "Russian", "South Korean",
-    "Other"
-  ];
-
   return (
-    <div className="h-screen flex bg-[#F7F5F9] w-full min-h-screen justify-center overflow-auto md:px-6 md:py-4 rounded-2xl">
-      <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
+      <div className="flex max-w-screen-2xl w-full h-full  rounded-xl overflow-hidden">
         {/* LEFT IMAGE SIDE */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
-          <div className="w-full flex flex-col items-center">
-            <img 
-              src={loginlogo} 
-              alt="Register" 
-              className="rounded-lg w-full h-auto max-h-[400px] object-contain" 
-            />
+          <div className=" w-full flex flex-col items-center">
+            <img src={loginlogo} alt="Register" className="rounded-lg w-full h-auto max-h-[400px] object-contain" />
             <div className="bg-gradient-to-br max-w-lg bottom-0 from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
               <h1 className="text-3xl font-semibold text-[#2D0D23] mb-1">
                 Share Expenses & Resources in Real Time
@@ -399,19 +376,19 @@ export default function Register() {
         </div>
 
         {/* RIGHT FORM SIDE */}
-        <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
-          <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
+        <div className="flex flex-1 flex-col items-center  p-3 sm:p-5 overflow-y-auto">
+          <div className="w-full  mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
 
-          <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
+          <div className="w-full max-w-2xl  p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
             {/* STEP INDICATOR */}
             <div className="w-full flex justify-center items-center py-4">
               <div className="flex items-center gap-2 justify-center">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
                     <div
-                      className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                      className={`w-4 h-4 rounded-full ${
                         currentStep >= s.id
                           ? "bg-green-600 shadow-md"
                           : "bg-gray-300"
@@ -419,7 +396,7 @@ export default function Register() {
                     ></div>
                     {i < steps.length - 1 && (
                       <div
-                        className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 transition-all duration-300 ${
+                        className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 ${
                           currentStep > s.id
                             ? "border-green-600"
                             : "border-gray-300"
@@ -442,13 +419,9 @@ export default function Register() {
                 </p>
 
                 {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mb-3 text-center"
-                  >
+                  <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mb-3 text-center">
                     {error}
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* SOCIAL BUTTONS */}
@@ -483,71 +456,27 @@ export default function Register() {
                   <div className="flex-grow border-t border-gray-300"></div>
                 </div>
 
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  {/* First Name */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.firstName}
-                      placeholder="Enter your first name"
-                      onChange={(e) => handleInputChange("firstName", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                      required
-                    />
-                  </div>
-
-                  {/* Last Name */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lastName}
-                      placeholder="Enter your last name"
-                      onChange={(e) => handleInputChange("lastName", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                      required
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      placeholder="Enter your email address"
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                      required
-                    />
-                  </div>
-
-                  {/* Nationality */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Nationality *
-                    </label>
-                    <select
-                      value={formData.nationality}
-                      onChange={(e) => handleInputChange("nationality", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                      required
-                    >
-                      <option value="">Select your nationality</option>
-                      {nationalities.map((nationality) => (
-                        <option key={nationality} value={nationality}>
-                          {nationality}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <form onSubmit={handleFormSubmit} className="space-y-2">
+                  {[
+                    { key: "firstName", label: "First Name", type: "text" },
+                    { key: "lastName", label: "Last Name", type: "text" },
+                    { key: "email", label: "Email Address", type: "email" },
+                    { key: "nationality", label: "Nationality", type: "text" }
+                  ].map((field) => (
+                    <div key={field.key}>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        {field.label} *
+                      </label>
+                      <input
+                        type={field.type}
+                        value={formData[field.key]}
+                        placeholder={`Enter your ${field.label.toLowerCase()}`}
+                        onChange={(e) => handleInputChange(field.key, e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
+                        required
+                      />
+                    </div>
+                  ))}
 
                   {/* PASSWORD */}
                   <div>
@@ -566,7 +495,7 @@ export default function Register() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                        className="text-gray-400 hover:text-gray-600 transition-colors"
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
@@ -575,12 +504,12 @@ export default function Register() {
                   </div>
 
                   {/* TERMS */}
-                  <label className="flex gap-2 items-start text-sm text-gray-600 mt-2 cursor-pointer">
+                  <label className="flex gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.agreeToTerms}
                       onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
-                      className="mt-1 rounded focus:ring-green-500"
+                      className="rounded focus:ring-green-500"
                     />
                     <span>
                       I agree to the{" "}
@@ -603,12 +532,12 @@ export default function Register() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
-                    disabled={isLoading}
+                    disabled={loading}
                     className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold transition-all duration-200 ${
-                      isLoading ? "opacity-60 cursor-not-allowed" : "hover:bg-green-700"
+                      loading ? "opacity-60 cursor-not-allowed" : "hover:bg-green-700"
                     }`}
                   >
-                    {isLoading ? (
+                    {loading ? (
                       <span className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         Creating Account...
@@ -632,18 +561,22 @@ export default function Register() {
             {currentStep === 2 && (
               <EmailVerificationStep
                 email={formData.email}
-                onVerify={handleVerifySuccess}
-                onBack={handleBackToRegistration}
+                onVerify={() => setCurrentStep(3)}
+                onBack={() => {
+                  if (registrationSuccess) {
+                    setCurrentStep(1);
+                  } else {
+                    navigate("/register");
+                  }
+                }}
+                error={error}
+                loading={loading}
               />
             )}
 
             {/* STEP 3: Success */}
             {currentStep === 3 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center text-center py-6"
-              >
+              <div className="flex flex-col items-center text-center py-6">
                 <img src={Checknow} alt="Success" className="w-24 h-24 mb-4" />
                 <h2 className="text-2xl font-bold text-gray-800">
                   Email Verified!
@@ -662,14 +595,13 @@ export default function Register() {
                 <p className="text-sm text-gray-500 mt-3">
                   Didn't receive the email?{" "}
                   <button
-                    type="button"
                     onClick={() => setCurrentStep(2)}
                     className="text-green-600 hover:underline font-medium"
                   >
                     Go back to verification
                   </button>
                 </p>
-              </motion.div>
+              </div>
             )}
           </div>
         </div>
