@@ -1,12 +1,13 @@
+// src/pages/EmailVerificationStep.jsx
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, Mail } from "lucide-react";
-import authService from "../../../services/authService";
-import useAuthStore from "../../../stores/authStore";
-import TimerDisplay from "../../../components/TimerDisplay";
+import { authService } from "../../services/api";
+import { useAuthStore } from "../../store/authStore";
+import TimerDisplay from "../../components/TimerDisplay";
 
-function EmailVerificationStep({ email, onVerify, onBack, error }) {
+function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
   const [emailOtp, setEmailOtp] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(180);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [localError, setLocalError] = useState("");
   const setError = useAuthStore((state) => state.setError);
@@ -50,7 +51,7 @@ function EmailVerificationStep({ email, onVerify, onBack, error }) {
 
     try {
       const response = await authService.verifyOTP({
-        email,
+        email: email,
         otp_code: otp
       });
 
@@ -72,21 +73,17 @@ function EmailVerificationStep({ email, onVerify, onBack, error }) {
       setLocalError("");
       clearError();
 
-      const { user } = useAuthStore.getState();
-
-      const emailToUse = email || user?.email;
-
-      if (!emailToUse) {
+      if (!email) {
         setLocalError("Unable to resend OTP. Email not found.");
         return;
       }
 
-      // Call getOTP with object containing email
-      const response = await authService.getOTP({ email: emailToUse });
+      // Use the correct API method from authService
+      const response = await authService.sendOTP(email);
 
       if (response?.status === 200 || response?.status === 201) {
         // Reset timer
-        setTimeLeft(120);
+        setTimeLeft(180);
         return;
       }
 
@@ -154,4 +151,5 @@ function EmailVerificationStep({ email, onVerify, onBack, error }) {
     </div>
   );
 }
+
 export default EmailVerificationStep;

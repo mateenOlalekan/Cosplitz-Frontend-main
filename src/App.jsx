@@ -9,7 +9,7 @@ const Loading = lazy(() => import('./components/Loading'));
 // Public Pages
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Auth/Login'));
-const Register = lazy(() => import('./pages/Auth/Register'));
+const Register = lazy(() => import('./pages/Auth/Register/index'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const Forget = lazy(() => import('./pages/Auth/ForgetPassword'));
 const VerifyEmail = lazy(() => import('./pages/Auth/EmailVerification'));

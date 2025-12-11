@@ -5,7 +5,6 @@ import { persist } from 'zustand/middleware';
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      // State
       user: null,
       token: null,
       isAuthenticated: false,
@@ -13,15 +12,12 @@ export const useAuthStore = create(
       error: null,
       userDetails: null,
 
-      // Actions
       login: (user, token) => {
         try {
-          // default to localStorage (but calling code may use sessionStorage)
           localStorage.setItem('authToken', token);
           localStorage.setItem('userInfo', JSON.stringify(user));
-        } catch (e) {
-          // ignore storage errors
-        }
+        } catch (e) {}
+
         set({
           user,
           token,
@@ -44,6 +40,7 @@ export const useAuthStore = create(
         localStorage.removeItem('userInfo');
         sessionStorage.removeItem('authToken');
         sessionStorage.removeItem('userInfo');
+
         set({
           user: null,
           token: null,
@@ -53,17 +50,11 @@ export const useAuthStore = create(
         });
       },
 
-      setUserDetails: (details) => {
-        set({ userDetails: details });
-      },
+      setUserDetails: (details) => set({ userDetails: details }),
 
-      setError: (error) => {
-        set({ error });
-      },
+      setError: (error) => set({ error }),
 
-      clearError: () => {
-        set({ error: null });
-      },
+      clearError: () => set({ error: null }),
 
       initializeAuth: () => {
         const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
@@ -91,24 +82,25 @@ export const useAuthStore = create(
         }
       },
 
-      // Check if user is admin
       isAdmin: () => {
         const { user } = get();
         return user?.role === 'admin' || user?.is_admin === true;
       },
 
-      // Get user info from API
       fetchUserInfo: async () => {
         try {
           const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
           if (!token) return;
 
-          const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://cosplitz-backend.onrender.com'}/api/user/info`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
+          const response = await fetch(
+            `${process.env.REACT_APP_API_URL || 'https://cosplitz-backend.onrender.com'}/api/user/info`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
             }
-          });
+          );
 
           if (response.ok) {
             const data = await response.json();
@@ -117,15 +109,15 @@ export const useAuthStore = create(
         } catch (error) {
           console.error('Failed to fetch user info:', error);
         }
-      }
+      },
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
