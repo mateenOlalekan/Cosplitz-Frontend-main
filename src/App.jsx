@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy,useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import "./App.css";
@@ -49,15 +49,7 @@ const AdminSplits = lazy(() => import("./pages/Admin/AdminSplits"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 
-// Simple fallback component
-const FallbackLoader = () => (
-  <div className="w-full h-screen flex items-center justify-center bg-gray-50">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      <p className="text-gray-600">Loading...</p>
-    </div>
-  </div>
-);
+
 
 function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -67,7 +59,7 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <Suspense fallback={<FallbackLoader />}>
+    <Suspense fallback={<Loading />}>
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
