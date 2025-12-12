@@ -310,24 +310,9 @@ export default function Register() {
               />
             )}
 
-            {/* Progress indicator */}
-            <div className="mt-6 pt-4 border-t border-gray-100">
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Step {currentStep} of {steps.length}</span>
-                <span>{Math.round((currentStep / steps.length) * 100)}% Complete</span>
-              </div>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(currentStep / steps.length) * 100}%` }}
-                ></div>
-              </div>
-            </div>
 
-            {/* Support link */}
-            <div className="mt-4 text-center text-sm text-gray-500">
-              Need help? <a href="/support" className="text-green-600 hover:underline">Contact Support</a>
-            </div>
+
+
           </div>
         </div>
       </div>
