@@ -12,7 +12,7 @@ export default function EmailVerificationStep({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [timer, setTimer] = useState(180);
+  const [timer, setTimer] = useState(300);
 
   // Countdown timer
   useEffect(() => {
