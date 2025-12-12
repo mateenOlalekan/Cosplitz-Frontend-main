@@ -4,12 +4,14 @@ import { persist } from "zustand/middleware";
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-
       user: null,
       token: null,
       error: null,
       isLoading: true,
 
+      // -------------------
+      // TOKEN HANDLING
+      // -------------------
       setToken: (token, persistToken = true) => {
         set({ token });
 
@@ -21,23 +23,35 @@ export const useAuthStore = create(
             sessionStorage.setItem("authToken", token);
             localStorage.removeItem("authToken");
           }
-        } catch (e) {}
+        } catch {}
       },
 
+      // -------------------
+      // USER HANDLING
+      // -------------------
       setUser: (userObj) => {
         set({ user: userObj });
         try {
-          if (userObj)
+          if (userObj) {
             localStorage.setItem("userInfo", JSON.stringify(userObj));
-          else localStorage.removeItem("userInfo");
-        } catch (e) {}
+          } else {
+            localStorage.removeItem("userInfo");
+          }
+        } catch {}
       },
 
+      // -------------------
+      // TEMP REGISTER DATA
+      // -------------------
       tempRegister: null,
       register: (payload) => set({ tempRegister: payload }),
 
+      // -------------------
+      // AUTH ACTIONS
+      // -------------------
       logout: () => {
         set({ user: null, token: null, error: null });
+
         localStorage.removeItem("authToken");
         localStorage.removeItem("userInfo");
         sessionStorage.removeItem("authToken");
@@ -49,13 +63,16 @@ export const useAuthStore = create(
       setError: (msg) => set({ error: msg }),
       clearError: () => set({ error: null }),
 
-      isAuthenticated: () => !!get().token,
+      isAuthenticated: () => Boolean(get().token),
 
       isAdmin: () => {
         const u = get().user;
         return u?.role === "admin" || u?.is_admin === true;
       },
 
+      // -------------------
+      // INIT AUTH FROM STORAGE
+      // -------------------
       initializeAuth: () => {
         try {
           const token =
@@ -76,7 +93,6 @@ export const useAuthStore = create(
         }
       },
     }),
-
     {
       name: "auth-storage",
       partialize: (state) => ({
@@ -86,5 +102,3 @@ export const useAuthStore = create(
     }
   )
 );
-
-export default useAuthStore;
