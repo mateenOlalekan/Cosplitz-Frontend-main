@@ -1,6 +1,6 @@
 // src/services/api.js
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "https://cosplitz-backend.onrender.com/api";
+  "https://cosplitz-backend.onrender.com/api";
 
 /**
  * Helper to get token from storage (local/session)

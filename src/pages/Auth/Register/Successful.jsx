@@ -1,7 +1,7 @@
 // src/pages/Successful.jsx
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import Checknow from "../../assets/Check.svg"; // Fixed the typo from 'Checknow'
+import Checknow from "../../../assets/Check.svg"; // Fixed the typo from 'Checknow'
 
 function Successful() {
   const navigate = useNavigate();

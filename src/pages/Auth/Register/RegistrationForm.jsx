@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
-import PasswordValidation from "../../components/PasswordValidation";
+import PasswordValidation from "./PasswordValidation";
 
 function RegistrationForm({
   formData,

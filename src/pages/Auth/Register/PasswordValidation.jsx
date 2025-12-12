@@ -1,3 +1,5 @@
+import { Check, X } from "lucide-react";
+
 function PasswordValidation({ password }) {
   const validations = [
     { label: "8+ characters", isValid: password.length >= 8 },
@@ -32,4 +34,5 @@ function PasswordValidation({ password }) {
     </div>
   );
 }
+
 export default PasswordValidation;

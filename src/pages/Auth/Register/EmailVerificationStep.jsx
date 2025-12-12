@@ -1,9 +1,9 @@
 // src/pages/EmailVerificationStep.jsx
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, Mail } from "lucide-react";
-import { authService } from "../../services/api";
-import { useAuthStore } from "../../store/authStore";
-import TimerDisplay from "../../components/TimerDisplay";
+import { authService } from "../../../services/api";
+import { useAuthStore } from "../../../store/authStore";
+import TimerDisplay from "../TimerDisplay";
 
 function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading }) {
   const [emailOtp, setEmailOtp] = useState(["", "", "", "", "", ""]);
