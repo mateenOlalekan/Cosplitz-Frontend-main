@@ -5,7 +5,7 @@ import { authService } from "../../services/api";
 import { useAuthStore } from "../../store/authStore";
 import TimerDisplay from "../../components/TimerDisplay";
 
-function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
+function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading }) {
   const [emailOtp, setEmailOtp] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(180);
   const [verificationLoading, setVerificationLoading] = useState(false);
@@ -13,13 +13,18 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
 
-  // Timer effect
+  // ============================
+  // TIMER
+  // ============================
   useEffect(() => {
     if (timeLeft === 0) return;
-    const timer = setInterval(() => setTimeLeft(prev => Math.max(prev - 1, 0)), 1000);
+    const timer = setInterval(() => setTimeLeft((prev) => Math.max(prev - 1, 0)), 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  // ============================
+  // OTP INPUT CHANGE
+  // ============================
   const handleChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
 
@@ -27,13 +32,13 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
     newOtp[index] = value;
     setEmailOtp(newOtp);
 
-    // Auto-focus next input
+    // Auto focus next
     if (value && index < 5) {
       document.getElementById(`otp-input-${index + 1}`)?.focus();
     }
 
-    // Auto-submit when all digits are filled
-    if (newOtp.every(digit => digit !== "")) {
+    // Auto verify when full
+    if (newOtp.every((digit) => digit !== "")) {
       handleVerify(newOtp.join(""));
     }
   };
@@ -44,6 +49,9 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
     }
   };
 
+  // ============================
+  // VERIFY OTP
+  // ============================
   const handleVerify = async (otp) => {
     setVerificationLoading(true);
     setLocalError("");
@@ -51,8 +59,8 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
 
     try {
       const response = await authService.verifyOTP({
-        email: email,
-        otp_code: otp
+        user_id: userId,
+        otp: otp
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -68,22 +76,24 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
     }
   };
 
+  // ============================
+  // RESEND OTP
+  // ============================
   const handleResendOTP = async () => {
     try {
       setLocalError("");
       clearError();
 
-      if (!email) {
-        setLocalError("Unable to resend OTP. Email not found.");
+      if (!userId) {
+        setLocalError("Unable to resend OTP. Missing user ID.");
         return;
       }
 
-      // Use the correct API method from authService
-      const response = await authService.sendOTP(email);
+      const response = await authService.getOTP(userId);
 
-      if (response?.status === 200 || response?.status === 201) {
-        // Reset timer
+      if (response?.status === 200) {
         setTimeLeft(180);
+        setEmailOtp(["", "", "", "", "", ""]);
         return;
       }
 
@@ -106,7 +116,7 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
 
       <h2 className="text-xl font-bold text-gray-800 mt-8">Verify Your Email</h2>
       <p className="text-gray-500 text-sm text-center max-w-xs">
-        Enter the code sent to your <span className="text-green-600 font-medium">{email}</span>.
+        Enter the code sent to <span className="text-green-600 font-medium">{email}</span>.
       </p>
 
       <div className="bg-[#1F82250D] rounded-full w-14 h-14 flex items-center justify-center">
@@ -132,16 +142,14 @@ function EmailVerificationStep({ email, onVerify, onBack, error, loading }) {
       <TimerDisplay onResend={handleResendOTP} timeLeft={timeLeft} />
 
       {(localError || error) && (
-        <p className="text-red-600 text-sm text-center max-w-xs">
-          {localError || error}
-        </p>
+        <p className="text-red-600 text-sm text-center max-w-xs">{localError || error}</p>
       )}
 
       <button
         onClick={() => handleVerify(emailOtp.join(""))}
-        disabled={verificationLoading || emailOtp.some(digit => digit === "")}
+        disabled={verificationLoading || emailOtp.some((digit) => digit === "")}
         className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-4 ${
-          verificationLoading || emailOtp.some(digit => digit === "")
+          verificationLoading || emailOtp.some((digit) => digit === "")
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-green-700"
         }`}

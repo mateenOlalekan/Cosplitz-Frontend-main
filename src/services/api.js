@@ -1,7 +1,9 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://cosplitz-backend.onrender.com/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL ||
+  'https://cosplitz-backend.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -15,11 +17,15 @@ const api = axios.create({
 // =======================
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    const token =
+      localStorage.getItem('authToken') ||
+      sessionStorage.getItem('authToken');
+
     if (token) {
       config.headers = config.headers || {};
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -38,6 +44,7 @@ api.interceptors.response.use(
       sessionStorage.removeItem('userInfo');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );
@@ -46,52 +53,46 @@ api.interceptors.response.use(
 // AUTH SERVICE
 // =======================
 export const authService = {
-  // Register user
+  // Register
   register: async (userData) => api.post('/register/', userData),
 
   // Login
   login: async (credentials) => api.post('/login/', credentials),
 
   // =======================
-  // SEND OTP
-  // backend:  POST /otp/send/  { email }
+  // GET OTP (resend)
+  // backend: GET /otp/<user_id>/
   // =======================
-  sendOTP: async (email) => {
-    return api.post('/otp/send/', { email });
-  },
-
-  // =======================
-  // RESEND OTP
-  // backend: POST /otp/resend/ { email }
-  // =======================
-  resendOTP: async (email) => {
-    return api.post('/otp/resend/', { email });
+  getOTP: async (userId) => {
+    return api.get(`/otp/${userId}/`);
   },
 
   // =======================
   // VERIFY OTP
-  // backend: POST /otp/verify/ { email, otp_code }
+  // backend: POST /verify_otp
+  // payload: { user_id, otp }
   // =======================
   verifyOTP: async (payload) => {
-    return api.post('/otp/verify/', payload);
+    return api.post('/verify_otp', payload);
   },
 
-  // Fetch user info
-  getUserInfo: async () => api.get('/user/info/'),
+  // Fetch user info (protected)
+  getUserInfo: async () => api.get('/user/info'),
 
   // KYC submission
   submitKYC: async (kycData) =>
     api.post('/kyc/submit/', kycData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
-  forgotPassword: async (email) => api.post('/forgot-password/', { email }),
+  forgotPassword: async (email) =>
+    api.post('/forgot-password/', { email }),
 
-  resetPassword: async (resetData) => api.post('/reset-password/', resetData),
+  resetPassword: async (resetData) =>
+    api.post('/reset-password/', resetData),
 
-  updateProfile: async (profileData) => api.put('/user/profile/', profileData)
+  updateProfile: async (profileData) =>
+    api.put('/user/profile/', profileData),
 };
 
 export default api;

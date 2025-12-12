@@ -13,6 +13,7 @@ export default function Register() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
@@ -39,11 +40,7 @@ export default function Register() {
     setLoading(true);
     clearError();
 
-    // Validation
-    const validPassword = formData.password.length >= 8 &&
-      /[A-Z]/.test(formData.password) &&
-      /\d/.test(formData.password);
-
+    // Basic validations
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -55,6 +52,11 @@ export default function Register() {
       setLoading(false);
       return;
     }
+
+    const validPassword =
+      formData.password.length >= 8 &&
+      /[A-Z]/.test(formData.password) &&
+      /\d/.test(formData.password);
 
     if (!validPassword) {
       setError("Your password does not meet all requirements.");
@@ -68,7 +70,6 @@ export default function Register() {
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address.");
@@ -85,24 +86,27 @@ export default function Register() {
         password: formData.password,
       });
 
-      if (response.status === 201 || response.status === 200) {
-        // Store user data in auth store
+      if (response.status === 200 || response.status === 201) {
+        const backendUserId = response.data?.id;
+        setUserId(backendUserId);
+
+        // Store user basic data
         registerStore({
           email: formData.email,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          nationality: formData.nationality
+          nationality: formData.nationality,
+          userId: backendUserId,
         });
 
         setRegistrationSuccess(true);
         setCurrentStep(2);
 
-        // Send OTP automatically after registration
+        // Request OTP via GET /otp/<user_id>/
         try {
-          await authService.sendOTP(formData.email.toLowerCase().trim());
+          await authService.getOTP(backendUserId);
         } catch (otpError) {
           console.warn("OTP request failed:", otpError);
-          // Continue anyway - user can request OTP manually
         }
       } else {
         setError(response.data?.message || "Registration failed. Please try again.");
@@ -120,16 +124,12 @@ export default function Register() {
   };
 
   const handleSocialRegister = (provider) => {
-    console.log(`Register with ${provider}`);
     setError(`${provider} registration is not available yet.`);
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (error) {
-      clearError();
-    }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (error) clearError();
   };
 
   const handleEmailVerificationSuccess = () => {
@@ -139,7 +139,8 @@ export default function Register() {
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
-        {/* LEFT IMAGE SIDE */}
+
+        {/* LEFT IMAGE */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
             <img src={loginlogo} alt="Register" className="rounded-lg w-full h-auto max-h-[400px] object-contain" />
@@ -148,37 +149,34 @@ export default function Register() {
                 Share Expenses & Resources in Real Time
               </h1>
               <p className="text-xl font-medium text-[#4B4B4B] leading-relaxed">
-                Connect with students, travelers, and locals to effortlessly manage costs and resources, anonymously and securely.
+                Connect with students, travelers, and locals to effortlessly manage costs and resources.
               </p>
             </div>
           </div>
         </div>
 
-        {/* RIGHT FORM SIDE */}
+        {/* RIGHT FORM */}
         <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
-            {/* STEP INDICATOR */}
+
+            {/* STEPS INDICATOR */}
             <div className="w-full flex justify-center items-center py-4">
               <div className="flex items-center gap-2 justify-center">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
                     <div
                       className={`w-4 h-4 rounded-full ${
-                        currentStep >= s.id
-                          ? "bg-green-600 shadow-md"
-                          : "bg-gray-300"
+                        currentStep >= s.id ? "bg-green-600 shadow-md" : "bg-gray-300"
                       }`}
                     ></div>
                     {i < steps.length - 1 && (
                       <div
                         className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 ${
-                          currentStep > s.id
-                            ? "border-green-600"
-                            : "border-gray-300"
+                          currentStep > s.id ? "border-green-600" : "border-gray-300"
                         }`}
                       ></div>
                     )}
@@ -187,7 +185,7 @@ export default function Register() {
               </div>
             </div>
 
-            {/* STEP 1: Registration Form */}
+            {/* STEP 1 */}
             {currentStep === 1 && (
               <RegistrationForm
                 formData={formData}
@@ -199,27 +197,23 @@ export default function Register() {
               />
             )}
 
-            {/* STEP 2: Email Verification */}
+            {/* STEP 2 */}
             {currentStep === 2 && (
               <EmailVerificationStep
                 email={formData.email}
+                userId={userId}
                 onVerify={handleEmailVerificationSuccess}
                 onBack={() => {
-                  if (registrationSuccess) {
-                    setCurrentStep(1);
-                  } else {
-                    navigate("/register");
-                  }
+                  if (registrationSuccess) setCurrentStep(1);
+                  else navigate("/register");
                 }}
                 error={error}
                 loading={loading}
               />
             )}
 
-            {/* STEP 3: Success */}
-            {currentStep === 3 && (
-              <Successful />
-            )}
+            {/* STEP 3 */}
+            {currentStep === 3 && <Successful />}
           </div>
         </div>
       </div>
