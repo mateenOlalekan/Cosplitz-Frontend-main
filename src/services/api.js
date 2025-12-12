@@ -1,77 +1,157 @@
 // src/services/api.js
-import axios from "axios";
-
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL ||
-  "https://cosplitz-backend.onrender.com/api";
+  process.env.REACT_APP_API_URL || "https://cosplitz-backend.onrender.com/api";
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
+/**
+ * Helper to get token from storage (local/session)
+ */
+function getAuthToken() {
+  try {
+    return localStorage.getItem("authToken") || sessionStorage.getItem("authToken") || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Generic request wrapper around fetch.
+ * Returns { status, data } where data is parsed JSON or null.
+ * Handles 401 by clearing tokens and redirecting to /login.
+ */
+async function request(path, options = {}) {
+  const url = `${API_BASE_URL}${path}`;
+
+  const defaultHeaders = {
     "Content-Type": "application/json",
-  },
-});
+    Accept: "application/json",
+  };
 
-// attach token from localStorage/sessionStorage
-api.interceptors.request.use(
-  (config) => {
-    const token =
-      localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  // If body is FormData, do not set Content-Type (browser will set multipart boundary)
+  const isFormData = options.body instanceof FormData;
 
-// handle auth global responses
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error?.response?.status === 401) {
-      // Clear tokens and redirect to login
+  const token = getAuthToken();
+  const headers = {
+    ...(isFormData ? {} : defaultHeaders),
+    ...(options.headers || {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const opts = {
+    credentials: "omit",
+    ...options,
+    headers,
+  };
+
+  // If JSON body and it's an object, stringify
+  if (opts.body && typeof opts.body === "object" && !(opts.body instanceof FormData)) {
+    opts.body = JSON.stringify(opts.body);
+  }
+
+  let res;
+  try {
+    res = await fetch(url, opts);
+  } catch (networkErr) {
+    // network-level failure
+    return { status: 0, data: { error: "Network error" }, rawError: networkErr };
+  }
+
+  // attempt parse JSON safely
+  let parsed = null;
+  try {
+    const text = await res.text();
+    parsed = text ? JSON.parse(text) : null;
+  } catch (e) {
+    parsed = null;
+  }
+
+  // handle unauthorized globally
+  if (res.status === 401) {
+    try {
       localStorage.removeItem("authToken");
       localStorage.removeItem("userInfo");
       sessionStorage.removeItem("authToken");
       sessionStorage.removeItem("userInfo");
-      // Use location assign to avoid SPA history issues in some dev setups
+    } catch (e) {}
+    // redirect to login to force re-auth
+    try {
       window.location.href = "/login";
-    }
-    return Promise.reject(error);
+    } catch (e) {}
+    return { status: 401, data: parsed };
   }
-);
 
+  return { status: res.status, data: parsed };
+}
+
+/**
+ * authService - methods used by UI
+ * All methods return the object { status, data }
+ */
 export const authService = {
-  // Register: POST /register/
-  register: async (userData) => api.post("/register/", userData),
+  register: async (userData) => {
+    return await request("/register/", {
+      method: "POST",
+      body: userData,
+    });
+  },
 
-  // Login: POST /login/
-  login: async (credentials) => api.post("/login/", credentials),
+  login: async (credentials) => {
+    return await request("/login/", {
+      method: "POST",
+      body: credentials,
+    });
+  },
 
-  // Get user info: GET /user/info
-  getUserInfo: async () => api.get("/user/info"),
+  getUserInfo: async () => {
+    return await request("/user/info", {
+      method: "GET",
+    });
+  },
 
   // Request OTP: GET /otp/<user_id>/
-  getOTP: async (userId) => api.get(`/otp/${userId}/`),
+  getOTP: async (userId) => {
+    if (!userId) return { status: 400, data: { message: "Missing userId" } };
+    return await request(`/otp/${encodeURIComponent(userId)}/`, {
+      method: "GET",
+    });
+  },
 
   // Verify OTP: POST /verify_otp/ with { user_id, otp_code }
-  verifyOTP: async ({ user_id, otp_code }) =>
-    api.post("/verify_otp/", { user_id, otp_code }),
+  verifyOTP: async ({ user_id, otp_code }) => {
+    return await request("/verify_otp/", {
+      method: "POST",
+      body: { user_id, otp_code },
+    });
+  },
 
-  // KYC submit (multipart)
-  submitKYC: async (kycData) =>
-    api.post("/kyc/submit/", kycData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+  // KYC submit (multipart) - pass FormData
+  submitKYC: async (kycData) => {
+    return await request("/kyc/submit/", {
+      method: "POST",
+      body: kycData,
+      // don't set Content-Type when using FormData -- request() handles it
+    });
+  },
 
-  // Forgot / reset
-  forgotPassword: async (email) => api.post("/forgot-password/", { email }),
-  resetPassword: async (data) => api.post("/reset-password/", data),
+  forgotPassword: async (email) => {
+    return await request("/forgot-password/", {
+      method: "POST",
+      body: { email },
+    });
+  },
 
-  // Update profile
-  updateProfile: async (profileData) => api.put("/user/profile/", profileData),
+  resetPassword: async (data) => {
+    return await request("/reset-password/", {
+      method: "POST",
+      body: data,
+    });
+  },
+
+  updateProfile: async (profileData) => {
+    return await request("/user/profile/", {
+      method: "PUT",
+      body: profileData,
+    });
+  },
 };
 
-export default api;
+export default { request, authService };
