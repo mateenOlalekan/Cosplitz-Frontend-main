@@ -157,11 +157,11 @@ export const authService = {
     });
   },
 
-  // ✅ FIXED: Verify OTP with correct parameter format
-  verifyOTP: async (user_id, otp_code) => {
+  // ✅ MODIFIED: verifyOTP to accept email instead of userId
+  verifyOTP: async (email, otp) => {
     return await request("/verify_otp", {
       method: "POST",
-      body: { user_id, otp_code },
+      body: { email, otp },
     });
   },
 
