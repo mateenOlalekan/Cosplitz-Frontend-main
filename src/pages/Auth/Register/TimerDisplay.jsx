@@ -1,4 +1,6 @@
 // src/components/TimerDisplay.jsx
+import React from "react";
+
 function TimerDisplay({ onResend, timeLeft }) {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;

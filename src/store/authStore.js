@@ -1,123 +1,62 @@
 // src/store/authStore.js
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+/**
+ * authStore responsibilities:
+ * - store token & user object
+ * - provide helpers: setToken, setUser, logout, register (store temp reg info)
+ * - store error messages
+ */
 
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      user: null,
+      // state
+      user: null, // { id, email, ... } from backend
       token: null,
-      isAuthenticated: false,
-      isLoading: true,
       error: null,
-      userDetails: null,
 
-      login: (user, token) => {
+      // actions
+      setToken: (token, persistToken = true) => {
+        set({ token });
+        if (persistToken) localStorage.setItem("authToken", token);
+        else sessionStorage.setItem("authToken", token);
+      },
+
+      setUser: (userObj) => {
+        set({ user: userObj });
         try {
-          localStorage.setItem('authToken', token);
-          localStorage.setItem('userInfo', JSON.stringify(user));
+          localStorage.setItem("userInfo", JSON.stringify(userObj));
         } catch (e) {}
-
-        set({
-          user,
-          token,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-        });
       },
 
-      register: (userData) => {
+      // registration helper to keep minimal data across steps
+      register: (payload) =>
         set({
-          user: { email: userData.email, ...userData },
-          isAuthenticated: false,
-          error: null,
-        });
-      },
+          user: {
+            ...get().user,
+            ...payload,
+          },
+        }),
 
       logout: () => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userInfo');
-        sessionStorage.removeItem('authToken');
-        sessionStorage.removeItem('userInfo');
-
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          userDetails: null,
-          error: null,
-        });
+        set({ user: null, token: null, error: null });
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userInfo");
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("userInfo");
       },
 
-      setUserDetails: (details) => set({ userDetails: details }),
-
-      setError: (error) => set({ error }),
-
+      setError: (msg) => set({ error: msg }),
       clearError: () => set({ error: null }),
-
-      initializeAuth: () => {
-        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-        const userInfo = localStorage.getItem('userInfo') || sessionStorage.getItem('userInfo');
-
-        if (token && userInfo) {
-          try {
-            const user = JSON.parse(userInfo);
-            set({
-              user,
-              token,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } catch (error) {
-            set({
-              user: null,
-              token: null,
-              isAuthenticated: false,
-              isLoading: false,
-            });
-          }
-        } else {
-          set({ isLoading: false });
-        }
-      },
-
-      isAdmin: () => {
-        const { user } = get();
-        return user?.role === 'admin' || user?.is_admin === true;
-      },
-
-      fetchUserInfo: async () => {
-        try {
-          const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-          if (!token) return;
-
-          const response = await fetch(
-            `${process.env.REACT_APP_API_URL || 'https://cosplitz-backend.onrender.com'}/api/user/info`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            set({ userDetails: data });
-          }
-        } catch (error) {
-          console.error('Failed to fetch user info:', error);
-        }
-      },
     }),
     {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        token: state.token,
-        isAuthenticated: state.isAuthenticated,
-      }),
+      name: "auth-storage", // storage key
+      // only persist token & user
+      partialize: (state) => ({ token: state.token, user: state.user }),
     }
   )
 );
+
+export default useAuthStore;

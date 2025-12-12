@@ -6,16 +6,14 @@ import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
 import PasswordValidation from "../../components/PasswordValidation";
-import { authService } from "../../services/api";
-import { useAuthStore } from "../../store/authStore";
 
-function RegistrationForm({ 
-  formData, 
-  handleInputChange, 
-  handleFormSubmit, 
-  handleSocialRegister, 
-  loading, 
-  error 
+function RegistrationForm({
+  formData,
+  handleInputChange,
+  handleFormSubmit,
+  handleSocialRegister,
+  loading,
+  error,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -34,13 +32,12 @@ function RegistrationForm({
         </div>
       )}
 
-      {/* SOCIAL BUTTONS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={() => handleSocialRegister('google')}
+          onClick={() => handleSocialRegister("google")}
           className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <FcGoogle size={20} />
@@ -51,7 +48,7 @@ function RegistrationForm({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={() => handleSocialRegister('apple')}
+          onClick={() => handleSocialRegister("apple")}
           className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <PiAppleLogoBold size={20} />
@@ -59,7 +56,6 @@ function RegistrationForm({
         </motion.button>
       </div>
 
-      {/* DIVIDER */}
       <div className="flex items-center my-4">
         <div className="flex-grow border-t border-gray-300"></div>
         <span className="mx-2 text-gray-500 text-sm">Or</span>
@@ -71,7 +67,7 @@ function RegistrationForm({
           { key: "firstName", label: "First Name", type: "text" },
           { key: "lastName", label: "Last Name", type: "text" },
           { key: "email", label: "Email Address", type: "email" },
-          { key: "nationality", label: "Nationality", type: "text" }
+          { key: "nationality", label: "Nationality", type: "text" },
         ].map((field) => (
           <div key={field.key}>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
@@ -88,7 +84,6 @@ function RegistrationForm({
           </div>
         ))}
 
-        {/* PASSWORD */}
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-1">
             Password *
@@ -113,7 +108,6 @@ function RegistrationForm({
           <PasswordValidation password={formData.password} />
         </div>
 
-        {/* TERMS */}
         <label className="flex gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
           <input
             type="checkbox"

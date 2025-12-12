@@ -10,35 +10,32 @@ function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading
   const [timeLeft, setTimeLeft] = useState(180);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [localError, setLocalError] = useState("");
+
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
 
-  // ============================
-  // TIMER
-  // ============================
+  // If userId not passed, try from store
+  const storeUser = useAuthStore((s) => s.user);
+
+  const resolvedUserId = userId || storeUser?.id;
+
   useEffect(() => {
     if (timeLeft === 0) return;
-    const timer = setInterval(() => setTimeLeft((prev) => Math.max(prev - 1, 0)), 1000);
+    const timer = setInterval(() => setTimeLeft(prev => Math.max(prev - 1, 0)), 1000);
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // ============================
-  // OTP INPUT CHANGE
-  // ============================
   const handleChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
-
     const newOtp = [...emailOtp];
     newOtp[index] = value;
     setEmailOtp(newOtp);
 
-    // Auto focus next
     if (value && index < 5) {
       document.getElementById(`otp-input-${index + 1}`)?.focus();
     }
 
-    // Auto verify when full
-    if (newOtp.every((digit) => digit !== "")) {
+    if (newOtp.every(d => d !== "")) {
       handleVerify(newOtp.join(""));
     }
   };
@@ -49,18 +46,20 @@ function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading
     }
   };
 
-  // ============================
-  // VERIFY OTP
-  // ============================
   const handleVerify = async (otp) => {
+    if (!resolvedUserId) {
+      setLocalError("Missing user ID — cannot verify OTP.");
+      return;
+    }
+
     setVerificationLoading(true);
     setLocalError("");
     clearError();
 
     try {
       const response = await authService.verifyOTP({
-        user_id: userId,
-        otp: otp
+        user_id: resolvedUserId,
+        otp_code: otp,
       });
 
       if (response.status === 200 || response.status === 201) {
@@ -68,38 +67,33 @@ function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading
       } else {
         setLocalError(response.data?.message || "Invalid OTP. Please try again.");
       }
-    } catch (error) {
-      console.error("OTP verification error:", error);
-      setLocalError(error.response?.data?.message || "Invalid OTP. Please try again.");
+    } catch (err) {
+      console.error("OTP verification error:", err);
+      setLocalError(err?.response?.data?.message || "Invalid OTP. Please try again.");
     } finally {
       setVerificationLoading(false);
     }
   };
 
-  // ============================
-  // RESEND OTP
-  // ============================
   const handleResendOTP = async () => {
+    setLocalError("");
+    clearError();
+
+    if (!resolvedUserId) {
+      setLocalError("Missing user ID — cannot resend OTP.");
+      return;
+    }
+
     try {
-      setLocalError("");
-      clearError();
-
-      if (!userId) {
-        setLocalError("Unable to resend OTP. Missing user ID.");
-        return;
-      }
-
-      const response = await authService.getOTP(userId);
-
-      if (response?.status === 200) {
+      const response = await authService.getOTP(resolvedUserId);
+      if (response.status === 200) {
         setTimeLeft(180);
         setEmailOtp(["", "", "", "", "", ""]);
-        return;
+      } else {
+        setLocalError(response.data?.message || "Failed to resend OTP.");
       }
-
-      setLocalError(response?.data?.message || "Failed to resend OTP.");
-    } catch (error) {
-      console.error("Resend OTP Error:", error);
+    } catch (err) {
+      console.error("Resend OTP error:", err);
       setLocalError("Failed to resend OTP. Try again.");
     }
   };
@@ -147,9 +141,9 @@ function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading
 
       <button
         onClick={() => handleVerify(emailOtp.join(""))}
-        disabled={verificationLoading || emailOtp.some((digit) => digit === "")}
+        disabled={verificationLoading || emailOtp.some((d) => d === "")}
         className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-4 ${
-          verificationLoading || emailOtp.some((digit) => digit === "")
+          verificationLoading || emailOtp.some((d) => d === "")
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-green-700"
         }`}
