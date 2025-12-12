@@ -159,7 +159,7 @@ export const authService = {
 
   // ✅ FIXED: Verify OTP with correct parameter format
   verifyOTP: async (user_id, otp_code) => {
-    return await request("/verify_otp/", {
+    return await request("/verify_otp", {
       method: "POST",
       body: { user_id, otp_code },
     });
