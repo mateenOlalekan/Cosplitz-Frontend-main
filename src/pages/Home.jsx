@@ -4,7 +4,6 @@
  import Why from '../components/Why';
  import Who from '../components/Who';
  import Work from "../components/Work";
- import Choose from "../components/Choose";
 
  export default function Home() {
    return (
