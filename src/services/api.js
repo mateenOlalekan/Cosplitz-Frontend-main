@@ -108,7 +108,7 @@ export const authService = {
     if (!userId)
       return { status: 400, data: { message: "Missing userId" } };
 
-    return await request(`/otp/${encodeURIComponent(userId)}/`, {
+    return await request(`/otp/11/${encodeURIComponent(userId)}/`, {
       method: "GET",
     });
   },

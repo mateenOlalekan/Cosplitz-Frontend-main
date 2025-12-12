@@ -182,7 +182,7 @@ export default function Register() {
                     <div className={`w-4 h-4 rounded-full ${currentStep >= s.id ? "bg-green-600 shadow-md" : "bg-gray-300"}`}></div>
                     {i < steps.length - 1 && (
                       <div
-                        className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 ${
+                        className={`w-24 md:w-36 lg:w-48 border-t-2 mx-2 ${
                           currentStep > s.id ? "border-green-600" : "border-gray-300"
                         }`}
                       ></div>

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import loginlogo from "../../assets/loginmain.jpg";
-import logo from "../../assets/newlogo.svg";
+import loginlogo from "../../../../assets/loginmain.jpg";
+import logo from "../../../../assets/newlogo.svg";
 import { useNavigate } from "react-router-dom";
 
 export default function PasswordResetSuccess() {
