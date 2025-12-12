@@ -1,157 +1,142 @@
-// src/pages/EmailVerificationStep.jsx
-import React, { useState, useEffect } from "react";
-import { ChevronLeft, Mail } from "lucide-react";
-import { authService } from "../../../services/api";
-import { useAuthStore } from "../../../store/authStore";
-import TimerDisplay from "../TimerDisplay";
+import { useState, useEffect } from "react";
+import { authService } from "../../services/api";
+import { ArrowLeft } from "lucide-react";
 
-function EmailVerificationStep({ email, userId, onVerify, onBack, error, loading }) {
-  const [emailOtp, setEmailOtp] = useState(["", "", "", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(180);
-  const [verificationLoading, setVerificationLoading] = useState(false);
-  const [localError, setLocalError] = useState("");
+export default function EmailVerificationStep({
+  email,
+  userId,
+  onBack,
+  onSuccess,
+}) {
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [timer, setTimer] = useState(60);
 
-  const setError = useAuthStore((state) => state.setError);
-  const clearError = useAuthStore((state) => state.clearError);
-
-  // If userId not passed, try from store
-  const storeUser = useAuthStore((s) => s.user);
-
-  const resolvedUserId = userId || storeUser?.id;
-
+  // Countdown timer
   useEffect(() => {
-    if (timeLeft === 0) return;
-    const timer = setInterval(() => setTimeLeft(prev => Math.max(prev - 1, 0)), 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+    if (timer <= 0) return;
 
-  const handleChange = (index, value) => {
-    if (!/^\d?$/.test(value)) return;
-    const newOtp = [...emailOtp];
+    const interval = setInterval(() => {
+      setTimer((t) => t - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timer]);
+
+  // Handle OTP input
+  const handleChange = (value, index) => {
+    if (!/^[0-9]?$/.test(value)) return;
+
+    const newOtp = [...otp];
     newOtp[index] = value;
-    setEmailOtp(newOtp);
+    setOtp(newOtp);
 
+    // Move to next input automatically
     if (value && index < 5) {
-      document.getElementById(`otp-input-${index + 1}`)?.focus();
-    }
-
-    if (newOtp.every(d => d !== "")) {
-      handleVerify(newOtp.join(""));
+      document.getElementById(`otp-${index + 1}`).focus();
     }
   };
 
-  const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !emailOtp[index] && index > 0) {
-      document.getElementById(`otp-input-${index - 1}`)?.focus();
-    }
-  };
+  // Submit OTP
+  const handleVerify = async () => {
+    const code = otp.join("");
 
-  const handleVerify = async (otp) => {
-    if (!resolvedUserId) {
-      setLocalError("Missing user ID — cannot verify OTP.");
+    if (code.length !== 6) {
+      setError("Please enter the complete 6-digit code.");
       return;
     }
 
-    setVerificationLoading(true);
-    setLocalError("");
-    clearError();
+    setLoading(true);
+    setError("");
 
     try {
-      const response = await authService.verifyOTP({
-        user_id: resolvedUserId,
-        otp_code: otp,
-      });
+      const response = await authService.verifyOTP(userId, code);
 
-      if (response.status === 200 || response.status === 201) {
-        onVerify();
+      if (response.success) {
+        onSuccess();
       } else {
-        setLocalError(response.data?.message || "Invalid OTP. Please try again.");
+        setError(response.message || "Invalid OTP");
       }
     } catch (err) {
-      console.error("OTP verification error:", err);
-      setLocalError(err?.response?.data?.message || "Invalid OTP. Please try again.");
-    } finally {
-      setVerificationLoading(false);
+      setError(
+        err?.message || "Verification failed. Please try again."
+      );
     }
+
+    setLoading(false);
   };
 
-  const handleResendOTP = async () => {
-    setLocalError("");
-    clearError();
-
-    if (!resolvedUserId) {
-      setLocalError("Missing user ID — cannot resend OTP.");
-      return;
-    }
+  // Resend OTP
+  const handleResend = async () => {
+    setResendLoading(true);
+    setError("");
 
     try {
-      const response = await authService.getOTP(resolvedUserId);
-      if (response.status === 200) {
-        setTimeLeft(180);
-        setEmailOtp(["", "", "", "", "", ""]);
+      const response = await authService.resendOTP(userId);
+
+      if (!response.success) {
+        setError(response.message || "Could not resend OTP");
       } else {
-        setLocalError(response.data?.message || "Failed to resend OTP.");
+        setTimer(60); // reset countdown
       }
     } catch (err) {
-      console.error("Resend OTP error:", err);
-      setLocalError("Failed to resend OTP. Try again.");
+      setError("Something went wrong while resending code.");
     }
+
+    setResendLoading(false);
   };
 
   return (
-    <div className="flex flex-col items-center gap-5 py-8 relative w-full">
-      <button
-        onClick={onBack}
-        className="absolute left-4 top-4 text-gray-600 hover:text-green-600 transition"
-        disabled={verificationLoading}
-      >
-        <ChevronLeft size={28} />
+    <div className="w-full max-w-md mx-auto mt-8">
+      <button onClick={onBack} className="flex items-center gap-1 mb-4 text-gray-600">
+        <ArrowLeft size={18} /> Back
       </button>
 
-      <h2 className="text-xl font-bold text-gray-800 mt-8">Verify Your Email</h2>
-      <p className="text-gray-500 text-sm text-center max-w-xs">
-        Enter the code sent to <span className="text-green-600 font-medium">{email}</span>.
+      <h2 className="text-2xl font-bold">Verify your email</h2>
+      <p className="text-gray-500 mt-1">
+        Enter the 6-digit code sent to <span className="font-semibold">{email}</span>
       </p>
 
-      <div className="bg-[#1F82250D] rounded-full w-14 h-14 flex items-center justify-center">
-        <Mail className="text-[#1F8225]" />
-      </div>
-
-      <div className="flex gap-2 mt-2">
-        {emailOtp.map((digit, index) => (
+      {/* OTP Inputs */}
+      <div className="flex justify-between mt-6">
+        {otp.map((digit, i) => (
           <input
-            key={index}
-            id={`otp-input-${index}`}
+            key={i}
+            id={`otp-${i}`}
             type="text"
             maxLength="1"
             value={digit}
-            onChange={(e) => handleChange(index, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(index, e)}
-            disabled={verificationLoading}
-            className="w-10 h-10 sm:w-12 sm:h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-600 outline-none disabled:opacity-50"
+            onChange={(e) => handleChange(e.target.value, i)}
+            className="w-12 h-12 border rounded-lg text-center text-lg font-semibold focus:ring-2 focus:ring-blue-500"
           />
         ))}
       </div>
 
-      <TimerDisplay onResend={handleResendOTP} timeLeft={timeLeft} />
-
-      {(localError || error) && (
-        <p className="text-red-600 text-sm text-center max-w-xs">{localError || error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm mt-3">{error}</p>}
 
       <button
-        onClick={() => handleVerify(emailOtp.join(""))}
-        disabled={verificationLoading || emailOtp.some((d) => d === "")}
-        className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-4 ${
-          verificationLoading || emailOtp.some((d) => d === "")
-            ? "opacity-50 cursor-not-allowed"
-            : "hover:bg-green-700"
-        }`}
+        onClick={handleVerify}
+        disabled={loading}
+        className="w-full bg-blue-600 text-white rounded-lg py-3 mt-6 hover:bg-blue-700 disabled:opacity-50"
       >
-        {verificationLoading ? "Verifying..." : "Verify Email"}
+        {loading ? "Verifying..." : "Verify Email"}
       </button>
+
+      <div className="text-center mt-4 text-sm text-gray-600">
+        {timer > 0 ? (
+          <p>Resend code in <b>{timer}s</b></p>
+        ) : (
+          <button
+            onClick={handleResend}
+            disabled={resendLoading}
+            className="text-blue-600 hover:underline"
+          >
+            {resendLoading ? "Resending..." : "Resend Code"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
-
-export default EmailVerificationStep;

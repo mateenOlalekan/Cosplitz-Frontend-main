@@ -41,6 +41,7 @@ export default function Register() {
     setLoading(true);
     clearError();
 
+    // validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -87,7 +88,9 @@ export default function Register() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        const backendUserId = response.data?.id;
+        // 🔥 Correct extraction
+        const backendUserId = response.data?.user?.id;
+
         if (!backendUserId) {
           setError("Server did not return a user id.");
           setLoading(false);
@@ -107,20 +110,25 @@ export default function Register() {
         setRegistrationSuccess(true);
         setCurrentStep(2);
 
-        // request otp
+        // request OTP
         try {
           await authService.getOTP(backendUserId);
         } catch (otpErr) {
           console.warn("OTP request failed:", otpErr);
         }
+
       } else {
         setError(response.data?.message || "Registration failed. Try again.");
       }
+
     } catch (err) {
       console.error("Registration error:", err);
       setError(
-        err?.response?.data?.message || err?.response?.data?.error || "Network error. Please try again."
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Network error. Please try again."
       );
+
     } finally {
       setLoading(false);
     }
@@ -142,6 +150,8 @@ export default function Register() {
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
+
+        {/* Left section */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
             <img src={loginlogo} alt="Register" className="rounded-lg w-full h-auto max-h-[400px] object-contain" />
@@ -156,19 +166,26 @@ export default function Register() {
           </div>
         </div>
 
+        {/* Right section */}
         <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
+
+            {/* Step indicators */}
             <div className="w-full flex justify-center items-center py-4">
               <div className="flex items-center gap-2 justify-center">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
                     <div className={`w-4 h-4 rounded-full ${currentStep >= s.id ? "bg-green-600 shadow-md" : "bg-gray-300"}`}></div>
                     {i < steps.length - 1 && (
-                      <div className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 ${currentStep > s.id ? "border-green-600" : "border-gray-300"}`}></div>
+                      <div
+                        className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 ${
+                          currentStep > s.id ? "border-green-600" : "border-gray-300"
+                        }`}
+                      ></div>
                     )}
                   </div>
                 ))}
@@ -187,14 +204,13 @@ export default function Register() {
             )}
 
             {currentStep === 2 && (
-              <EmailVerificationStep
-                email={formData.email}
-                userId={userId}
-                onVerify={handleEmailVerificationSuccess}
-                onBack={() => setCurrentStep(1)}
-                error={error}
-                loading={loading}
-              />
+<EmailVerificationStep
+  email={formData.email}
+  userId={userId}
+  onBack={() => setCurrentStep(1)}
+  onSuccess={() => setCurrentStep(3)}
+/>
+
             )}
 
             {currentStep === 3 && <Successful />}
