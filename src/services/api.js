@@ -152,7 +152,7 @@ export const authService = {
       };
     }
 
-    return await request(`/otp/11/${encodeURIComponent(userId)}/`, {
+    return await request(`/otp/${encodeURIComponent(userId)}/`, {
       method: "GET",
     });
   },
