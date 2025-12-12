@@ -1,7 +1,8 @@
 // routes/ProtectedRoute.js
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import Loading from "../components/Loading"; // Import directly
+const Loading = React.lazy(() => import("../components/Loading"));
+ // Import directly
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();

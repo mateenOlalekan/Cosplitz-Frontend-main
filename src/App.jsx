@@ -14,12 +14,12 @@ const Loading = lazy(() => import("./components/Loading"));
 // Public Pages
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Auth/Login/index"));
-const Register = lazy(() => import("./pages/Register")); // ✅ FIXED: Changed from Auth/Register/index
+const Register = lazy(() => import("./pages/Auth/Register/index")); // ✅ FIXED: Changed from Auth/Register/index
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Forget = lazy(() => import("./pages/Auth/ForgetPassword"));
+const Forget = lazy(() => import("./pages/Auth/ForgetPassword/ForgetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
-const ConfirmPassword = lazy(() => import("./pages/Auth/ConfirmPassword"));
-const PasswordResetSuccess = lazy(() => import("./pages/Auth/PasswordReset"));
+const ConfirmPassword = lazy(() => import("./pages/Auth/ConfirmPassword/ConfirmPassword"));
+const PasswordResetSuccess = lazy(() => import("./pages/PasswordResetSuccess"));
 const OnboardingSteps = lazy(() => import("./pages/OnBoardingSteps"));
 const KYCFlow = lazy(() => import("./pages/Identification/KYCFlow"));
 
