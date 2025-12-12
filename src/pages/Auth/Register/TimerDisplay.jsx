@@ -1,6 +1,4 @@
-
-function TimerDisplay() {
-  return (
+// src/components/TimerDisplay.jsx
 function TimerDisplay({ onResend, timeLeft }) {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -25,7 +23,5 @@ function TimerDisplay({ onResend, timeLeft }) {
     </div>
   );
 }
-  )
-}
 
-export default TimerDisplay
+export default TimerDisplay;
