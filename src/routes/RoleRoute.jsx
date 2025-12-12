@@ -1,10 +1,11 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+import Loading from "../components/Loading"; // Import directly
 
 const RoleRoute = ({ allowedRoles = [] }) => {
   const { isAuthenticated, isLoading, user } = useAuthStore();
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <Loading />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   const userRole = user?.role || "user";

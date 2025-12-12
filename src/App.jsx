@@ -1,8 +1,12 @@
-// Fixed and debugged App.js with working lazy loading and routing
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import "./App.css";
+
+// Import route components directly (not lazy)
+import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminProtectedRoute from "./routes/AdminRoute";
+import RoleRoute from "./routes/RoleRoute";
 
 // Loading Component
 const Loading = lazy(() => import("./components/Loading"));
@@ -10,7 +14,7 @@ const Loading = lazy(() => import("./components/Loading"));
 // Public Pages
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Auth/Login/index"));
-const Register = lazy(() => import("./pages/Auth/Register/index"));
+const Register = lazy(() => import("./pages/Register")); // ✅ FIXED: Changed from Auth/Register/index
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Forget = lazy(() => import("./pages/Auth/ForgetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
@@ -41,14 +45,19 @@ const AdminDashboard = lazy(() => import("./pages/Admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/Admin/AdminUsers"));
 const AdminSplits = lazy(() => import("./pages/Admin/AdminSplits"));
 
-// Route Components
-const ProtectedRoute = lazy(() => import("./routes/ProtectedRoute"));
-const AdminProtectedRoute = lazy(() => import("./routes/AdminRoute"));
-const RoleRoute = lazy(() => import("./routes/RoleRoute"));
-
 // Error Pages
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
+
+// Simple fallback component
+const FallbackLoader = () => (
+  <div className="w-full h-screen flex items-center justify-center bg-gray-50">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
@@ -58,7 +67,7 @@ function App() {
   }, [initializeAuth]);
 
   return (
-    <Suspense fallback={<div className="w-full h-screen flex items-center justify-center"><Loading /></div>}>
+    <Suspense fallback={<FallbackLoader />}>
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<Home />} />
@@ -120,6 +129,3 @@ function App() {
 }
 
 export default App;
-
-
- 

@@ -54,7 +54,14 @@ async function request(path, options = {}) {
   try {
     res = await fetch(url, opts);
   } catch (networkErr) {
-    return { status: 0, data: { error: "Network error" }, rawError: networkErr };
+    return { 
+      status: 0, 
+      data: { 
+        error: "Network error. Please check your connection.",
+        message: "Network error. Please check your connection."
+      }, 
+      rawError: networkErr 
+    };
   }
 
   let parsed = null;
@@ -62,8 +69,11 @@ async function request(path, options = {}) {
   try {
     const text = await res.text();
     parsed = text ? JSON.parse(text) : null;
-  } catch {
-    parsed = null;
+  } catch (parseErr) {
+    parsed = { 
+      error: "Failed to parse response", 
+      message: "Server returned an invalid response"
+    };
   }
 
   // handle 401 invalid token
@@ -71,16 +81,43 @@ async function request(path, options = {}) {
     try {
       localStorage.clear();
       sessionStorage.clear();
-    } catch (e) {}
+    } catch (e) {
+      console.error("Error clearing storage:", e);
+    }
 
-    try {
-      window.location.href = "/login";
-    } catch (e) {}
+    // Only redirect if not on login page
+    if (!window.location.pathname.includes('/login')) {
+      try {
+        window.location.href = "/login";
+      } catch (e) {
+        console.error("Redirect error:", e);
+      }
+    }
 
-    return { status: 401, data: parsed };
+    return { 
+      status: 401, 
+      data: parsed || { message: "Unauthorized. Please login again." },
+      unauthorized: true
+    };
   }
 
-  return { status: res.status, data: parsed };
+  // Handle 400, 403, 404, 500 errors
+  if (res.status >= 400 && res.status !== 401) {
+    return {
+      status: res.status,
+      data: parsed || { 
+        error: `Request failed with status ${res.status}`,
+        message: `Request failed with status ${res.status}`
+      },
+      error: true
+    };
+  }
+
+  return { 
+    status: res.status, 
+    data: parsed,
+    success: res.status >= 200 && res.status < 300
+  };
 }
 
 export const authService = {
@@ -105,26 +142,32 @@ export const authService = {
   },
 
   getOTP: async (userId) => {
-    if (!userId)
-      return { status: 400, data: { message: "Missing userId" } };
+    if (!userId) {
+      return { 
+        status: 400, 
+        data: { 
+          message: "Missing userId",
+          error: "User ID is required"
+        } 
+      };
+    }
 
     return await request(`/otp/11/${encodeURIComponent(userId)}/`, {
       method: "GET",
     });
   },
 
-  verifyOTP: async ({ user_id, otp_code }) => {
+  // ✅ FIXED: Verify OTP with correct parameter format
+  verifyOTP: async (user_id, otp_code) => {
     return await request("/verify_otp/", {
       method: "POST",
       body: { user_id, otp_code },
     });
   },
 
-  submitKYC: async (kycData) => {
-    return await request("/kyc/submit/", {
-      method: "POST",
-      body: kycData,
-    });
+  // ✅ ADDED: Resend OTP method
+  resendOTP: async (userId) => {
+    return await authService.getOTP(userId);
   },
 
   forgotPassword: async (email) => {
@@ -147,6 +190,96 @@ export const authService = {
       body: profileData,
     });
   },
+
+  submitKYC: async (kycData) => {
+    return await request("/kyc/submit/", {
+      method: "POST",
+      body: kycData,
+    });
+  },
+
+  // Check email availability
+  checkEmail: async (email) => {
+    return await request("/check-email/", {
+      method: "POST",
+      body: { email },
+    });
+  },
+
+  // Social login
+  socialLogin: async (provider, token) => {
+    return await request(`/social/${provider}/`, {
+      method: "POST",
+      body: { access_token: token },
+    });
+  },
+
+  // Logout
+  logout: async () => {
+    return await request("/logout/", {
+      method: "POST",
+    });
+  }
 };
 
-export default { request, authService };
+// Dashboard services
+export const dashboardService = {
+  getOverview: async () => {
+    return await request("/dashboard/overview", {
+      method: "GET",
+    });
+  },
+
+  getAnalytics: async (period = "monthly") => {
+    return await request(`/dashboard/analytics?period=${period}`, {
+      method: "GET",
+    });
+  },
+
+  createSplit: async (splitData) => {
+    return await request("/splits/create", {
+      method: "POST",
+      body: splitData,
+    });
+  },
+
+  getWalletBalance: async () => {
+    return await request("/wallet/balance", {
+      method: "GET",
+    });
+  },
+
+  getNotifications: async () => {
+    return await request("/notifications", {
+      method: "GET",
+    });
+  }
+};
+
+// Admin services
+export const adminService = {
+  getDashboardStats: async () => {
+    return await request("/admin/dashboard", {
+      method: "GET",
+    });
+  },
+
+  getUsers: async (page = 1, limit = 20) => {
+    return await request(`/admin/users?page=${page}&limit=${limit}`, {
+      method: "GET",
+    });
+  },
+
+  getSplits: async (page = 1, limit = 20) => {
+    return await request(`/admin/splits?page=${page}&limit=${limit}`, {
+      method: "GET",
+    });
+  }
+};
+
+export default { 
+  request, 
+  authService, 
+  dashboardService, 
+  adminService 
+};

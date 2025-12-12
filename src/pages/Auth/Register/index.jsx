@@ -1,5 +1,5 @@
 // src/pages/Register.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
@@ -14,12 +14,15 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const navigate = useNavigate();
 
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
   const registerStore = useAuthStore((state) => state.register);
+  const setUser = useAuthStore((state) => state.setUser);
+  const setToken = useAuthStore((state) => state.setToken);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -31,17 +34,22 @@ export default function Register() {
   });
 
   const steps = [
-    { id: 1, label: "Account" },
-    { id: 2, label: "Verify Email" },
-    { id: 3, label: "Success" },
+    { id: 1, label: "Account", description: "Create your account" },
+    { id: 2, label: "Verify Email", description: "Verify your email address" },
+    { id: 3, label: "Success", description: "Account created successfully" },
   ];
+
+  // Clear error when component mounts or step changes
+  useEffect(() => {
+    clearError();
+  }, [currentStep, clearError]);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     clearError();
 
-    // validation
+    // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -54,13 +62,14 @@ export default function Register() {
       return;
     }
 
+    // Password validation
     const validPassword =
       formData.password.length >= 8 &&
       /[A-Z]/.test(formData.password) &&
       /\d/.test(formData.password);
 
     if (!validPassword) {
-      setError("Your password does not meet all requirements.");
+      setError("Your password must be at least 8 characters long, contain an uppercase letter and a number.");
       setLoading(false);
       return;
     }
@@ -71,6 +80,7 @@ export default function Register() {
       return;
     }
 
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address.");
@@ -79,46 +89,97 @@ export default function Register() {
     }
 
     try {
-      const response = await authService.register({
+      // Prepare registration data
+      const registrationData = {
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
         email: formData.email.toLowerCase().trim(),
         nationality: formData.nationality.trim(),
         password: formData.password,
-      });
+      };
+
+      console.log("Sending registration request:", registrationData);
+
+      const response = await authService.register(registrationData);
+      console.log("Registration response:", response);
 
       if (response.status === 200 || response.status === 201) {
-        // 🔥 Correct extraction
-        const backendUserId = response.data?.user?.id;
+        // Handle different possible response structures
+        const backendUserId = 
+          response.data?.user?.id || 
+          response.data?.id || 
+          response.data?.user_id ||
+          response.data?.userId;
+
+        const userEmail = response.data?.user?.email || formData.email;
+        const userName = response.data?.user?.name || `${formData.firstName} ${formData.lastName}`;
+        const userToken = response.data?.token || response.data?.access_token;
 
         if (!backendUserId) {
-          setError("Server did not return a user id.");
+          console.error("User ID not found in response:", response.data);
+          setError("Registration successful but user ID not received. Please try logging in.");
           setLoading(false);
           return;
         }
 
         setUserId(backendUserId);
+        setRegisteredEmail(userEmail);
 
+        // Store user data temporarily for verification
         registerStore({
-          email: formData.email,
+          email: userEmail,
           firstName: formData.firstName,
           lastName: formData.lastName,
           nationality: formData.nationality,
           userId: backendUserId,
         });
 
+        // If token is returned, set it
+        if (userToken) {
+          setToken(userToken);
+          setUser({
+            id: backendUserId,
+            email: userEmail,
+            name: userName,
+            role: "user",
+            isVerified: false
+          });
+        }
+
         setRegistrationSuccess(true);
         setCurrentStep(2);
 
-        // request OTP
+        // Request OTP for verification
         try {
-          await authService.getOTP(backendUserId);
+          console.log("Requesting OTP for userId:", backendUserId);
+          const otpResponse = await authService.getOTP(backendUserId);
+          console.log("OTP response:", otpResponse);
+          
+          if (otpResponse.status !== 200 && otpResponse.status !== 201) {
+            console.warn("OTP request returned non-200 status:", otpResponse);
+          }
         } catch (otpErr) {
           console.warn("OTP request failed:", otpErr);
+          // Don't block the flow if OTP request fails
+          // User can still resend OTP from verification step
         }
 
       } else {
-        setError(response.data?.message || "Registration failed. Try again.");
+        // Handle registration errors
+        const errorMessage = 
+          response.data?.message || 
+          response.data?.error || 
+          response.data?.detail || 
+          "Registration failed. Please try again.";
+        
+        setError(errorMessage);
+        
+        // If email already exists
+        if (errorMessage.toLowerCase().includes("email") || 
+            errorMessage.toLowerCase().includes("already") ||
+            response.status === 400) {
+          // You could highlight the email field here
+        }
       }
 
     } catch (err) {
@@ -126,7 +187,8 @@ export default function Register() {
       setError(
         err?.response?.data?.message ||
         err?.response?.data?.error ||
-        "Network error. Please try again."
+        err?.message ||
+        "Network error. Please check your connection and try again."
       );
 
     } finally {
@@ -135,7 +197,7 @@ export default function Register() {
   };
 
   const handleSocialRegister = (provider) => {
-    setError(`${provider} registration is not available yet.`);
+    setError(`${provider} registration is not available yet. We're working on it!`);
   };
 
   const handleInputChange = (field, value) => {
@@ -145,6 +207,21 @@ export default function Register() {
 
   const handleEmailVerificationSuccess = () => {
     setCurrentStep(3);
+    
+    // Auto-redirect to dashboard after 3 seconds
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 3000);
+  };
+
+  const handleBackToStep1 = () => {
+    setCurrentStep(1);
+    clearError();
+  };
+
+  // Handle OTP verification failure
+  const handleVerificationFailed = (errorMsg) => {
+    setError(errorMsg);
   };
 
   return (
@@ -154,8 +231,12 @@ export default function Register() {
         {/* Left section */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
-            <img src={loginlogo} alt="Register" className="rounded-lg w-full h-auto max-h-[400px] object-contain" />
-            <div className="bg-gradient-to-br max-w-lg bottom-0 from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
+            <img 
+              src={loginlogo} 
+              alt="Register" 
+              className="rounded-lg w-full h-auto max-h-[400px] object-contain"
+            />
+            <div className="bg-gradient-to-br max-w-lg from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
               <h1 className="text-3xl font-semibold text-[#2D0D23] mb-1">
                 Share Expenses & Resources in Real Time
               </h1>
@@ -172,17 +253,23 @@ export default function Register() {
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
 
-          <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100">
+          <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
 
             {/* Step indicators */}
-            <div className="w-full flex justify-center items-center py-4">
-              <div className="flex items-center gap-2 justify-center">
+            <div className="w-full flex flex-col items-center py-4 mb-4">
+              <div className="flex items-center gap-2 justify-center mb-2">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
-                    <div className={`w-4 h-4 rounded-full ${currentStep >= s.id ? "bg-green-600 shadow-md" : "bg-gray-300"}`}></div>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                      currentStep >= s.id 
+                        ? "bg-green-600 border-green-600 text-white" 
+                        : "bg-white border-gray-300 text-gray-400"
+                    }`}>
+                      {s.id}
+                    </div>
                     {i < steps.length - 1 && (
                       <div
-                        className={`w-24 md:w-36 lg:w-48 border-t-2 mx-2 ${
+                        className={`w-16 md:w-24 lg:w-32 border-t-2 mx-2 ${
                           currentStep > s.id ? "border-green-600" : "border-gray-300"
                         }`}
                       ></div>
@@ -190,6 +277,9 @@ export default function Register() {
                   </div>
                 ))}
               </div>
+              <p className="text-sm text-gray-600 text-center">
+                {steps.find(s => s.id === currentStep)?.description}
+              </p>
             </div>
 
             {currentStep === 1 && (
@@ -204,16 +294,40 @@ export default function Register() {
             )}
 
             {currentStep === 2 && (
-<EmailVerificationStep
-  email={formData.email}
-  userId={userId}
-  onBack={() => setCurrentStep(1)}
-  onSuccess={() => setCurrentStep(3)}
-/>
-
+              <EmailVerificationStep
+                email={registeredEmail || formData.email}
+                userId={userId}
+                onBack={handleBackToStep1}
+                onSuccess={handleEmailVerificationSuccess}
+                onVerificationFailed={handleVerificationFailed}
+              />
             )}
 
-            {currentStep === 3 && <Successful />}
+            {currentStep === 3 && (
+              <Successful 
+                email={registeredEmail || formData.email}
+                name={`${formData.firstName} ${formData.lastName}`}
+              />
+            )}
+
+            {/* Progress indicator */}
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Step {currentStep} of {steps.length}</span>
+                <span>{Math.round((currentStep / steps.length) * 100)}% Complete</span>
+              </div>
+              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentStep / steps.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Support link */}
+            <div className="mt-4 text-center text-sm text-gray-500">
+              Need help? <a href="/support" className="text-green-600 hover:underline">Contact Support</a>
+            </div>
           </div>
         </div>
       </div>
