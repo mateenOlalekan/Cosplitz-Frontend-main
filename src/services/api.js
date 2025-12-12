@@ -128,12 +128,16 @@ export const authService = {
   },
 
   /** VERIFY OTP — MUST SEND email + otp */
-  verifyOTP: async (userId, otpCode) => {
-    return await request("/verify_otp", {
-      method: "POST",
-      body: {userId, otpCode },
-    });
-  },
+verifyOTP: async (userId, otp) => {
+  return await request("/verify-otp", {
+    method: "POST",
+    body: {
+      user_id: userId,
+      otp: otp,
+    },
+  });
+},
+
 
   /** RESEND OTP — backend uses SAME endpoint as getOTP */
   resendOTP: async (userId) => {
