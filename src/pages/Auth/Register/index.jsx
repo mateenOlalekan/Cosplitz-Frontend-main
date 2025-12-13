@@ -42,6 +42,17 @@ export default function Register() {
     clearError();
   }, [currentStep]);
 
+  // Handle social registration
+  const handleSocialRegister = async (provider) => {
+    try {
+      // This would be implemented based on your OAuth flow
+      console.log(`Social register with ${provider}`);
+      // You would typically redirect to OAuth provider or use a popup
+    } catch (error) {
+      setError(`Failed to register with ${provider}. Please try again.`);
+    }
+  };
+
   // -------------------------
   // HANDLE REGISTER SUBMIT
   // -------------------------
@@ -50,7 +61,7 @@ export default function Register() {
     clearError();
     setLoading(true);
 
-    // --- BASIC VALIDATION ---
+    // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -81,38 +92,41 @@ export default function Register() {
       return;
     }
 
-    // --- PREPARE BACKEND DATA ---
+    // Prepare backend data
     const registrationData = {
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0], // fallback username
+      username: formData.email.toLowerCase().trim().split("@")[0],
+      nationality: formData.nationality || "Not specified",
     };
 
     try {
       const response = await authService.register(registrationData);
       console.log("REGISTER RESPONSE =>", response);
 
-      if (!response.success) {
-        setError(response.message || "Registration failed.");
+      if (response.error) {
+        setError(response.data?.message || "Registration failed. Please try again.");
         setLoading(false);
         return;
       }
 
-      // Extract user information
-      const backendUserId =
-        response.user?.id ||
-        response.user_id ||
-        response.id ||
-        null;
+      if (!response.success) {
+        setError(response.data?.message || "Registration failed. Please try again.");
+        setLoading(false);
+        return;
+      }
 
-      const userEmail =
-        response.user?.email ||
-        formData.email;
+      // Extract user information from response
+      const userData = response.data?.user || response.data;
+      
+      const backendUserId = userData?.id || userData?.user_id || null;
+      const userEmail = userData?.email || formData.email;
 
       if (!backendUserId) {
-        setError("Registration worked, but user ID is missing. Try logging in.");
+        console.error("User ID missing in response:", response);
+        setError("Registration successful but user ID is missing. Please try logging in.");
         setLoading(false);
         return;
       }
@@ -128,36 +142,44 @@ export default function Register() {
         userId: backendUserId,
       });
 
-      // Save token if provided
-      if (response.token) {
-        setToken(response.token);
+      // Save token if provided (some backends return token immediately)
+      if (response.data?.token) {
+        authService.storeToken(response.data.token, true);
+        setToken(response.data.token);
+        
         setUser({
           id: backendUserId,
           email: userEmail,
           name: `${formData.firstName} ${formData.lastName}`,
           role: "user",
-          isVerified: false
+          isVerified: false,
         });
       }
 
       // Move to Step 2 (email verification)
       setCurrentStep(2);
 
-      // AUTO SEND OTP
-      try {
-        await authService.resendOTP(userEmail);
-      } catch (otpError) {
-        console.warn("OTP sending failed:", otpError);
-      }
+      // Auto send OTP after a short delay
+      setTimeout(async () => {
+        try {
+          const otpResponse = await authService.resendOTP(backendUserId);
+          if (otpResponse.error) {
+            console.warn("OTP sending failed:", otpResponse.data?.message);
+          } else {
+            console.log("OTP sent successfully");
+          }
+        } catch (otpError) {
+          console.warn("OTP sending error:", otpError);
+        }
+      }, 1000);
 
     } catch (err) {
       console.error("REGISTRATION ERROR =>", err);
-      setError(err.message || "Network error.");
+      setError(err.message || "Network error. Please check your connection.");
     } finally {
       setLoading(false);
     }
   };
-
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -172,18 +194,10 @@ export default function Register() {
     }, 3000);
   };
 
-  const handleVerificationFailed = (msg) => {
-    setError(msg);
-  };
-
   const handleBackToStep1 = () => {
     clearError();
     setCurrentStep(1);
   };
-
-  // ---------------------------------------------------
-  // 🎨 UI SECTION (UNCHANGED — EXACTLY AS YOU PROVIDED)
-  // ---------------------------------------------------
 
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
@@ -248,6 +262,7 @@ export default function Register() {
                 formData={formData}
                 handleInputChange={handleInputChange}
                 handleFormSubmit={handleFormSubmit}
+                handleSocialRegister={handleSocialRegister}
                 loading={loading}
                 error={error}
               />
@@ -259,7 +274,6 @@ export default function Register() {
                 userId={userId}
                 onBack={handleBackToStep1}
                 onSuccess={handleEmailVerificationSuccess}
-                onVerificationFailed={handleVerificationFailed}
               />
             )}
 
