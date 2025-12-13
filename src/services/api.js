@@ -128,12 +128,12 @@ export const authService = {
   },
 
   /** VERIFY OTP — MUST SEND email + otp */
-verifyOTP: async (userId, otp) => {
-  return await request("/verify-otp", {
+verifyOTP: async (email, otp) => {
+  return await request("/verify_otp", {
     method: "POST",
     body: {
-      user_id: userId,
-      otp: otp,
+      email: email.toLowerCase().trim(),
+      otp: otp.trim(),
     },
   });
 },
