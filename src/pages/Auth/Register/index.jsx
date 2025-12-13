@@ -14,12 +14,12 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [debugInfo, setDebugInfo] = useState("");
   const navigate = useNavigate();
 
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
-  const registerStore = useAuthStore((state) => state.register);
   const setUser = useAuthStore((state) => state.setUser);
   const setToken = useAuthStore((state) => state.setToken);
 
@@ -27,7 +27,7 @@ export default function Register() {
     firstName: "",
     lastName: "",
     email: "",
-    nationality: "",
+    nationality: "Nigeria", // Default to Nigeria based on your API
     password: "",
     agreeToTerms: false,
   });
@@ -45,21 +45,22 @@ export default function Register() {
   // Handle social registration
   const handleSocialRegister = async (provider) => {
     try {
-      // This would be implemented based on your OAuth flow
       console.log(`Social register with ${provider}`);
-      // You would typically redirect to OAuth provider or use a popup
+      // You would typically redirect to OAuth provider
+      alert(`${provider} registration will be available soon!`);
     } catch (error) {
       setError(`Failed to register with ${provider}. Please try again.`);
     }
   };
 
   // -------------------------
-  // HANDLE REGISTER SUBMIT
+  // HANDLE REGISTER SUBMIT - UPDATED
   // -------------------------
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     clearError();
     setLoading(true);
+    setDebugInfo("");
 
     // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
@@ -74,6 +75,7 @@ export default function Register() {
       return;
     }
 
+    // Password validation
     const passwordValid =
       formData.password.length >= 8 &&
       /[A-Z]/.test(formData.password) &&
@@ -85,6 +87,7 @@ export default function Register() {
       return;
     }
 
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address.");
@@ -92,89 +95,105 @@ export default function Register() {
       return;
     }
 
-    // Prepare backend data
+    // Prepare data EXACTLY as backend expects
     const registrationData = {
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.toLowerCase().trim().split("@")[0],
-      nationality: formData.nationality || "Not specified",
+      username: formData.email.toLowerCase().trim().split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_"), // Safe username
+      nationality: formData.nationality || "Nigeria", // Default to Nigeria
     };
+
+    console.log("📤 Final registration data being sent:", registrationData);
+    setDebugInfo(JSON.stringify(registrationData, null, 2));
 
     try {
       const response = await authService.register(registrationData);
-      console.log("REGISTER RESPONSE =>", response);
+      console.log("✅ REGISTER RESPONSE =>", response);
 
-      if (response.error) {
-        setError(response.data?.message || "Registration failed. Please try again.");
+      // Handle 400 Bad Request
+      if (response.status === 400) {
+        const errorMsg = response.data?.message || "Registration failed. Please check your details.";
+        const details = response.data?.errors 
+          ? Object.entries(response.data.errors).map(([key, val]) => `${key}: ${val}`).join(", ")
+          : "";
+        
+        setError(`${errorMsg} ${details ? `(${details})` : ''}`);
         setLoading(false);
         return;
       }
 
-      if (!response.success) {
-        setError(response.data?.message || "Registration failed. Please try again.");
+      // Handle other errors
+      if (response.error || !response.success) {
+        const errorMsg = response.data?.message || "Registration failed. Please try again.";
+        setError(errorMsg);
         setLoading(false);
         return;
       }
 
-      // Extract user information from response
+      // Success - extract user data
       const userData = response.data?.user || response.data;
       
-      const backendUserId = userData?.id || userData?.user_id || null;
-      const userEmail = userData?.email || formData.email;
+      if (!userData) {
+        console.error("❌ No user data in response:", response);
+        setError("Registration successful but no user data received.");
+        setLoading(false);
+        return;
+      }
+
+      const backendUserId = userData.id || userData.user_id;
+      const userEmail = userData.email || formData.email;
 
       if (!backendUserId) {
-        console.error("User ID missing in response:", response);
+        console.error("❌ User ID missing:", response);
         setError("Registration successful but user ID is missing. Please try logging in.");
         setLoading(false);
         return;
       }
 
+      console.log("✅ Registration successful:", { userId: backendUserId, email: userEmail });
+
       setUserId(backendUserId);
       setRegisteredEmail(userEmail);
 
-      // Store registration info in global store
-      registerStore({
-        email: userEmail,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        userId: backendUserId,
-      });
-
-      // Save token if provided (some backends return token immediately)
+      // Store token if provided
       if (response.data?.token) {
         authService.storeToken(response.data.token, true);
         setToken(response.data.token);
         
+        // Update user store
         setUser({
           id: backendUserId,
           email: userEmail,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           name: `${formData.firstName} ${formData.lastName}`,
-          role: "user",
+          nationality: formData.nationality,
           isVerified: false,
         });
       }
 
-      // Move to Step 2 (email verification)
+      // Move to verification step
       setCurrentStep(2);
 
-      // Auto send OTP after a short delay
+      // Auto-send OTP after a delay
       setTimeout(async () => {
         try {
+          console.log("📤 Sending OTP to user ID:", backendUserId);
           const otpResponse = await authService.resendOTP(backendUserId);
           if (otpResponse.error) {
-            console.warn("OTP sending failed:", otpResponse.data?.message);
+            console.warn("⚠️ OTP sending warning:", otpResponse.data?.message);
           } else {
-            console.log("OTP sent successfully");
+            console.log("✅ OTP sent successfully");
           }
         } catch (otpError) {
-          console.warn("OTP sending error:", otpError);
+          console.warn("⚠️ OTP sending error:", otpError);
         }
       }, 1000);
 
     } catch (err) {
-      console.error("REGISTRATION ERROR =>", err);
+      console.error("❌ REGISTRATION ERROR =>", err);
       setError(err.message || "Network error. Please check your connection.");
     } finally {
       setLoading(false);
@@ -188,7 +207,6 @@ export default function Register() {
 
   const handleEmailVerificationSuccess = () => {
     setCurrentStep(3);
-
     setTimeout(() => {
       navigate("/dashboard");
     }, 3000);
@@ -258,14 +276,23 @@ export default function Register() {
 
             {/* STEP CONTENT */}
             {currentStep === 1 && (
-              <RegistrationForm
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleFormSubmit={handleFormSubmit}
-                handleSocialRegister={handleSocialRegister}
-                loading={loading}
-                error={error}
-              />
+              <>
+                <RegistrationForm
+                  formData={formData}
+                  handleInputChange={handleInputChange}
+                  handleFormSubmit={handleFormSubmit}
+                  handleSocialRegister={handleSocialRegister}
+                  loading={loading}
+                  error={error}
+                />
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === "development" && debugInfo && (
+                  <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
+                    <p className="font-semibold">Debug Info:</p>
+                    <pre className="whitespace-pre-wrap">{debugInfo}</pre>
+                  </div>
+                )}
+              </>
             )}
 
             {currentStep === 2 && (

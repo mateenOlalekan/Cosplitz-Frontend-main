@@ -31,24 +31,12 @@ function storeToken(token, rememberMe = false) {
 }
 
 /**
- * Clear auth data
- */
-function clearAuthData() {
-  try {
-    localStorage.removeItem("authToken");
-    sessionStorage.removeItem("authToken");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("user");
-  } catch (error) {
-    console.error("Error clearing auth data:", error);
-  }
-}
-
-/**
- * Core request handler
+ * Core request handler with detailed logging for debugging
  */
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  console.log(`🔄 API Request: ${options.method || "GET"} ${url}`);
   
   // Default headers
   const defaultHeaders = {
@@ -59,12 +47,9 @@ async function request(endpoint, options = {}) {
   // Get auth token
   const token = getAuthToken();
   
-  // Check if body is FormData
-  const isFormData = options.body instanceof FormData;
-  
   // Prepare headers
   const headers = {
-    ...(isFormData ? {} : defaultHeaders), // Remove Content-Type for FormData
+    ...defaultHeaders,
     ...(options.headers || {}),
   };
   
@@ -77,106 +62,131 @@ async function request(endpoint, options = {}) {
   const requestOptions = {
     method: options.method || "GET",
     headers,
-    credentials: "include", // Important for cookies/sessions
+    credentials: "omit", // Changed from "include" to avoid CORS issues
     ...options,
   };
   
-  // Stringify body if it's an object and not FormData
-  if (requestOptions.body && !isFormData && typeof requestOptions.body === "object") {
+  // Stringify body if it's an object
+  if (requestOptions.body && typeof requestOptions.body === "object" && !(requestOptions.body instanceof FormData)) {
+    console.log("📤 Request Body:", requestOptions.body);
     requestOptions.body = JSON.stringify(requestOptions.body);
   }
   
-  // Set timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-  requestOptions.signal = controller.signal;
+  console.log("📝 Request Options:", {
+    method: requestOptions.method,
+    headers: requestOptions.headers,
+    body: requestOptions.body,
+  });
   
-  let response;
   try {
-    response = await fetch(url, requestOptions);
-    clearTimeout(timeoutId);
-  } catch (error) {
-    clearTimeout(timeoutId);
+    const response = await fetch(url, requestOptions);
     
-    if (error.name === "AbortError") {
+    console.log(`📥 Response Status: ${response.status} ${response.statusText}`);
+    
+    // Parse response
+    let responseData;
+    const contentType = response.headers.get("content-type");
+    
+    try {
+      if (contentType && contentType.includes("application/json")) {
+        responseData = await response.json();
+      } else {
+        const text = await response.text();
+        responseData = text ? { message: text } : {};
+      }
+    } catch (error) {
+      console.error("❌ Error parsing response:", error);
+      responseData = { message: "Invalid server response" };
+    }
+    
+    console.log("📦 Response Data:", responseData);
+    
+    // Handle 400 Bad Request specifically
+    if (response.status === 400) {
+      console.error("❌ 400 Bad Request Details:", {
+        endpoint,
+        requestBody: options.body,
+        response: responseData
+      });
+      
       return {
-        status: 408,
-        data: { message: "Request timeout. Please try again." },
+        status: 400,
+        data: responseData,
         error: true,
-        timeout: true,
+        badRequest: true,
+        validationErrors: responseData.errors || responseData.message,
       };
     }
     
+    // Handle 401 Unauthorized
+    if (response.status === 401) {
+      localStorage.removeItem("authToken");
+      sessionStorage.removeItem("authToken");
+      
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login?session_expired=true";
+      }
+      
+      return {
+        status: 401,
+        data: responseData,
+        unauthorized: true,
+        error: true,
+      };
+    }
+    
+    // Handle other error statuses
+    if (!response.ok) {
+      return {
+        status: response.status,
+        data: responseData,
+        error: true,
+        serverError: true,
+      };
+    }
+    
+    // Successful response
+    return {
+      status: response.status,
+      data: responseData,
+      success: true,
+    };
+    
+  } catch (error) {
+    console.error("❌ Network/Fetch Error:", error);
+    
     return {
       status: 0,
-      data: { message: "Network error. Please check your connection." },
+      data: { 
+        message: "Network error. Please check your internet connection.",
+        error: error.message 
+      },
       error: true,
       networkError: true,
     };
   }
-  
-  // Parse response
-  let responseData;
-  const contentType = response.headers.get("content-type");
-  
-  try {
-    if (contentType && contentType.includes("application/json")) {
-      responseData = await response.json();
-    } else {
-      const text = await response.text();
-      responseData = text ? { message: text } : {};
-    }
-  } catch (error) {
-    console.error("Error parsing response:", error);
-    responseData = { message: "Invalid server response" };
-  }
-  
-  // Handle 401 Unauthorized
-  if (response.status === 401) {
-    clearAuthData();
-    
-    // Only redirect if not already on login page
-    if (!window.location.pathname.includes("/login")) {
-      window.location.href = "/login?session_expired=true";
-    }
-    
-    return {
-      status: 401,
-      data: responseData,
-      unauthorized: true,
-      error: true,
-    };
-  }
-  
-  // Handle other error statuses
-  if (!response.ok) {
-    return {
-      status: response.status,
-      data: responseData,
-      error: true,
-      serverError: true,
-    };
-  }
-  
-  // Successful response
-  return {
-    status: response.status,
-    data: responseData,
-    success: true,
-  };
 }
 
 /* -------------------------------------------------------------
-   AUTH SERVICE
+   AUTH SERVICE - UPDATED TO MATCH YOUR BACKEND EXACTLY
 ----------------------------------------------------------------*/
 export const authService = {
   /** REGISTER — /api/register/ */
   register: async (userData) => {
-    // Ensure username is provided (required by backend)
+    console.log("👤 Registration Data:", userData);
+    
+    // Based on your API response, backend expects:
+    // first_name, last_name, email, password, username, nationality
     const dataToSend = {
-      ...userData,
+      first_name: userData.first_name || userData.firstName,
+      last_name: userData.last_name || userData.lastName,
+      email: userData.email,
+      password: userData.password,
       username: userData.username || userData.email.split("@")[0],
+      nationality: userData.nationality || "Unknown",
     };
+    
+    console.log("📨 Sending to backend:", dataToSend);
     
     return await request("/register/", {
       method: "POST",
@@ -186,7 +196,7 @@ export const authService = {
 
   /** LOGIN — /api/login/ */
   login: async (credentials) => {
-    return await request("/login", {
+    return await request("/login/", {
       method: "POST",
       body: credentials,
     });
@@ -212,26 +222,28 @@ export const authService = {
 
   /** VERIFY OTP — /api/verify_otp */
   verifyOTP: async (email, otp) => {
-    if (!email || !otp) {
-      return {
-        success: false,
-        message: "Email and OTP are required",
-        error: true,
-      };
-    }
-    
-    return await request("/verify_otp", {
-      method: "POST",
-      body: { email, otp },
-    });
-  },
+  console.log("🔐 Verifying OTP:", { email, otp });
+  
+  if (!email || !otp) {
+    return {
+      success: false,
+      message: "Email and OTP are required",
+      error: true,
+    };
+  }
+  
+  return await request("/verify_otp", {
+    method: "POST",
+    body: { email, otp },
+  });
+},
 
-  /** RESEND OTP — Uses same endpoint as getOTP */
+  /** RESEND OTP */
   resendOTP: async (userId) => {
     return await authService.getOTP(userId);
   },
 
-  /** FORGOT PASSWORD — /api/forgot-password/ */
+  /** FORGOT PASSWORD */
   forgotPassword: async (email) => {
     return await request("/forgot-password/", {
       method: "POST",
@@ -239,7 +251,7 @@ export const authService = {
     });
   },
 
-  /** RESET PASSWORD — /api/reset-password/ */
+  /** RESET PASSWORD */
   resetPassword: async (data) => {
     return await request("/reset-password/", {
       method: "POST",
@@ -247,7 +259,7 @@ export const authService = {
     });
   },
 
-  /** UPDATE PROFILE — /api/user/profile/ */
+  /** UPDATE PROFILE */
   updateProfile: async (profileData) => {
     return await request("/user/profile/", {
       method: "PUT",
@@ -255,30 +267,8 @@ export const authService = {
     });
   },
 
-  /** CHECK EMAIL — /api/check-email/ */
-  checkEmail: async (email) => {
-    return await request("/check-email/", {
-      method: "POST",
-      body: { email },
-    });
-  },
-
-  /** SOCIAL LOGIN — /api/social/<provider>/ */
-  socialLogin: async (provider, token) => {
-    return await request(`/social/${provider}/`, {
-      method: "POST",
-      body: { access_token: token },
-    });
-  },
-
-  /** LOGOUT — /api/logout/ */
-  logout: async () => {
-    return await request("/logout/", { method: "POST" });
-  },
-
   /** Helper functions */
   storeToken,
-  clearAuthData,
   getAuthToken,
 };
 
@@ -302,35 +292,6 @@ export const dashboardService = {
       body: splitData,
     });
   },
-
-  getWalletBalance: async () => {
-    return await request("/wallet/balance", { method: "GET" });
-  },
-
-  getNotifications: async () => {
-    return await request("/notifications", { method: "GET" });
-  },
-};
-
-/* -------------------------------------------------------------
-   ADMIN SERVICE
-----------------------------------------------------------------*/
-export const adminService = {
-  getDashboardStats: async () => {
-    return await request("/admin/dashboard", { method: "GET" });
-  },
-
-  getUsers: async (page = 1, limit = 20) => {
-    return await request(`/admin/users?page=${page}&limit=${limit}`, {
-      method: "GET",
-    });
-  },
-
-  getSplits: async (page = 1, limit = 20) => {
-    return await request(`/admin/splits?page=${page}&limit=${limit}`, {
-      method: "GET",
-    });
-  },
 };
 
 // Export all services
@@ -338,5 +299,4 @@ export default {
   request,
   authService,
   dashboardService,
-  adminService,
 };
