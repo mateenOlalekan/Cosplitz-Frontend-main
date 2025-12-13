@@ -1,13 +1,13 @@
+// src/pages/EmailVerificationStep.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { authService } from "../../../services/api";
 import { ArrowLeft, Mail } from "lucide-react";
+import { useAuthStore } from "../../../store/authStore";
 
 const OTP_LENGTH = 6;
 const RESEND_DELAY = 180;
 
 export default function EmailVerificationStep({
   email,
-  userId,
   onBack,
   onSuccess,
   onVerificationFailed,
@@ -19,6 +19,16 @@ export default function EmailVerificationStep({
   const [timer, setTimer] = useState(RESEND_DELAY);
 
   const inputsRef = useRef([]);
+
+  const {
+    initVerificationFlow,
+    verifyOtp,
+  } = useAuthStore();
+
+  /* ---------------- INIT (LOGIN + SEND OTP) ---------------- */
+  useEffect(() => {
+    initVerificationFlow();
+  }, [initVerificationFlow]);
 
   /* ---------------- TIMER ---------------- */
   useEffect(() => {
@@ -61,7 +71,7 @@ export default function EmailVerificationStep({
     setError("");
 
     requestAnimationFrame(() => {
-      inputsRef.current[5]?.focus();
+      inputsRef.current[OTP_LENGTH - 1]?.focus();
     });
   };
 
@@ -77,12 +87,12 @@ export default function EmailVerificationStep({
     setLoading(true);
     setError("");
 
-    const res = await authService.verifyOTP(email, code);
+    const ok = await verifyOtp(code);
 
-    if (res?.success) {
-      onSuccess();
+    if (ok) {
+      onSuccess?.();
     } else {
-      const msg = res?.data?.message || "Invalid OTP.";
+      const msg = "Invalid or expired OTP.";
       setError(msg);
       onVerificationFailed?.(msg);
     }
@@ -92,25 +102,16 @@ export default function EmailVerificationStep({
 
   /* ---------------- RESEND OTP ---------------- */
   const handleResend = async () => {
-    if (timer > 0 || !userId) {
-      if (!userId) {
-        setError("User session missing. Please go back and register again.");
-      }
-      return;
-    }
+    if (timer > 0) return;
 
     setResendLoading(true);
     setError("");
 
-    const res = await authService.getOTP(userId);
+    await initVerificationFlow();
 
-    if (res?.success) {
-      setOtp(Array(OTP_LENGTH).fill(""));
-      setTimer(RESEND_DELAY);
-      inputsRef.current[0]?.focus();
-    } else {
-      setError(res?.data?.message || "Could not resend OTP.");
-    }
+    setOtp(Array(OTP_LENGTH).fill(""));
+    setTimer(RESEND_DELAY);
+    inputsRef.current[0]?.focus();
 
     setResendLoading(false);
   };

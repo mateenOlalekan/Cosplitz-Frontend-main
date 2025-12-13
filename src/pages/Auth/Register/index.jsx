@@ -1,4 +1,4 @@
-    // src/pages/Register.jsx
+// src/pages/Register.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
@@ -9,14 +9,14 @@ import RegistrationForm from "./RegistrationForm";
 import Successful from "./Successful";
 
 export default function Register() {
-  const [currentStep, setCurrentStep] = useState(1);
+  const navigate = useNavigate();
+
+  const [currentStep, setCurrentStep] = useState(1); // 1=form, 2=verify, 3=success
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [userId, setUserId] = useState(null);
   const [registeredEmail, setRegisteredEmail] = useState("");
-
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -27,19 +27,22 @@ export default function Register() {
     agreeToTerms: false,
   });
 
+  /* ----------------------------------------
+     CLEAR ERROR ON STEP CHANGE
+  ---------------------------------------- */
   useEffect(() => {
     setError(null);
   }, [currentStep]);
 
   /* ----------------------------------------
-     REGISTER SUBMIT
+     REGISTER SUBMIT (STEP 1 → STEP 2)
   ---------------------------------------- */
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    // Validation
+    // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill all required fields.");
       setLoading(false);
@@ -57,7 +60,7 @@ export default function Register() {
       !/[A-Z]/.test(formData.password) ||
       !/\d/.test(formData.password)
     ) {
-      setError("Password must be 8+ chars, include an uppercase letter and a number.");
+      setError("Password must be at least 8 characters, include an uppercase letter and a number.");
       setLoading(false);
       return;
     }
@@ -72,40 +75,77 @@ export default function Register() {
 
     const res = await authService.register(payload);
 
-    if (res.error) {
-      setError(res.data?.message || "Registration failed.");
+    if (!res?.success) {
+      setError(res?.data?.message || "Registration failed.");
       setLoading(false);
       return;
     }
 
     const user = res.data?.user;
 
-    if (!user?.id) {
-      setError("Registration succeeded but user ID missing.");
+    if (!user?.id || !user?.email) {
+      setError("Registration succeeded but user data is incomplete.");
       setLoading(false);
       return;
     }
 
+    // Persist minimal verification context (refresh-safe)
+    localStorage.setItem(
+      "pending_verification",
+      JSON.stringify({ userId: user.id, email: user.email })
+    );
+
     setUserId(user.id);
     setRegisteredEmail(user.email);
-    setCurrentStep(2); // backend already sent OTP
+    setCurrentStep(2); // OTP already sent by backend
     setLoading(false);
   };
 
+  /* ----------------------------------------
+     INPUT CHANGE
+  ---------------------------------------- */
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (error) setError(null);
   };
 
+  /* ----------------------------------------
+     VERIFY SUCCESS (STEP 2 → STEP 3)
+  ---------------------------------------- */
   const handleVerificationSuccess = () => {
+    localStorage.removeItem("pending_verification");
     setCurrentStep(3);
-    setTimeout(() => navigate("/dashboard"), 3000);
+
+    // Short success screen → dashboard
+    setTimeout(() => {
+      navigate("/dashboard", { replace: true });
+    }, 2500);
   };
 
+  /* ----------------------------------------
+     BACK TO FORM
+  ---------------------------------------- */
   const handleBackToStep1 = () => {
     setError(null);
     setCurrentStep(1);
   };
+
+  /* ----------------------------------------
+     RESTORE VERIFICATION STATE ON REFRESH
+  ---------------------------------------- */
+  useEffect(() => {
+    const pending = localStorage.getItem("pending_verification");
+    if (!pending) return;
+
+    try {
+      const { userId, email } = JSON.parse(pending);
+      if (userId && email) {
+        setUserId(userId);
+        setRegisteredEmail(email);
+        setCurrentStep(2);
+      }
+    } catch (_) {}
+  }, []);
 
   /* ----------------------------------------
      UI (UNCHANGED)
@@ -117,9 +157,9 @@ export default function Register() {
         {/* LEFT */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
-            <img 
-              src={loginlogo} 
-              alt="Register" 
+            <img
+              src={loginlogo}
+              alt="Register"
               className="rounded-lg w-full h-auto max-h-[400px] object-contain"
             />
             <div className="bg-gradient-to-br max-w-lg from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">

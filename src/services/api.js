@@ -1,19 +1,12 @@
-// src/services/api.js
+// ==============================
+// src/services/api.js (NEW)
+// ==============================
+
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
-/* ----------------------------------------------------
-   TOKEN HELPERS
----------------------------------------------------- */
-export const getAuthToken = () => {
-  try {
-    return (
-      localStorage.getItem("authToken") ||
-      sessionStorage.getItem("authToken")
-    );
-  } catch {
-    return null;
-  }
-};
+/* ---------------- TOKEN HELPERS ---------------- */
+export const getAuthToken = () =>
+  localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
 
 export const storeToken = (token, remember = true) => {
   if (!token) return;
@@ -33,9 +26,7 @@ export const clearAuthData = () => {
   sessionStorage.removeItem("userInfo");
 };
 
-/* ----------------------------------------------------
-   CORE REQUEST HANDLER
----------------------------------------------------- */
+/* ---------------- CORE REQUEST ---------------- */
 async function request(endpoint, options = {}) {
   const token = getAuthToken();
 
@@ -46,90 +37,41 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  const config = {
+  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: options.method || "GET",
     headers,
-    credentials: "include",
-    body:
-      options.body && typeof options.body === "object"
-        ? JSON.stringify(options.body)
-        : options.body,
-  };
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
 
-  try {
-    const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
-    const data = await res.json().catch(() => ({}));
+  const data = await res.json().catch(() => ({}));
 
-    if (!res.ok) {
-      return { error: true, status: res.status, data };
-    }
-
-    return { success: true, status: res.status, data };
-  } catch (err) {
-    return {
-      error: true,
-      status: 0,
-      data: { message: "Network error" },
-    };
+  if (!res.ok) {
+    return { success: false, status: res.status, data };
   }
+
+  return { success: true, status: res.status, data };
 }
 
-/* ----------------------------------------------------
-   RUNTIME GUARD
----------------------------------------------------- */
-function safeCall(fn, name) {
-  if (typeof fn !== "function") {
-    console.error(`[API GUARD] ${name} is not a function`);
-    return async () => ({
-      error: true,
-      data: { message: `${name} is not a function` },
-    });
-  }
-  return fn;
-}
-
-/* ----------------------------------------------------
-   AUTH SERVICE (BACKEND-ALIGNED + SAFE)
----------------------------------------------------- */
+/* ---------------- AUTH SERVICE ---------------- */
 export const authService = {
-  register: safeCall(
-    async (payload) =>
-      request("/register/", { method: "POST", body: payload }),
-    "authService.register"
-  ),
+  register: (payload) =>
+    request("/register/", { method: "POST", body: payload }),
 
-  login: safeCall(
-    async (payload) =>
-      request("/login/", { method: "POST", body: payload }),
-    "authService.login"
-  ),
+  login: (payload) =>
+    request("/login/", { method: "POST", body: payload }),
 
-  getUserInfo: safeCall(
-    async () => request("/user/info", { method: "GET" }),
-    "authService.getUserInfo"
-  ),
+  getUserInfo: () => request("/user/info"),
 
-  getOTP: safeCall(
-    async (userId) => request(`/otp/${userId}/`, { method: "GET" }),
-    "authService.getOTP"
-  ),
+  sendOTP: (userId) => request(`/otp/${userId}/`),
 
-  // Alias for resend OTP
-  resendOTP: safeCall(
-    async (userId) => request(`/otp/${userId}/`, { method: "GET" }),
-    "authService.resendOTP"
-  ),
+  verifyOTP: (email, otp) =>
+    request("/verify_otp", {
+      method: "POST",
+      body: { email, otp },
+    }),
 
-  verifyOTP: safeCall(
-    async (email, otp) =>
-      request("/verify_otp", { method: "POST", body: { email, otp } }),
-    "authService.verifyOTP"
-  ),
-
-  logout: safeCall(async () => request("/logout/", { method: "POST" }), "authService.logout"),
+  logout: () => request("/logout/", { method: "POST" }),
 };
 
-/* ----------------------------------------------------
-   EXPORT
----------------------------------------------------- */
-export default { request, authService };
+export default authService;
+

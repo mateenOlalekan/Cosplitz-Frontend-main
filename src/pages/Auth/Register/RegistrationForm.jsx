@@ -37,7 +37,7 @@ function RegistrationForm({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={() => handleSocialRegister("google")}
+          onClick={() => handleSocialRegister?.("google")}
           className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <FcGoogle size={20} />
@@ -48,7 +48,7 @@ function RegistrationForm({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
-          onClick={() => handleSocialRegister("apple")}
+          onClick={() => handleSocialRegister?.("apple")}
           className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <PiAppleLogoBold size={20} />
@@ -88,7 +88,7 @@ function RegistrationForm({
           <label className="text-sm font-medium text-gray-700 block mb-1">
             Password *
           </label>
-          <div className="flex items-center border border-gray-300 px-3 rounded-lg focus-within:ring-2 focus-within:ring-green-500 transition-colors">
+          <div className="bg-gray-300 flex items-center border border-gray-300 px-3 rounded-lg focus-within:ring-2 focus-within:ring-green-500 transition-colors">
             <input
               type={showPassword ? "text" : "password"}
               value={formData.password}

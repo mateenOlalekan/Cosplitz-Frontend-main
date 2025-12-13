@@ -1,96 +1,82 @@
+// src/store/authStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authService, storeToken, clearAuthData } from "../services/api";
 
 export const useAuthStore = create(
   persist(
     (set, get) => ({
+      /* ---------------- STATE ---------------- */
       user: null,
       token: null,
-      isLoading: false,
+      isVerified: false,
+      isLoading: true,
       error: null,
 
-      /* ---------------- AUTH ACTIONS ---------------- */
+      /* ---------------- SET AUTH ---------------- */
+      setAuth: ({ token, user, isVerified }) => {
+        set({
+          token,
+          user,
+          isVerified: !!isVerified,
+          isLoading: false,
+        });
 
-      registerUser: async (formData) => {
-        set({ isLoading: true, error: null });
-
-        const res = await authService.register(formData);
-
-        if (res.error) {
-          set({ error: res.data?.message, isLoading: false });
-          return null;
-        }
-
-        set({ isLoading: false });
-        return res.data.user; // used for OTP
+        if (token) localStorage.setItem("authToken", token);
+        if (user) localStorage.setItem("userInfo", JSON.stringify(user));
+        localStorage.setItem("isVerified", JSON.stringify(!!isVerified));
       },
 
-      loginUser: async (credentials, remember = true) => {
-        set({ isLoading: true, error: null });
+      /* ---------------- INIT (CRASH FIX) ---------------- */
+      initializeAuth: () => {
+        try {
+          const token = localStorage.getItem("authToken");
+          const userRaw = localStorage.getItem("userInfo");
+          const isVerified = JSON.parse(
+            localStorage.getItem("isVerified") || "false"
+          );
 
-        const res = await authService.login(credentials);
-
-        if (res.error) {
-          set({ error: res.data?.message, isLoading: false });
-          return false;
+          set({
+            token: token || null,
+            user: userRaw ? JSON.parse(userRaw) : null,
+            isVerified,
+            isLoading: false,
+          });
+        } catch {
+          set({
+            token: null,
+            user: null,
+            isVerified: false,
+            isLoading: false,
+          });
         }
-
-        storeToken(res.data.token, remember);
-
-        const userRes = await authService.getUserInfo();
-        if (userRes.success) {
-          set({ user: userRes.data, token: res.data.token });
-          localStorage.setItem("userInfo", JSON.stringify(userRes.data));
-        }
-
-        set({ isLoading: false });
-        return true;
       },
 
-      verifyOTP: async (email, otp) => {
-        set({ isLoading: true, error: null });
+      /* ---------------- HELPERS ---------------- */
+      isAuthenticated: () => !!get().token,
 
-        const res = await authService.verifyOTP(email, otp);
-
-        if (res.error) {
-          set({ error: res.data?.message, isLoading: false });
-          return false;
-        }
-
-        set({ isLoading: false });
-        return true;
+      isAdmin: () => {
+        const u = get().user;
+        return u?.role === "admin" || u?.is_admin === true;
       },
-
-      sendOTP: async (userId) => authService.getOTP(userId),
 
       logout: () => {
-        clearAuthData();
-        set({ user: null, token: null });
+        localStorage.clear();
+        set({
+          user: null,
+          token: null,
+          isVerified: false,
+          error: null,
+        });
         window.location.href = "/login";
       },
-
-      initializeAuth: () => {
-        const token =
-          localStorage.getItem("authToken") ||
-          sessionStorage.getItem("authToken");
-
-        const user =
-          localStorage.getItem("userInfo") ||
-          sessionStorage.getItem("userInfo");
-
-        set({
-          token: token || null,
-          user: user ? JSON.parse(user) : null,
-        });
-      },
-
-      isAuthenticated: () => !!get().token,
-      isAdmin: () => get().user?.is_admin === true,
     }),
     {
       name: "auth-storage",
-      partialize: (s) => ({ user: s.user, token: s.token }),
+      partialize: (state) => ({
+        token: state.token,
+        user: state.user,
+        isVerified: state.isVerified,
+      }),
     }
   )
 );
