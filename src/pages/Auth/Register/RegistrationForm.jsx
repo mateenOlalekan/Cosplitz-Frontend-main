@@ -16,13 +16,6 @@ function RegistrationForm({
   error,
 }) {
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Common nationalities - you can expand this list
-  const nationalities = [
-    "Nigeria", "Ghana", "Kenya", "South Africa", "Egypt", "Morocco",
-    "United States", "Canada", "United Kingdom", "Germany", "France",
-    "India", "China", "Japan", "Australia", "Brazil", "Mexico"
-  ];
 
   return (
     <div>
@@ -70,76 +63,26 @@ function RegistrationForm({
       </div>
 
       <form onSubmit={handleFormSubmit} className="space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
+        {[
+          { key: "firstName", label: "First Name", type: "text" },
+          { key: "lastName", label: "Last Name", type: "text" },
+          { key: "email", label: "Email Address", type: "email" },
+          { key: "nationality", label: "Nationality", type: "text" },
+        ].map((field) => (
+          <div key={field.key}>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
-              First Name *
+              {field.label} *
             </label>
             <input
-              type="text"
-              value={formData.firstName}
-              placeholder="Enter your first name"
-              onChange={(e) => handleInputChange("firstName", e.target.value)}
+              type={field.type}
+              value={formData[field.key]}
+              placeholder={`Enter your ${field.label.toLowerCase()}`}
+              onChange={(e) => handleInputChange(field.key, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
               required
             />
           </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
-              Last Name *
-            </label>
-            <input
-              type="text"
-              value={formData.lastName}
-              placeholder="Enter your last name"
-              onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-              required
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">
-            Email Address *
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            placeholder="Enter your email address"
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-gray-700 mb-1 block">
-            Nationality
-          </label>
-          <select
-            value={formData.nationality}
-            onChange={(e) => handleInputChange("nationality", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors bg-white"
-          >
-            <option value="">Select your nationality</option>
-            {nationalities.map((country) => (
-              <option key={country} value={country}>
-                {country}
-              </option>
-            ))}
-            <option value="Other">Other</option>
-          </select>
-          {formData.nationality === "Other" && (
-            <input
-              type="text"
-              placeholder="Please specify your nationality"
-              onChange={(e) => handleInputChange("nationality", e.target.value)}
-              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-            />
-          )}
-        </div>
+        ))}
 
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-1">
@@ -149,11 +92,10 @@ function RegistrationForm({
             <input
               type={showPassword ? "text" : "password"}
               value={formData.password}
-              placeholder="Create your password (min. 8 chars, 1 uppercase, 1 number)"
+              placeholder="Create your password"
               onChange={(e) => handleInputChange("password", e.target.value)}
               className="w-full py-2 outline-none"
               required
-              minLength={8}
             />
             <button
               type="button"
@@ -166,24 +108,24 @@ function RegistrationForm({
           <PasswordValidation password={formData.password} />
         </div>
 
-        <label className="flex gap-2 text-sm text-gray-600 mt-2 cursor-pointer items-start">
+        <label className="flex gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
           <input
             type="checkbox"
             checked={formData.agreeToTerms}
             onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
-            className="rounded focus:ring-green-500 mt-1"
+            className="rounded focus:ring-green-500"
           />
           <span>
             I agree to the{" "}
-            <a href="/terms" className="text-green-600 hover:underline font-medium" target="_blank" rel="noopener noreferrer">
+            <a href="/terms" className="text-green-600 hover:underline font-medium">
               Terms
             </a>
             ,{" "}
-            <a href="/privacy" className="text-green-600 hover:underline font-medium" target="_blank" rel="noopener noreferrer">
+            <a href="/privacy" className="text-green-600 hover:underline font-medium">
               Privacy
             </a>{" "}
             &{" "}
-            <a href="/fees" className="text-green-600 hover:underline font-medium" target="_blank" rel="noopener noreferrer">
+            <a href="/fees" className="text-green-600 hover:underline font-medium">
               Fees
             </a>
             .
