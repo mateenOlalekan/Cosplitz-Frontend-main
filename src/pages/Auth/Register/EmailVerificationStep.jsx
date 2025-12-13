@@ -4,7 +4,7 @@ import { ArrowLeft, Mail } from "lucide-react";
 
 export default function EmailVerificationStep({
   email,
-  userId,
+  userId, // kept for compatibility (not used by verify)
   onBack,
   onSuccess,
 }) {
@@ -12,9 +12,9 @@ export default function EmailVerificationStep({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [timer, setTimer] = useState(300);
+  const [timer, setTimer] = useState(180);
 
-  // Countdown timer
+  /* ---------------- TIMER ---------------- */
   useEffect(() => {
     if (timer <= 0) return;
 
@@ -25,7 +25,7 @@ export default function EmailVerificationStep({
     return () => clearInterval(interval);
   }, [timer]);
 
-  // Handle OTP input
+  /* ---------------- OTP INPUT ---------------- */
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
 
@@ -38,10 +38,7 @@ export default function EmailVerificationStep({
       document.getElementById(`otp-input-${index + 1}`)?.focus();
     }
 
-    // Auto-verify once all digits are filled
-    if (newOtp.every((d) => d !== "")) {
-      handleVerify(newOtp.join(""));
-    }
+    // ❌ DO NOT auto-verify here (caused double requests)
   };
 
   const handleKeyDown = (index, e) => {
@@ -50,24 +47,20 @@ export default function EmailVerificationStep({
     }
   };
 
-  // Handle paste event
   const handlePaste = (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text/plain").trim();
 
     if (/^\d{6}$/.test(pasted)) {
-      const digits = pasted.split("");
-      setOtp(digits);
+      setOtp(pasted.split(""));
       setError("");
-
-      document.getElementById(`otp-input-5`)?.focus();
-      handleVerify(pasted);
+      document.getElementById("otp-input-5")?.focus();
     }
   };
 
-  // Verify OTP
-  const handleVerify = async (code = null) => {
-    const otpCode = code || otp.join("");
+  /* ---------------- VERIFY OTP ---------------- */
+  const handleVerify = async () => {
+    const otpCode = otp.join("");
 
     if (otpCode.length !== 6) {
       setError("Please enter the complete 6-digit code.");
@@ -78,24 +71,29 @@ export default function EmailVerificationStep({
     setError("");
 
     try {
-      const response = await authService.verifyOTP(userId, otpCode);
+      const response = await authService.verifyOTP(
+        email.toLowerCase().trim(), // ✅ backend expects email
+        otpCode
+      );
 
-      // Your fetch service returns:
-      // { success: true/false, message, ... }
-      if (response?.success) {
+      console.log("VERIFY OTP RESPONSE:", response);
+
+      if (response?.status === 200) {
         onSuccess();
       } else {
-        setError(response?.message || "Invalid OTP. Please try again.");
+        setError(
+          response?.data?.message || "Invalid OTP. Please try again."
+        );
       }
     } catch (err) {
       console.error("OTP verification error:", err);
       setError("Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // Resend OTP
+  /* ---------------- RESEND OTP ---------------- */
   const handleResend = async () => {
     if (timer > 0) return;
 
@@ -103,21 +101,27 @@ export default function EmailVerificationStep({
     setError("");
 
     try {
-      const response = await authService.resendOTP(userId);
+      const response = await authService.resendOTP(
+        email.toLowerCase().trim() // ✅ email, not userId
+      );
 
-      if (response?.success) {
-        setTimer(180);
+      console.log("RESEND OTP RESPONSE:", response);
+
+      if (response?.status === 200) {
         setOtp(["", "", "", "", "", ""]);
-        document.getElementById(`otp-input-0`)?.focus();
+        setTimer(180);
+        document.getElementById("otp-input-0")?.focus();
       } else {
-        setError(response?.message || "Could not resend OTP.");
+        setError(
+          response?.data?.message || "Could not resend OTP."
+        );
       }
     } catch (err) {
       console.error("OTP resend error:", err);
       setError("Failed to resend OTP. Try again.");
+    } finally {
+      setResendLoading(false);
     }
-
-    setResendLoading(false);
   };
 
   const formatTime = (seconds) => {
@@ -126,8 +130,10 @@ export default function EmailVerificationStep({
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <div className="flex flex-col items-center gap-5 py-8 relative w-full">
+      {/* BACK BUTTON (RESTORED) */}
       <button
         onClick={onBack}
         className="absolute left-4 top-4 text-gray-600 hover:text-green-600 transition"
@@ -137,7 +143,10 @@ export default function EmailVerificationStep({
         <ArrowLeft size={28} />
       </button>
 
-      <h2 className="text-xl font-bold text-gray-800 mt-8">Verify Your Email</h2>
+      <h2 className="text-xl font-bold text-gray-800 mt-8">
+        Verify Your Email
+      </h2>
+
       <p className="text-gray-500 text-sm text-center max-w-xs">
         Enter the code sent to{" "}
         <span className="text-green-600 font-medium">{email}</span>.
@@ -147,7 +156,7 @@ export default function EmailVerificationStep({
         <Mail className="text-[#1F8225]" size={24} />
       </div>
 
-      {/* OTP fields */}
+      {/* OTP INPUTS */}
       <div className="flex gap-2 mt-2" onPaste={handlePaste}>
         {otp.map((digit, i) => (
           <input
@@ -156,7 +165,6 @@ export default function EmailVerificationStep({
             type="text"
             maxLength={1}
             inputMode="numeric"
-            pattern="[0-9]*"
             value={digit}
             onChange={(e) => handleChange(e.target.value, i)}
             onKeyDown={(e) => handleKeyDown(i, e)}
@@ -167,7 +175,7 @@ export default function EmailVerificationStep({
         ))}
       </div>
 
-      {/* Timer / Resend */}
+      {/* TIMER / RESEND */}
       <div className="text-center mt-4">
         {timer > 0 ? (
           <p className="text-sm text-gray-600">
@@ -179,44 +187,32 @@ export default function EmailVerificationStep({
             type="button"
             onClick={handleResend}
             disabled={resendLoading}
-            className="text-green-600 hover:text-green-700 font-medium text-sm transition-colors"
+            className="text-green-600 hover:text-green-700 font-medium text-sm"
           >
-            {resendLoading ? (
-              <span className="flex items-center gap-2">
-                <div className="w-3 h-3 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
-                Resending...
-              </span>
-            ) : (
-              "Resend Code"
-            )}
+            {resendLoading ? "Resending..." : "Resend Code"}
           </button>
         )}
       </div>
 
-      {/* Errors */}
+      {/* ERROR */}
       {error && (
-        <p className="text-red-600 text-sm text-center max-w-xs mt-2">{error}</p>
+        <p className="text-red-600 text-sm text-center max-w-xs mt-2">
+          {error}
+        </p>
       )}
 
-      {/* Verify button */}
+      {/* VERIFY BUTTON */}
       <button
         type="button"
         disabled={loading || otp.some((d) => d === "")}
-        onClick={() => handleVerify()}
+        onClick={handleVerify}
         className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold mt-4 ${
           loading || otp.some((d) => d === "")
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-green-700"
         }`}
       >
-        {loading ? (
-          <span className="flex items-center justify-center gap-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            Verifying...
-          </span>
-        ) : (
-          "Verify Email"
-        )}
+        {loading ? "Verifying..." : "Verify Email"}
       </button>
     </div>
   );

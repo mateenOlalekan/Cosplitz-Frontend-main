@@ -100,82 +100,40 @@ async function request(path, options = {}) {
 /* -------------------------------------------------------------
    AUTH SERVICE — MATCHED EXACTLY WITH YOUR BACKEND
 ----------------------------------------------------------------*/
+/* -------------------------------------------------------------
+   AUTH SERVICE — CLEAN & CONSISTENT
+----------------------------------------------------------------*/
 export const authService = {
-  /** REGISTER — /api/register/ */
-  register: async (userData) => {
-    return await request("/register/", {
+  register: async (userData) =>
+    request("/register/", {
       method: "POST",
       body: userData,
-    });
-  },
+    }),
 
-  /** LOGIN — Backend uses: http://localhost:8000/api/login/ */
-  login: async (credentials) => {
-    return await request("/login/", {
+  login: async (credentials) =>
+    request("/login/", {
       method: "POST",
       body: credentials,
-    });
-  },
+    }),
 
-  /** USER INFO */
-  getUserInfo: async () => {
-    return await request("/user/info", { method: "GET" });
-  },
-
-  /** GET OTP — Backend: /api/otp/<user_id>/ */
-  getOTP: async (userId) => {
-    return await request(`/otp/${userId}/`, { method: "GET" });
-  },
-
-  /** VERIFY OTP — MUST SEND email + otp */
-verifyOTP: async (email, otp) => {
-  return await request("/verify_otp", {
-    method: "POST",
-    body: {
-      email: email.toLowerCase().trim(),
-      otp: otp.trim(),
-    },
-  });
-},
-
-
-  /** RESEND OTP — backend uses SAME endpoint as getOTP */
-  resendOTP: async (userId) => {
-    return await authService.getOTP(userId);
-  },
-
-  forgotPassword: async (email) =>
-    request("/forgot-password/", {
+  /** VERIFY OTP — EMAIL + OTP */
+  verifyOTP: async (email, otp) =>
+    request("/verify_otp", {
       method: "POST",
-      body: { email },
+      body: {
+        email: email.toLowerCase().trim(),
+        otp: otp.trim(),
+      },
     }),
 
-  resetPassword: async (data) =>
-    request("/reset-password/", {
+  /** RESEND OTP — SAME BACKEND FLOW */
+  resendOTP: async (email) =>
+    request("/resend_otp", {
       method: "POST",
-      body: data,
+      body: {
+        email: email.toLowerCase().trim(),
+      },
     }),
-
-  updateProfile: async (profileData) =>
-    request("/user/profile/", {
-      method: "PUT",
-      body: profileData,
-    }),
-
-  checkEmail: async (email) =>
-    request("/check-email/", {
-      method: "POST",
-      body: { email },
-    }),
-
-  socialLogin: async (provider, token) =>
-    request(`/social/${provider}/`, {
-      method: "POST",
-      body: { access_token: token },
-    }),
-
-  logout: async () =>
-    request("/logout/", { method: "POST" }),
 };
 
 /* -------------------------------------------------------------
