@@ -3,11 +3,11 @@ import { authService } from "../../../services/api";
 import { ArrowLeft, Mail } from "lucide-react";
 
 const OTP_LENGTH = 6;
-const RESEND_DELAY = 180; // seconds
+const RESEND_DELAY = 180;
 
 export default function EmailVerificationStep({
   email,
-  userId, // kept for UI compatibility (not used by backend)
+  userId,
   onBack,
   onSuccess,
   onVerificationFailed,
@@ -55,7 +55,6 @@ export default function EmailVerificationStep({
   const handlePaste = (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text").trim();
-
     if (!/^\d{6}$/.test(pasted)) return;
 
     setOtp(pasted.split(""));
@@ -78,8 +77,6 @@ export default function EmailVerificationStep({
     setLoading(true);
     setError("");
 
-    console.info("[AUTH] OTP VERIFY →", { email });
-
     const res = await authService.verifyOTP(email, code);
 
     if (res?.success) {
@@ -88,7 +85,6 @@ export default function EmailVerificationStep({
       const msg = res?.data?.message || "Invalid OTP.";
       setError(msg);
       onVerificationFailed?.(msg);
-      console.warn("[AUTH] OTP FAILED →", res);
     }
 
     setLoading(false);
@@ -96,12 +92,15 @@ export default function EmailVerificationStep({
 
   /* ---------------- RESEND OTP ---------------- */
   const handleResend = async () => {
-    if (timer > 0) return;
+    if (timer > 0 || !userId) {
+      if (!userId) {
+        setError("User session missing. Please go back and register again.");
+      }
+      return;
+    }
 
     setResendLoading(true);
     setError("");
-
-    console.info("[AUTH] OTP RESEND →", { userId });
 
     const res = await authService.getOTP(userId);
 
