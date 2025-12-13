@@ -5,10 +5,9 @@ import { useAuthStore } from "../store/authStore";
 const Loading = lazy(() => import("../components/Loading"));
 
 const ProtectedRoute = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const { isAuthenticated, loading } = useAuthStore();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Suspense fallback={null}>
         <Loading />
@@ -16,7 +15,11 @@ const ProtectedRoute = () => {
     );
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/register" replace />;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

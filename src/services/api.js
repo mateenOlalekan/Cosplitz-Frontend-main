@@ -1,77 +1,117 @@
-// ==============================
-// src/services/api.js (NEW)
-// ==============================
+// src/store/authStore.js
+import { create } from "zustand";
+import { authService, storeAuthToken, clearAuthToken } from "../services/api";
 
-const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
+export const useAuthStore = create((set) => ({
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isVerified: false,
+  loading: false,
+  error: null,
 
-/* ---------------- TOKEN HELPERS ---------------- */
-export const getAuthToken = () =>
-  localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+  /* ----------------------------------------------------
+     REGISTER → LOGIN → OTP (SILENT FLOW)
+  ---------------------------------------------------- */
+  registerAndLogin: async (registerData) => {
+    try {
+      set({ loading: true, error: null });
 
-export const storeToken = (token, remember = true) => {
-  if (!token) return;
-  if (remember) {
-    localStorage.setItem("authToken", token);
-    sessionStorage.removeItem("authToken");
-  } else {
-    sessionStorage.setItem("authToken", token);
-    localStorage.removeItem("authToken");
-  }
-};
+      // 1️⃣ Register
+      await authService.register(registerData);
 
-export const clearAuthData = () => {
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("userInfo");
-  sessionStorage.removeItem("authToken");
-  sessionStorage.removeItem("userInfo");
-};
+      // 2️⃣ Login silently
+      const loginRes = await authService.login({
+        email: registerData.email,
+        password: registerData.password,
+      });
 
-/* ---------------- CORE REQUEST ---------------- */
-async function request(endpoint, options = {}) {
-  const token = getAuthToken();
+      const token = loginRes.access || loginRes.token;
+      storeAuthToken(token);
 
-  const headers = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
+      set({
+        token,
+        isAuthenticated: true,
+      });
 
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: options.method || "GET",
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+      return loginRes.user; // contains id + email
+    } catch (err) {
+      set({
+        error: err?.response?.data || "Registration failed",
+      });
+      throw err;
+    } finally {
+      set({ loading: false });
+    }
+  },
 
-  const data = await res.json().catch(() => ({}));
+  /* ----------------------------------------------------
+     REQUEST OTP
+  ---------------------------------------------------- */
+  requestOtp: async (userId) => {
+    try {
+      set({ loading: true, error: null });
+      await authService.getOtp(userId);
+    } catch (err) {
+      set({
+        error: err?.response?.data || "Failed to send OTP",
+      });
+      throw err;
+    } finally {
+      set({ loading: false });
+    }
+  },
 
-  if (!res.ok) {
-    return { success: false, status: res.status, data };
-  }
+  /* ----------------------------------------------------
+     VERIFY OTP
+  ---------------------------------------------------- */
+  verifyOtp: async (email, otp) => {
+    try {
+      set({ loading: true, error: null });
 
-  return { success: true, status: res.status, data };
-}
+      await authService.verifyOtp({ email, otp });
 
-/* ---------------- AUTH SERVICE ---------------- */
-export const authService = {
-  register: (payload) =>
-    request("/register/", { method: "POST", body: payload }),
+      const user = await authService.getUserInfo();
 
-  login: (payload) =>
-    request("/login/", { method: "POST", body: payload }),
+      set({
+        user,
+        isVerified: true,
+      });
+    } catch (err) {
+      set({
+        error: err?.response?.data || "Invalid OTP",
+      });
+      throw err;
+    } finally {
+      set({ loading: false });
+    }
+  },
 
-  getUserInfo: () => request("/user/info"),
+  /* ----------------------------------------------------
+     LOAD USER (ON REFRESH)
+  ---------------------------------------------------- */
+  loadUser: async () => {
+    try {
+      const user = await authService.getUserInfo();
+      set({
+        user,
+        isAuthenticated: true,
+      });
+    } catch {
+      clearAuthToken();
+    }
+  },
 
-  sendOTP: (userId) => request(`/otp/${userId}/`),
-
-  verifyOTP: (email, otp) =>
-    request("/verify_otp", {
-      method: "POST",
-      body: { email, otp },
-    }),
-
-  logout: () => request("/logout/", { method: "POST" }),
-};
-
-export default authService;
-
+  /* ----------------------------------------------------
+     LOGOUT
+  ---------------------------------------------------- */
+  logout: () => {
+    clearAuthToken();
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isVerified: false,
+    });
+  },
+}));

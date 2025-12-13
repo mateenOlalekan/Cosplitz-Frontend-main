@@ -1,176 +1,97 @@
-// src/pages/Register.jsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
-import { authService } from "../../../services/api";
-import EmailVerificationStep from "./EmailVerificationStep";
 import RegistrationForm from "./RegistrationForm";
+import EmailVerificationStep from "./EmailVerificationStep";
 import Successful from "./Successful";
+import { useAuthStore } from "../../../store/authStore";
 
 export default function Register() {
   const navigate = useNavigate();
+  const {
+    registerAndLogin,
+    requestOtp,
+  } = useAuthStore();
 
-  const [currentStep, setCurrentStep] = useState(1); // 1=form, 2=verify, 3=success
+  const [step, setStep] = useState("register"); // register | verify | success
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [userId, setUserId] = useState(null);
-  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [email, setEmail] = useState("");
 
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    nationality: "",
-    password: "",
-    agreeToTerms: false,
-  });
+  /* ---------------------------------------
+     REGISTER → LOGIN → OTP
+  --------------------------------------- */
+  const handleRegister = async (formData) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  /* ----------------------------------------
-     CLEAR ERROR ON STEP CHANGE
-  ---------------------------------------- */
-  useEffect(() => {
-    setError(null);
-  }, [currentStep]);
+      const user = await registerAndLogin(formData);
 
-  /* ----------------------------------------
-     REGISTER SUBMIT (STEP 1 → STEP 2)
-  ---------------------------------------- */
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+      await requestOtp(user.id);
 
-    // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError("Please fill all required fields.");
+      setUserId(user.id);
+      setEmail(user.email);
+
+      // persist refresh-safe state
+      localStorage.setItem(
+        "pending_verification",
+        JSON.stringify({ userId: user.id, email: user.email })
+      );
+
+      setStep("verify");
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Registration failed. Please try again."
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!formData.agreeToTerms) {
-      setError("Please agree to the terms & conditions.");
-      setLoading(false);
-      return;
-    }
-
-    if (
-      formData.password.length < 8 ||
-      !/[A-Z]/.test(formData.password) ||
-      !/\d/.test(formData.password)
-    ) {
-      setError("Password must be at least 8 characters, include an uppercase letter and a number.");
-      setLoading(false);
-      return;
-    }
-
-    const payload = {
-      first_name: formData.firstName.trim(),
-      last_name: formData.lastName.trim(),
-      email: formData.email.toLowerCase().trim(),
-      password: formData.password,
-      username: formData.email.split("@")[0],
-    };
-
-    const res = await authService.register(payload);
-
-    if (!res?.success) {
-      setError(res?.data?.message || "Registration failed.");
-      setLoading(false);
-      return;
-    }
-
-    const user = res.data?.user;
-
-    if (!user?.id || !user?.email) {
-      setError("Registration succeeded but user data is incomplete.");
-      setLoading(false);
-      return;
-    }
-
-    // Persist minimal verification context (refresh-safe)
-    localStorage.setItem(
-      "pending_verification",
-      JSON.stringify({ userId: user.id, email: user.email })
-    );
-
-    setUserId(user.id);
-    setRegisteredEmail(user.email);
-    setCurrentStep(2); // OTP already sent by backend
-    setLoading(false);
   };
 
-  /* ----------------------------------------
-     INPUT CHANGE
-  ---------------------------------------- */
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (error) setError(null);
-  };
-
-  /* ----------------------------------------
-     VERIFY SUCCESS (STEP 2 → STEP 3)
-  ---------------------------------------- */
-  const handleVerificationSuccess = () => {
+  /* ---------------------------------------
+     OTP VERIFIED
+  --------------------------------------- */
+  const handleVerified = () => {
     localStorage.removeItem("pending_verification");
-    setCurrentStep(3);
+    setStep("success");
 
-    // Short success screen → dashboard
     setTimeout(() => {
       navigate("/dashboard", { replace: true });
-    }, 2500);
+    }, 2000);
   };
 
-  /* ----------------------------------------
-     BACK TO FORM
-  ---------------------------------------- */
-  const handleBackToStep1 = () => {
-    setError(null);
-    setCurrentStep(1);
-  };
-
-  /* ----------------------------------------
-     RESTORE VERIFICATION STATE ON REFRESH
-  ---------------------------------------- */
+  /* ---------------------------------------
+     RESTORE STATE ON REFRESH
+  --------------------------------------- */
   useEffect(() => {
     const pending = localStorage.getItem("pending_verification");
     if (!pending) return;
 
     try {
-      const { userId, email } = JSON.parse(pending);
-      if (userId && email) {
-        setUserId(userId);
-        setRegisteredEmail(email);
-        setCurrentStep(2);
+      const parsed = JSON.parse(pending);
+      if (parsed?.userId && parsed?.email) {
+        setUserId(parsed.userId);
+        setEmail(parsed.email);
+        setStep("verify");
       }
-    } catch (_) {}
+    } catch {}
   }, []);
 
-  /* ----------------------------------------
-     UI (UNCHANGED)
-  ---------------------------------------- */
+  /* ---------------------------------------
+     UI
+  --------------------------------------- */
   return (
-    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
 
         {/* LEFT */}
-        <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
-          <div className="w-full flex flex-col items-center">
-            <img
-              src={loginlogo}
-              alt="Register"
-              className="rounded-lg w-full h-auto max-h-[400px] object-contain"
-            />
-            <div className="bg-gradient-to-br max-w-lg from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
-              <h1 className="text-3xl font-semibold text-[#2D0D23] mb-1">
-                Share Expenses & Resources in Real Time
-              </h1>
-              <p className="text-xl font-medium text-[#4B4B4B] leading-relaxed">
-                Connect with students, travelers, and locals to effortlessly manage costs and resources.
-              </p>
-            </div>
-          </div>
+        <div className="hidden lg:flex w-1/2 bg-[#F8EACD] p-6 items-center justify-center">
+          <img src={loginlogo} alt="Register" className="max-h-[420px]" />
         </div>
 
         {/* RIGHT */}
@@ -178,26 +99,24 @@ export default function Register() {
           <img src={logo} alt="Logo" className="h-10 mb-4" />
 
           <div className="w-full max-w-2xl bg-white p-6 rounded-xl shadow-md">
-            {currentStep === 1 && (
+            {step === "register" && (
               <RegistrationForm
-                formData={formData}
-                handleInputChange={handleInputChange}
-                handleFormSubmit={handleFormSubmit}
+                onSubmit={handleRegister}
                 loading={loading}
                 error={error}
               />
             )}
 
-            {currentStep === 2 && (
+            {step === "verify" && (
               <EmailVerificationStep
-                email={registeredEmail}
+                email={email}
                 userId={userId}
-                onBack={handleBackToStep1}
-                onSuccess={handleVerificationSuccess}
+                onBack={() => setStep("register")}
+                onSuccess={handleVerified}
               />
             )}
 
-            {currentStep === 3 && <Successful />}
+            {step === "success" && <Successful />}
           </div>
         </div>
       </div>

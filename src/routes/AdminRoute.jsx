@@ -5,12 +5,16 @@ import { useAuthStore } from "../store/authStore";
 const Loading = lazy(() => import("../components/Loading"));
 
 const AdminProtectedRoute = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated());
-  const isAdmin = useAuthStore((s) => s.isAdmin());
-  const isVerified = useAuthStore((s) => s.isVerified);
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const {
+    user,
+    isAuthenticated,
+    isVerified,
+    loading,
+  } = useAuthStore();
 
-  if (isLoading) {
+  const isAdmin = user?.is_admin === true;
+
+  if (loading) {
     return (
       <Suspense fallback={null}>
         <Loading />
