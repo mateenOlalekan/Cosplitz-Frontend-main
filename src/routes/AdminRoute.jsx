@@ -1,38 +1,15 @@
-import React, { lazy, Suspense } from "react";
+import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
+const Loading = React.lazy(() => import("../components/Loading"));
 
-const Loading = lazy(() => import("../components/Loading"));
 
 const AdminProtectedRoute = () => {
-  const {
-    user,
-    isAuthenticated,
-    isVerified,
-    loading,
-  } = useAuthStore();
+  const { isAuthenticated, isLoading, isAdmin } = useAuthStore();
 
-  const isAdmin = user?.is_admin === true;
-
-  if (loading) {
-    return (
-      <Suspense fallback={null}>
-        <Loading />
-      </Suspense>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/admin/login" replace />;
-  }
-
-  if (!isVerified) {
-    return <Navigate to="/verify-email" replace />;
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+  if (!isAdmin()) return <Navigate to="/dashboard" replace />;
 
   return <Outlet />;
 };

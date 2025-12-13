@@ -1,36 +1,17 @@
-import React, { lazy, Suspense } from "react";
+import React,{lazy}from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-
-const Loading = lazy(() => import("../components/Loading"));
+const Loading = React.lazy(() => import("../components/Loading"));
+ // Import directly
 
 const RoleRoute = ({ allowedRoles = [] }) => {
-  const {
-    user,
-    isAuthenticated,
-    isVerified,
-    loading,
-  } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
 
-  if (loading) {
-    return (
-      <Suspense fallback={null}>
-        <Loading />
-      </Suspense>
-    );
-  }
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  if (!isAuthenticated) {
-    return <Navigate to="/register" replace />;
-  }
-
-  if (!isVerified) {
-    return <Navigate to="/verify-email" replace />;
-  }
-
-  const role = user?.role || "user";
-
-  if (allowedRoles.length && !allowedRoles.includes(role)) {
+  const userRole = user?.role || "user";
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -38,4 +19,3 @@ const RoleRoute = ({ allowedRoles = [] }) => {
 };
 
 export default RoleRoute;
- 

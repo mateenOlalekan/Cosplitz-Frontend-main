@@ -1,97 +1,125 @@
-import { useEffect, useState } from "react";
+
+        // src/pages/Register.jsx
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
-import RegistrationForm from "./RegistrationForm";
+import { authService } from "../../../services/api";
 import EmailVerificationStep from "./EmailVerificationStep";
+import RegistrationForm from "./RegistrationForm";
 import Successful from "./Successful";
-import { useAuthStore } from "../../../store/authStore";
 
 export default function Register() {
-  const navigate = useNavigate();
-  const {
-    registerAndLogin,
-    requestOtp,
-  } = useAuthStore();
-
-  const [step, setStep] = useState("register"); // register | verify | success
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [userId, setUserId] = useState(null);
-  const [email, setEmail] = useState("");
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
-  /* ---------------------------------------
-     REGISTER → LOGIN → OTP
-  --------------------------------------- */
-  const handleRegister = async (formData) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const navigate = useNavigate();
 
-      const user = await registerAndLogin(formData);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    nationality: "",
+    password: "",
+    agreeToTerms: false,
+  });
 
-      await requestOtp(user.id);
-
-      setUserId(user.id);
-      setEmail(user.email);
-
-      // persist refresh-safe state
-      localStorage.setItem(
-        "pending_verification",
-        JSON.stringify({ userId: user.id, email: user.email })
-      );
-
-      setStep("verify");
-    } catch (err) {
-      setError(
-        err?.response?.data?.message ||
-          "Registration failed. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ---------------------------------------
-     OTP VERIFIED
-  --------------------------------------- */
-  const handleVerified = () => {
-    localStorage.removeItem("pending_verification");
-    setStep("success");
-
-    setTimeout(() => {
-      navigate("/dashboard", { replace: true });
-    }, 2000);
-  };
-
-  /* ---------------------------------------
-     RESTORE STATE ON REFRESH
-  --------------------------------------- */
   useEffect(() => {
-    const pending = localStorage.getItem("pending_verification");
-    if (!pending) return;
+    setError(null);
+  }, [currentStep]);
 
-    try {
-      const parsed = JSON.parse(pending);
-      if (parsed?.userId && parsed?.email) {
-        setUserId(parsed.userId);
-        setEmail(parsed.email);
-        setStep("verify");
-      }
-    } catch {}
-  }, []);
+  /* ----------------------------------------
+     REGISTER SUBMIT
+  ---------------------------------------- */
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
-  /* ---------------------------------------
-     UI
-  --------------------------------------- */
+    // Validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      setError("Please fill all required fields.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.agreeToTerms) {
+      setError("Please agree to the terms & conditions.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      formData.password.length < 8 ||
+      !/[A-Z]/.test(formData.password) ||
+      !/\d/.test(formData.password)
+    ) {
+      setError("Password must be 8+ chars, include an uppercase letter and a number.");
+      setLoading(false);
+      return;
+    }
+
+    const payload = {
+      first_name: formData.firstName.trim(),
+      last_name: formData.lastName.trim(),
+      email: formData.email.toLowerCase().trim(),
+      password: formData.password,
+      username: formData.email.split("@")[0],
+    };
+
+    const res = await authService.register(payload);
+
+    if (res.error) {
+      setError(res.data?.message || "Registration failed.");
+      setLoading(false);
+      return;
+    }
+
+    const user = res.data?.user;
+
+    if (!user?.id) {
+      setError("Registration succeeded but user ID missing.");
+      setLoading(false);
+      return;
+    }
+
+    setUserId(user.id);
+    setRegisteredEmail(user.email);
+    setCurrentStep(2); // backend already sent OTP
+    setLoading(false);
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (error) setError(null);
+  };
+
+  const handleVerificationSuccess = () => {
+    setCurrentStep(3);
+    setTimeout(() => navigate("/dashboard"), 3000);
+  };
+
+  const handleBackToStep1 = () => {
+    setError(null);
+    setCurrentStep(1);
+  };
+
+  /* ----------------------------------------
+     UI (UNCHANGED)
+  ---------------------------------------- */
   return (
-    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4">
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
 
         {/* LEFT */}
-        <div className="hidden lg:flex w-1/2 bg-[#F8EACD] p-6 items-center justify-center">
-          <img src={loginlogo} alt="Register" className="max-h-[420px]" />
+        <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
+          <div className="w-full flex flex-col items-center">
+            <img src={loginlogo} alt="Register" className="rounded-lg w-full max-h-[400px] object-contain" />
+          </div>
         </div>
 
         {/* RIGHT */}
@@ -99,24 +127,26 @@ export default function Register() {
           <img src={logo} alt="Logo" className="h-10 mb-4" />
 
           <div className="w-full max-w-2xl bg-white p-6 rounded-xl shadow-md">
-            {step === "register" && (
+            {currentStep === 1 && (
               <RegistrationForm
-                onSubmit={handleRegister}
+                formData={formData}
+                handleInputChange={handleInputChange}
+                handleFormSubmit={handleFormSubmit}
                 loading={loading}
                 error={error}
               />
             )}
 
-            {step === "verify" && (
+            {currentStep === 2 && (
               <EmailVerificationStep
-                email={email}
+                email={registeredEmail}
                 userId={userId}
-                onBack={() => setStep("register")}
-                onSuccess={handleVerified}
+                onBack={handleBackToStep1}
+                onSuccess={handleVerificationSuccess}
               />
             )}
 
-            {step === "success" && <Successful />}
+            {currentStep === 3 && <Successful />}
           </div>
         </div>
       </div>

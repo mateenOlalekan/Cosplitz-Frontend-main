@@ -52,11 +52,11 @@ const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 
 
 function App() {
-const initializeAuth = useAuthStore((s) => s.initializeAuth);
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
 
-useEffect(() => {
-  initializeAuth();
-}, [initializeAuth]);
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
 
   return (
     <Suspense fallback={<Loading />}>

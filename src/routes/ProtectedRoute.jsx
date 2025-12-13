@@ -1,25 +1,18 @@
-import React, { lazy, Suspense } from "react";
+// routes/ProtectedRoute.js
+import {lazy} from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-
 const Loading = lazy(() => import("../components/Loading"));
+ // Import directly
 
 const ProtectedRoute = () => {
-  const { isAuthenticated, loading } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-  if (loading) {
-    return (
-      <Suspense fallback={null}>
-        <Loading />
-      </Suspense>
-    );
+  if (isLoading) {
+    return <Loading />;
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/register" replace />;
-  }
-
-  return <Outlet />;
+  
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;

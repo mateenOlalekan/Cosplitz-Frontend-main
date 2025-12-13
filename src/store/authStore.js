@@ -1,57 +1,54 @@
-// src/store/authStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      /* ---------------- STATE ---------------- */
+
       user: null,
       token: null,
-      isVerified: false,
-      isLoading: true,
       error: null,
+      isLoading:true,
 
-      /* ---------------- SET AUTH ---------------- */
-      setAuth: ({ token, user, isVerified }) => {
-        set({
-          token,
-          user,
-          isVerified: !!isVerified,
-          isLoading: false,
-        });
+      setToken: (token, persistToken = true) => {
+        set({ token });
 
-        if (token) localStorage.setItem("authToken", token);
-        if (user) localStorage.setItem("userInfo", JSON.stringify(user));
-        localStorage.setItem("isVerified", JSON.stringify(!!isVerified));
-      },
-
-      /* ---------------- INIT (CRASH FIX) ---------------- */
-      initializeAuth: () => {
         try {
-          const token = localStorage.getItem("authToken");
-          const userRaw = localStorage.getItem("userInfo");
-          const isVerified = JSON.parse(
-            localStorage.getItem("isVerified") || "false"
-          );
-
-          set({
-            token: token || null,
-            user: userRaw ? JSON.parse(userRaw) : null,
-            isVerified,
-            isLoading: false,
-          });
-        } catch {
-          set({
-            token: null,
-            user: null,
-            isVerified: false,
-            isLoading: false,
-          });
-        }
+          if (persistToken) {
+            localStorage.setItem("authToken", token);
+            sessionStorage.removeItem("authToken");
+          } else {
+            sessionStorage.setItem("authToken", token);
+            localStorage.removeItem("authToken");
+          }
+        } catch (e) {}
       },
 
-      /* ---------------- HELPERS ---------------- */
+      setUser: (userObj) => {
+        set({ user: userObj });
+        try {
+          if (userObj)
+            localStorage.setItem("userInfo", JSON.stringify(userObj));
+          else localStorage.removeItem("userInfo");
+        } catch (e) {}
+      },
+
+      tempRegister: null,
+      register: (payload) => set({ tempRegister: payload }),
+
+      logout: () => {
+        set({ user: null, token: null, error: null });
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userInfo");
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("userInfo");
+
+        window.location.href = "/login";
+      },
+
+      setError: (msg) => set({ error: msg }),
+      clearError: () => set({ error: null }),
+
       isAuthenticated: () => !!get().token,
 
       isAdmin: () => {
@@ -59,23 +56,32 @@ export const useAuthStore = create(
         return u?.role === "admin" || u?.is_admin === true;
       },
 
-      logout: () => {
-        localStorage.clear();
-        set({
-          user: null,
-          token: null,
-          isVerified: false,
-          error: null,
-        });
-        window.location.href = "/login";
+      initializeAuth: () => {
+        try {
+          const token =
+            localStorage.getItem("authToken") ||
+            sessionStorage.getItem("authToken");
+
+          const userRaw =
+            localStorage.getItem("userInfo") ||
+            sessionStorage.getItem("userInfo");
+
+          set({
+            token: token || null,
+            user: userRaw ? JSON.parse(userRaw) : null,
+            isLoading: false,
+          });
+        } catch {
+          set({ token: null, user: null, isLoading: false });
+        }
       },
     }),
+
     {
       name: "auth-storage",
       partialize: (state) => ({
         token: state.token,
         user: state.user,
-        isVerified: state.isVerified,
       }),
     }
   )
