@@ -178,7 +178,7 @@ export const authService = {
       username: userData.username || userData.email.split("@")[0],
     };
     
-    return await request("/register", {
+    return await request("/register/", {
       method: "POST",
       body: dataToSend,
     });
