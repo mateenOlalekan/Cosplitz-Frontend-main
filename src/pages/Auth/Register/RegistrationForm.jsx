@@ -1,3 +1,4 @@
+// src/pages/Register/RegistrationForm.jsx
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -25,20 +26,20 @@ function RegistrationForm({
         Let's get started with real-time cost sharing.
       </p>
 
-      {/* Error */}
+      {/* ERROR MESSAGE */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mb-3 text-center">
           {error}
         </div>
       )}
 
-      {/* Social Signup */}
+      {/* SOCIAL SIGNUP (UI UNCHANGED) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
         <motion.button
           type="button"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => handleSocialRegister("google")}
+          onClick={() => handleSocialRegister?.("google")}
           className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <FcGoogle size={20} />
@@ -49,7 +50,7 @@ function RegistrationForm({
           type="button"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => handleSocialRegister("apple")}
+          onClick={() => handleSocialRegister?.("apple")}
           className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <PiAppleLogoBold size={20} />
@@ -57,14 +58,14 @@ function RegistrationForm({
         </motion.button>
       </div>
 
-      {/* Divider */}
+      {/* DIVIDER */}
       <div className="flex items-center my-4">
         <div className="flex-grow border-t border-gray-300" />
         <span className="mx-2 text-gray-500 text-sm">Or</span>
         <div className="flex-grow border-t border-gray-300" />
       </div>
 
-      {/* Form */}
+      {/* FORM */}
       <form onSubmit={handleFormSubmit} className="space-y-3">
         {[
           { key: "firstName", label: "First Name", type: "text" },
@@ -79,9 +80,7 @@ function RegistrationForm({
             <input
               type={field.type}
               value={formData[field.key]}
-              onChange={(e) =>
-                handleInputChange(field.key, e.target.value)
-              }
+              onChange={(e) => handleInputChange(field.key, e.target.value)}
               placeholder={`Enter your ${field.label.toLowerCase()}`}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
               required
@@ -89,7 +88,7 @@ function RegistrationForm({
           </div>
         ))}
 
-        {/* Password */}
+        {/* PASSWORD */}
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-1">
             Password *
@@ -99,9 +98,7 @@ function RegistrationForm({
             <input
               type={showPassword ? "text" : "password"}
               value={formData.password}
-              onChange={(e) =>
-                handleInputChange("password", e.target.value)
-              }
+              onChange={(e) => handleInputChange("password", e.target.value)}
               placeholder="Create your password"
               className="w-full py-2 outline-none"
               required
@@ -118,14 +115,12 @@ function RegistrationForm({
           <PasswordValidation password={formData.password} />
         </div>
 
-        {/* Terms */}
+        {/* TERMS */}
         <label className="flex gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
           <input
             type="checkbox"
             checked={formData.agreeToTerms}
-            onChange={(e) =>
-              handleInputChange("agreeToTerms", e.target.checked)
-            }
+            onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
             className="rounded focus:ring-green-500"
           />
           <span>
@@ -145,7 +140,7 @@ function RegistrationForm({
           </span>
         </label>
 
-        {/* Submit */}
+        {/* SUBMIT */}
         <motion.button
           type="submit"
           whileHover={{ scale: 1.02 }}
@@ -165,7 +160,7 @@ function RegistrationForm({
           )}
         </motion.button>
 
-        {/* Login link */}
+        {/* LOGIN LINK */}
         <p className="text-center text-sm text-gray-600 mt-3">
           Already have an account?{" "}
           <Link to="/login" className="text-green-600 hover:underline font-medium">

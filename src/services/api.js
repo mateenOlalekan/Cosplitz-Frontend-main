@@ -1,9 +1,10 @@
 // src/services/api.js
+
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
-/**
- * Get token
- */
+/* -------------------------------------------------------------
+   AUTH TOKEN
+------------------------------------------------------------- */
 function getAuthToken() {
   try {
     return (
@@ -16,172 +17,116 @@ function getAuthToken() {
   }
 }
 
-/**
- * Core request handler (fetch)
- */
+/* -------------------------------------------------------------
+   LOGGER (DEV ONLY)
+------------------------------------------------------------- */
+const logRequest = (type, payload) => {
+  if (process.env.NODE_ENV === "development") {
+    console.group(`[API ${type}]`);
+    console.log(payload);
+    console.groupEnd();
+  }
+};
+
+/* -------------------------------------------------------------
+   CORE REQUEST (FETCH)
+------------------------------------------------------------- */
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
-
-  const defaultHeaders = {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  };
-
   const token = getAuthToken();
   const isFormData = options.body instanceof FormData;
 
   const headers = {
-    ...(isFormData ? {} : defaultHeaders),
-    ...(options.headers || {}),
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    Accept: "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
   };
 
   const finalOptions = {
     method: options.method || "GET",
     headers,
-    ...options,
+    body: options.body,
   };
 
   if (finalOptions.body && !isFormData && typeof finalOptions.body === "object") {
     finalOptions.body = JSON.stringify(finalOptions.body);
   }
 
+  logRequest("REQUEST", { url, finalOptions });
+
   let response;
   try {
     response = await fetch(url, finalOptions);
-  } catch (err) {
+  } catch (error) {
+    logRequest("NETWORK_ERROR", error);
     return {
       status: 0,
-      data: { message: "Network error. Please try again." },
+      success: false,
       error: true,
+      data: { message: "Network error. Please try again." },
     };
   }
 
-  let json = null;
+  let data = null;
   try {
-    const text = await response.text();
-    json = text ? JSON.parse(text) : null;
+    data = await response.json();
   } catch {
-    json = { message: "Invalid JSON response from server." };
+    data = { message: "Invalid JSON response" };
   }
 
-  // Handle 401
+  logRequest("RESPONSE", { status: response.status, data });
+
   if (response.status === 401) {
     localStorage.clear();
     sessionStorage.clear();
-
-    if (!window.location.pathname.includes("/login")) {
-      window.location.href = "/login";
-    }
-
-    return {
-      status: 401,
-      data: json || { message: "Unauthorized" },
-      unauthorized: true,
-    };
+    window.location.href = "/login";
+    return { status: 401, unauthorized: true, data };
   }
 
-  // Generic error handling
   if (!response.ok) {
     return {
       status: response.status,
-      data: json,
+      success: false,
       error: true,
+      data,
     };
   }
 
   return {
     status: response.status,
-    data: json,
     success: true,
+    data,
   };
 }
 
 /* -------------------------------------------------------------
-   AUTH SERVICE — MATCHED EXACTLY WITH YOUR BACKEND
-----------------------------------------------------------------*/
-/* -------------------------------------------------------------
-   AUTH SERVICE — CLEAN & CONSISTENT
-----------------------------------------------------------------*/
+   AUTH SERVICE (DJANGO ALIGNED)
+------------------------------------------------------------- */
 export const authService = {
-  register: async (userData) =>
+  register: (payload) =>
     request("/register/", {
       method: "POST",
-      body: userData,
+      body: payload,
     }),
 
-  login: async (credentials) =>
+  login: (payload) =>
     request("/login/", {
       method: "POST",
-      body: credentials,
+      body: payload,
     }),
 
-  /** VERIFY OTP — EMAIL + OTP */
-  verifyOTP: async (email, otp) =>
-    request("/verify_otp", {
+  verifyOTP: (email, otp) =>
+    request("/verify_otp/", {
       method: "POST",
-      body: {
-        email: email.toLowerCase().trim(),
-        otp: otp.trim(),
-      },
+      body: { email, otp },
     }),
 
-  /** RESEND OTP — SAME BACKEND FLOW */
-  resendOTP: async (email) =>
-    request("/resend_otp", {
+  resendOTP: (email) =>
+    request("/otp/", {
       method: "POST",
-      body: {
-        email: email.toLowerCase().trim(),
-      },
+      body: { email },
     }),
 };
 
-/* -------------------------------------------------------------
-   DASHBOARD SERVICE
-----------------------------------------------------------------*/
-export const dashboardService = {
-  getOverview: async () =>
-    request("/dashboard/overview", { method: "GET" }),
-
-  getAnalytics: async (period = "monthly") =>
-    request(`/dashboard/analytics?period=${period}`, {
-      method: "GET",
-    }),
-
-  createSplit: async (splitData) =>
-    request("/splits/create", {
-      method: "POST",
-      body: splitData,
-    }),
-
-  getWalletBalance: async () =>
-    request("/wallet/balance", { method: "GET" }),
-
-  getNotifications: async () =>
-    request("/notifications", { method: "GET" }),
-};
-
-/* -------------------------------------------------------------
-   ADMIN SERVICE
-----------------------------------------------------------------*/
-export const adminService = {
-  getDashboardStats: async () =>
-    request("/admin/dashboard", { method: "GET" }),
-
-  getUsers: async (page = 1, limit = 20) =>
-    request(`/admin/users?page=${page}&limit=${limit}`, {
-      method: "GET",
-    }),
-
-  getSplits: async (page = 1, limit = 20) =>
-    request(`/admin/splits?page=${page}&limit=${limit}`, {
-      method: "GET",
-    }),
-};
-
-export default {
-  request,
-  authService,
-  dashboardService,
-  adminService,
-};
+export default { request, authService };
