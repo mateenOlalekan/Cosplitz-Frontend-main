@@ -1,5 +1,4 @@
 // src/services/api.js
-
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 /* ----------------------------------------------------
@@ -76,39 +75,61 @@ async function request(endpoint, options = {}) {
 }
 
 /* ----------------------------------------------------
-   AUTH SERVICE (100% BACKEND-ALIGNED)
+   RUNTIME GUARD
+---------------------------------------------------- */
+function safeCall(fn, name) {
+  if (typeof fn !== "function") {
+    console.error(`[API GUARD] ${name} is not a function`);
+    return async () => ({
+      error: true,
+      data: { message: `${name} is not a function` },
+    });
+  }
+  return fn;
+}
+
+/* ----------------------------------------------------
+   AUTH SERVICE (BACKEND-ALIGNED + SAFE)
 ---------------------------------------------------- */
 export const authService = {
-  /** REGISTER */
-  register: async (payload) =>
-    request("/register/", {
-      method: "POST",
-      body: payload,
-    }),
+  register: safeCall(
+    async (payload) =>
+      request("/register/", { method: "POST", body: payload }),
+    "authService.register"
+  ),
 
-  /** LOGIN */
-  login: async (payload) =>
-    request("/login/", {
-      method: "POST",
-      body: payload,
-    }),
+  login: safeCall(
+    async (payload) =>
+      request("/login/", { method: "POST", body: payload }),
+    "authService.login"
+  ),
 
-  /** USER INFO */
-  getUserInfo: async () => request("/user/info", { method: "GET" }),
+  getUserInfo: safeCall(
+    async () => request("/user/info", { method: "GET" }),
+    "authService.getUserInfo"
+  ),
 
-  /** SEND OTP */
-  getOTP: async (userId) =>
-    request(`/otp/${userId}/`, { method: "GET" }),
+  getOTP: safeCall(
+    async (userId) => request(`/otp/${userId}/`, { method: "GET" }),
+    "authService.getOTP"
+  ),
 
-  /** VERIFY OTP (FIXED 400 ISSUE) */
-  verifyOTP: async (email, otp) =>
-    request("/verify_otp", {
-      method: "POST",
-      body: { email, otp },
-    }),
+  // Alias for resend OTP
+  resendOTP: safeCall(
+    async (userId) => request(`/otp/${userId}/`, { method: "GET" }),
+    "authService.resendOTP"
+  ),
 
-  /** LOGOUT */
-  logout: async () => request("/logout/", { method: "POST" }),
+  verifyOTP: safeCall(
+    async (email, otp) =>
+      request("/verify_otp", { method: "POST", body: { email, otp } }),
+    "authService.verifyOTP"
+  ),
+
+  logout: safeCall(async () => request("/logout/", { method: "POST" }), "authService.logout"),
 };
 
+/* ----------------------------------------------------
+   EXPORT
+---------------------------------------------------- */
 export default { request, authService };

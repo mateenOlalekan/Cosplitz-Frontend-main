@@ -145,7 +145,7 @@ export default function Register() {
 
       // AUTO SEND OTP
       try {
-        await authService.resendOTP(userEmail);
+        await authService.getOTP(userEmail);
       } catch (otpError) {
         console.warn("OTP sending failed:", otpError);
       }
