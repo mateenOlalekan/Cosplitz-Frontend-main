@@ -1,10 +1,9 @@
 // src/services/api.js
-
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
-/* -------------------------------------------------------------
-   AUTH TOKEN
-------------------------------------------------------------- */
+/**
+ * Get token
+ */
 function getAuthToken() {
   try {
     return (
@@ -17,116 +16,210 @@ function getAuthToken() {
   }
 }
 
-/* -------------------------------------------------------------
-   LOGGER (DEV ONLY)
-------------------------------------------------------------- */
-const logRequest = (type, payload) => {
-  if (process.env.NODE_ENV === "development") {
-    console.group(`[API ${type}]`);
-    console.log(payload);
-    console.groupEnd();
-  }
-};
-
-/* -------------------------------------------------------------
-   CORE REQUEST (FETCH)
-------------------------------------------------------------- */
+/**
+ * Core request handler (fetch)
+ */
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
+
+  const defaultHeaders = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+
   const token = getAuthToken();
   const isFormData = options.body instanceof FormData;
 
   const headers = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
-    Accept: "application/json",
+    ...(isFormData ? {} : defaultHeaders),
+    ...(options.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
   };
 
   const finalOptions = {
     method: options.method || "GET",
     headers,
-    body: options.body,
+    ...options,
   };
 
   if (finalOptions.body && !isFormData && typeof finalOptions.body === "object") {
     finalOptions.body = JSON.stringify(finalOptions.body);
   }
 
-  logRequest("REQUEST", { url, finalOptions });
-
   let response;
   try {
     response = await fetch(url, finalOptions);
-  } catch (error) {
-    logRequest("NETWORK_ERROR", error);
+  } catch (err) {
     return {
       status: 0,
-      success: false,
-      error: true,
       data: { message: "Network error. Please try again." },
+      error: true,
     };
   }
 
-  let data = null;
+  let json = null;
   try {
-    data = await response.json();
+    const text = await response.text();
+    json = text ? JSON.parse(text) : null;
   } catch {
-    data = { message: "Invalid JSON response" };
+    json = { message: "Invalid JSON response from server." };
   }
 
-  logRequest("RESPONSE", { status: response.status, data });
-
+  // Handle 401
   if (response.status === 401) {
     localStorage.clear();
     sessionStorage.clear();
-    window.location.href = "/login";
-    return { status: 401, unauthorized: true, data };
+
+    if (!window.location.pathname.includes("/login")) {
+      window.location.href = "/login";
+    }
+
+    return {
+      status: 401,
+      data: json || { message: "Unauthorized" },
+      unauthorized: true,
+    };
   }
 
+  // Generic error handling
   if (!response.ok) {
     return {
       status: response.status,
-      success: false,
+      data: json,
       error: true,
-      data,
     };
   }
 
   return {
     status: response.status,
+    data: json,
     success: true,
-    data,
   };
 }
 
 /* -------------------------------------------------------------
-   AUTH SERVICE (DJANGO ALIGNED)
-------------------------------------------------------------- */
+   AUTH SERVICE — MATCHED EXACTLY WITH YOUR BACKEND
+----------------------------------------------------------------*/
 export const authService = {
-  register: (payload) =>
-    request("/register/", {
+  /** REGISTER — /api/register/ */
+  register: async (userData) => {
+    return await request("/register/", {
       method: "POST",
-      body: payload,
-    }),
+      body: userData,
+    });
+  },
 
-  login: (payload) =>
-    request("/login/", {
+  /** LOGIN — Backend uses: http://localhost:8000/api/login/ */
+  login: async (credentials) => {
+    return await request("/login/", {
       method: "POST",
-      body: payload,
-    }),
+      body: credentials,
+    });
+  },
 
-  verifyOTP: (email, otp) =>
-    request("/verify_otp/", {
+  /** USER INFO */
+  getUserInfo: async () => {
+    return await request("/user/info", { method: "GET" });
+  },
+
+  /** GET OTP — Backend: /api/otp/<user_id>/ */
+  getOTP: async (userId) => {
+    return await request(`/otp/${userId}/`, { method: "GET" });
+  },
+
+  /** VERIFY OTP — MUST SEND email + otp */
+  verifyOTP: async (email, otp) => {
+    return await request("/verify_otp", {
       method: "POST",
       body: { email, otp },
-    }),
+    });
+  },
 
-  resendOTP: (email) =>
-    request("/otp/", {
+  /** RESEND OTP — backend uses SAME endpoint as getOTP */
+  resendOTP: async (userId) => {
+    return await authService.getOTP(userId);
+  },
+
+  forgotPassword: async (email) =>
+    request("/forgot-password/", {
       method: "POST",
       body: { email },
     }),
+
+  resetPassword: async (data) =>
+    request("/reset-password/", {
+      method: "POST",
+      body: data,
+    }),
+
+  updateProfile: async (profileData) =>
+    request("/user/profile/", {
+      method: "PUT",
+      body: profileData,
+    }),
+
+  checkEmail: async (email) =>
+    request("/check-email/", {
+      method: "POST",
+      body: { email },
+    }),
+
+  socialLogin: async (provider, token) =>
+    request(`/social/${provider}/`, {
+      method: "POST",
+      body: { access_token: token },
+    }),
+
+  logout: async () =>
+    request("/logout/", { method: "POST" }),
 };
 
-export default { request, authService };
+/* -------------------------------------------------------------
+   DASHBOARD SERVICE
+----------------------------------------------------------------*/
+export const dashboardService = {
+  getOverview: async () =>
+    request("/dashboard/overview", { method: "GET" }),
+
+  getAnalytics: async (period = "monthly") =>
+    request(`/dashboard/analytics?period=${period}`, {
+      method: "GET",
+    }),
+
+  createSplit: async (splitData) =>
+    request("/splits/create", {
+      method: "POST",
+      body: splitData,
+    }),
+
+  getWalletBalance: async () =>
+    request("/wallet/balance", { method: "GET" }),
+
+  getNotifications: async () =>
+    request("/notifications", { method: "GET" }),
+};
+
+/* -------------------------------------------------------------
+   ADMIN SERVICE
+----------------------------------------------------------------*/
+export const adminService = {
+  getDashboardStats: async () =>
+    request("/admin/dashboard", { method: "GET" }),
+
+  getUsers: async (page = 1, limit = 20) =>
+    request(`/admin/users?page=${page}&limit=${limit}`, {
+      method: "GET",
+    }),
+
+  getSplits: async (page = 1, limit = 20) =>
+    request(`/admin/splits?page=${page}&limit=${limit}`, {
+      method: "GET",
+    }),
+};
+
+export default {
+  request,
+  authService,
+  dashboardService,
+  adminService,
+};
