@@ -1,88 +1,96 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { authService, storeToken, clearAuthData } from "../services/api";
 
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-
       user: null,
       token: null,
+      isLoading: false,
       error: null,
-      isLoading: true,
 
-      setToken: (token, persistToken = true) => {
-        set({ token });
+      /* ---------------- AUTH ACTIONS ---------------- */
 
-        try {
-          if (persistToken) {
-            localStorage.setItem("authToken", token);
-            sessionStorage.removeItem("authToken");
-          } else {
-            sessionStorage.setItem("authToken", token);
-            localStorage.removeItem("authToken");
-          }
-        } catch (e) {}
+      registerUser: async (formData) => {
+        set({ isLoading: true, error: null });
+
+        const res = await authService.register(formData);
+
+        if (res.error) {
+          set({ error: res.data?.message, isLoading: false });
+          return null;
+        }
+
+        set({ isLoading: false });
+        return res.data.user; // used for OTP
       },
 
-      setUser: (userObj) => {
-        set({ user: userObj });
-        try {
-          if (userObj)
-            localStorage.setItem("userInfo", JSON.stringify(userObj));
-          else localStorage.removeItem("userInfo");
-        } catch (e) {}
+      loginUser: async (credentials, remember = true) => {
+        set({ isLoading: true, error: null });
+
+        const res = await authService.login(credentials);
+
+        if (res.error) {
+          set({ error: res.data?.message, isLoading: false });
+          return false;
+        }
+
+        storeToken(res.data.token, remember);
+
+        const userRes = await authService.getUserInfo();
+        if (userRes.success) {
+          set({ user: userRes.data, token: res.data.token });
+          localStorage.setItem("userInfo", JSON.stringify(userRes.data));
+        }
+
+        set({ isLoading: false });
+        return true;
       },
 
-      tempRegister: null,
-      register: (payload) => set({ tempRegister: payload }),
+      verifyOTP: async (email, otp) => {
+        set({ isLoading: true, error: null });
+
+        const res = await authService.verifyOTP(email, otp);
+
+        if (res.error) {
+          set({ error: res.data?.message, isLoading: false });
+          return false;
+        }
+
+        set({ isLoading: false });
+        return true;
+      },
+
+      sendOTP: async (userId) => authService.getOTP(userId),
 
       logout: () => {
-        set({ user: null, token: null, error: null });
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userInfo");
-        sessionStorage.removeItem("authToken");
-        sessionStorage.removeItem("userInfo");
-
+        clearAuthData();
+        set({ user: null, token: null });
         window.location.href = "/login";
       },
 
-      setError: (msg) => set({ error: msg }),
-      clearError: () => set({ error: null }),
+      initializeAuth: () => {
+        const token =
+          localStorage.getItem("authToken") ||
+          sessionStorage.getItem("authToken");
+
+        const user =
+          localStorage.getItem("userInfo") ||
+          sessionStorage.getItem("userInfo");
+
+        set({
+          token: token || null,
+          user: user ? JSON.parse(user) : null,
+        });
+      },
 
       isAuthenticated: () => !!get().token,
-
-      isAdmin: () => {
-        const u = get().user;
-        return u?.role === "admin" || u?.is_admin === true;
-      },
-
-      initializeAuth: () => {
-        try {
-          const token =
-            localStorage.getItem("authToken") ||
-            sessionStorage.getItem("authToken");
-
-          const userRaw =
-            localStorage.getItem("userInfo") ||
-            sessionStorage.getItem("userInfo");
-
-          set({
-            token: token || null,
-            user: userRaw ? JSON.parse(userRaw) : null,
-            isLoading: false,
-          });
-        } catch {
-          set({ token: null, user: null, isLoading: false });
-        }
-      },
+      isAdmin: () => get().user?.is_admin === true,
     }),
-
     {
       name: "auth-storage",
-      partialize: (state) => ({
-        token: state.token,
-        user: state.user,
-      }),
+      partialize: (s) => ({ user: s.user, token: s.token }),
     }
   )
 );
