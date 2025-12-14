@@ -2,7 +2,7 @@
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 /**
- * Get token
+ * Get token from storage
  */
 function getAuthToken() {
   try {
@@ -17,7 +17,7 @@ function getAuthToken() {
 }
 
 /**
- * Core request handler (fetch)
+ * Core request handler
  */
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
@@ -65,13 +65,19 @@ async function request(path, options = {}) {
     json = { message: "Invalid JSON response from server." };
   }
 
-  // Handle 401
+  // Handle 401 - Unauthorized
   if (response.status === 401) {
-    localStorage.clear();
-    sessionStorage.clear();
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn("Failed to clear storage:", e);
+    }
 
     if (!window.location.pathname.includes("/login")) {
-      window.location.href = "/login";
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 100);
     }
 
     return {
@@ -98,10 +104,10 @@ async function request(path, options = {}) {
 }
 
 /* -------------------------------------------------------------
-   AUTH SERVICE — MATCHED EXACTLY WITH YOUR BACKEND
+   AUTH SERVICE
 ----------------------------------------------------------------*/
 export const authService = {
-  /** REGISTER — /api/register/ */
+  /** REGISTER — POST /api/register/ */
   register: async (userData) => {
     return await request("/register/", {
       method: "POST",
@@ -109,7 +115,7 @@ export const authService = {
     });
   },
 
-  /** LOGIN — Backend uses: http://localhost:8000/api/login/ */
+  /** LOGIN — POST /api/login/ */
   login: async (credentials) => {
     return await request("/login/", {
       method: "POST",
@@ -117,17 +123,17 @@ export const authService = {
     });
   },
 
-  /** USER INFO */
+  /** USER INFO — GET /api/user/info */
   getUserInfo: async () => {
     return await request("/user/info", { method: "GET" });
   },
 
-  /** GET OTP — Backend: /api/otp/<user_id>/ */
+  /** GET OTP — GET /api/otp/{id}/ */
   getOTP: async (userId) => {
     return await request(`/otp/${userId}/`, { method: "GET" });
   },
 
-  /** VERIFY OTP — MUST SEND email + otp */
+  /** VERIFY OTP — POST /api/verify_otp */
   verifyOTP: async (email, otp) => {
     return await request("/verify_otp", {
       method: "POST",
@@ -135,43 +141,56 @@ export const authService = {
     });
   },
 
-  /** RESEND OTP — backend uses SAME endpoint as getOTP */
+  /** RESEND OTP — Same as getOTP */
   resendOTP: async (userId) => {
     return await authService.getOTP(userId);
   },
 
+  /** FORGOT PASSWORD */
   forgotPassword: async (email) =>
     request("/forgot-password/", {
       method: "POST",
       body: { email },
     }),
 
+  /** RESET PASSWORD */
   resetPassword: async (data) =>
     request("/reset-password/", {
       method: "POST",
       body: data,
     }),
 
+  /** UPDATE PROFILE */
   updateProfile: async (profileData) =>
     request("/user/profile/", {
       method: "PUT",
       body: profileData,
     }),
 
+  /** CHECK EMAIL */
   checkEmail: async (email) =>
     request("/check-email/", {
       method: "POST",
       body: { email },
     }),
 
+  /** SOCIAL LOGIN */
   socialLogin: async (provider, token) =>
     request(`/social/${provider}/`, {
       method: "POST",
       body: { access_token: token },
     }),
 
+  /** LOGOUT */
   logout: async () =>
     request("/logout/", { method: "POST" }),
+
+  /** REFRESH TOKEN */
+  refreshToken: async (refreshToken) =>
+    request("/token/refresh/", {
+      method: "POST",
+      body: { refresh: refreshToken },
+    }),
 };
 
 /* -------------------------------------------------------------
@@ -217,9 +236,42 @@ export const adminService = {
     }),
 };
 
+/* -------------------------------------------------------------
+   UTILITY FUNCTIONS
+----------------------------------------------------------------*/
+export const apiUtils = {
+  /**
+   * Test OTP endpoint manually
+   */
+  testOTP: async (userId) => {
+    console.log(`Testing OTP for userId: ${userId}`);
+    const response = await authService.getOTP(userId);
+    console.log("OTP Test Response:", response);
+    return response;
+  },
+
+  /**
+   * Test verify OTP endpoint manually
+   */
+  testVerifyOTP: async (email, otp) => {
+    console.log(`Testing OTP verification for: ${email}`);
+    const response = await authService.verifyOTP(email, otp);
+    console.log("Verify OTP Test Response:", response);
+    return response;
+  },
+
+  /**
+   * Check API health
+   */
+  checkHealth: async () => {
+    return await request("/health/", { method: "GET" });
+  },
+};
+
 export default {
   request,
   authService,
   dashboardService,
   adminService,
+  apiUtils,
 };

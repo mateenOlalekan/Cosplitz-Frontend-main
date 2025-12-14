@@ -19,9 +19,10 @@ export default function Register() {
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
-  const registerStore = useAuthStore((state) => state.register);
+  const setPendingVerification = useAuthStore((state) => state.setPendingVerification);
   const setUser = useAuthStore((state) => state.setUser);
   const setToken = useAuthStore((state) => state.setToken);
+  const completeRegistration = useAuthStore((state) => state.completeRegistration);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -87,7 +88,8 @@ export default function Register() {
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0], // fallback username
+      username: formData.email.split("@")[0],
+      nationality: formData.nationality || "",
     };
 
     try {
@@ -122,38 +124,49 @@ export default function Register() {
       setUserId(backendUserId);
       setRegisteredEmail(userEmail);
 
-      // Store registration info in global store
-      registerStore({
+      // Store pending verification in auth store
+      setPendingVerification({
         email: userEmail,
+        userId: backendUserId,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        userId: backendUserId,
       });
 
-      // Save token if provided
+      // Save token if provided (some backends return token on register)
       if (response.data?.token || response.token) {
         const token = response.data?.token || response.token;
         setToken(token);
         setUser({
           id: backendUserId,
           email: userEmail,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
           name: `${formData.firstName} ${formData.lastName}`,
           role: "user",
-          isVerified: false
+          is_active: false,
+          email_verified: false
         });
       }
 
       // Move to Step 2 (email verification)
       setCurrentStep(2);
 
-      // AUTO SEND OTP - Use getOTP endpoint with userId
-      try {
-        await authService.getOTP(backendUserId);
-      } catch (otpError) {
-        console.warn("OTP sending failed:", otpError);
-        // Don't fail registration if OTP sending fails
-        // User can manually request OTP later
-      }
+      // AUTO SEND OTP - Use getOTP with userId
+      setTimeout(async () => {
+        try {
+          console.log("Sending OTP to userId:", backendUserId);
+          const otpResponse = await authService.getOTP(backendUserId);
+          console.log("OTP Response:", otpResponse);
+          
+          if (!otpResponse.success) {
+            console.warn("OTP sending failed:", otpResponse.data?.message);
+            // User can resend manually
+          }
+        } catch (otpError) {
+          console.error("OTP sending error:", otpError);
+          // Don't fail the flow
+        }
+      }, 500);
 
     } catch (err) {
       console.error("REGISTRATION ERROR =>", err);
@@ -168,41 +181,68 @@ export default function Register() {
     if (error) clearError();
   };
 
-// In Register.jsx, update handleEmailVerificationSuccess:
-const handleEmailVerificationSuccess = async () => {
-  try {
-    // Auto-login after verification
-    const loginResponse = await authService.login({
-      email: registeredEmail || formData.email,
-      password: formData.password
-    });
-    
-    if (loginResponse.success && loginResponse.data?.token) {
-      // Use the new method
-      completeRegistration(
-        {
-          id: userId,
-          email: registeredEmail || formData.email,
-          name: `${formData.firstName} ${formData.lastName}`,
-          role: "user",
-          is_active: true,
-          email_verified: true
-        },
-        loginResponse.data.token
-      );
+  const handleEmailVerificationSuccess = async () => {
+    try {
+      // Auto-login after successful verification
+      const loginResponse = await authService.login({
+        email: registeredEmail || formData.email,
+        password: formData.password
+      });
+      
+      console.log("Auto-login response:", loginResponse);
+      
+      if (loginResponse.success && loginResponse.data?.token) {
+        // Use completeRegistration to update store
+        completeRegistration(
+          {
+            id: userId,
+            email: registeredEmail || formData.email,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            name: `${formData.firstName} ${formData.lastName}`,
+            role: "user",
+            is_active: true,
+            email_verified: true,
+            username: formData.email.split("@")[0]
+          },
+          loginResponse.data.token
+        );
+        
+        // Also get full user info if available
+        try {
+          const userInfo = await authService.getUserInfo();
+          if (userInfo.success && userInfo.data) {
+            setUser(userInfo.data);
+          }
+        } catch (userInfoError) {
+          console.warn("Could not fetch user info:", userInfoError);
+        }
+        
+        setCurrentStep(3);
+        
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 3000);
+      } else {
+        // Login failed but OTP verified
+        setError("Account verified! Please login manually.");
+        setCurrentStep(3);
+        
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+      }
+    } catch (err) {
+      console.error("Auto-login failed:", err);
+      // OTP verified but login failed
+      setError("Email verified! Please login with your credentials.");
+      setCurrentStep(3);
+      
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
     }
-    
-    setCurrentStep(3);
-    
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 3000);
-  } catch (err) {
-    console.error("Auto-login failed:", err);
-    // Still show success
-    setCurrentStep(3);
-  }
-};
+  };
 
   const handleVerificationFailed = (msg) => {
     setError(msg);
@@ -213,16 +253,11 @@ const handleEmailVerificationSuccess = async () => {
     setCurrentStep(1);
   };
 
-  // Handle social register
   const handleSocialRegister = (provider) => {
-    // Implementation for social registration
+    // Placeholder for social registration
     console.log(`Social register with ${provider}`);
-    // Add your social registration logic here
+    setError(`${provider} registration coming soon!`);
   };
-
-  // ---------------------------------------------------
-  // UI SECTION
-  // ---------------------------------------------------
 
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">

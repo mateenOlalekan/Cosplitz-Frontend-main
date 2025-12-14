@@ -110,32 +110,46 @@ export default function EmailVerificationStep({
   };
 
   // Resend OTP - FIXED: Use getOTP endpoint with userId
-  const handleResend = async () => {
-    if (timer > 0) return;
+// In EmailVerificationStep.jsx - Update handleResend function:
+const handleResend = async () => {
+  if (timer > 0) return;
 
-    setResendLoading(true);
-    setError("");
+  setResendLoading(true);
+  setError("");
 
-    try {
-      // Use getOTP with userId as per your backend
-      const response = await authService.getOTP(userId);
+  try {
+    console.log("Resending OTP for userId:", userId);
+    
+    // Clear any previous OTP from input
+    setOtp(["", "", "", "", "", ""]);
+    
+    const response = await authService.getOTP(userId);
+    console.log("Resend OTP Response:", response);
 
-      if (response?.success || response?.status === 200) {
-        setTimer(180);
-        setOtp(["", "", "", "", "", ""]);
-        document.getElementById(`otp-input-0`)?.focus();
-        setError(""); // Clear any previous errors
-      } else {
-        const errorMsg = response?.data?.message || response?.message || "Could not resend OTP.";
-        setError(errorMsg);
-      }
-    } catch (err) {
-      console.error("OTP resend error:", err);
-      setError("Failed to resend OTP. Try again.");
+    if (response?.success || response?.status === 200) {
+      setTimer(180);
+      document.getElementById(`otp-input-0`)?.focus();
+      
+      // Show success message
+      setError("OTP resent successfully! Check your email.");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        if (error === "OTP resent successfully! Check your email.") {
+          setError("");
+        }
+      }, 3000);
+    } else {
+      const errorMsg = response?.data?.message || response?.message || "Could not resend OTP.";
+      setError(errorMsg);
     }
+  } catch (err) {
+    console.error("OTP resend error:", err);
+    setError("Failed to resend OTP. Try again.");
+  }
 
-    setResendLoading(false);
-  };
+  setResendLoading(false);
+};
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
