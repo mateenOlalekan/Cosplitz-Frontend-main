@@ -168,38 +168,41 @@ export default function Register() {
     if (error) clearError();
   };
 
-  const handleEmailVerificationSuccess = async () => {
-    try {
-      // Auto-login after successful verification
-      const loginResponse = await authService.login({
-        email: registeredEmail || formData.email,
-        password: formData.password
-      });
-      
-      if (loginResponse.success && loginResponse.data?.token) {
-        setToken(loginResponse.data.token);
-        // Get user info
-        const userInfo = await authService.getUserInfo();
-        if (userInfo.success && userInfo.data) {
-          setUser(userInfo.data);
-        }
-      }
-      
-      setCurrentStep(3);
-      
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 3000);
-    } catch (err) {
-      console.error("Auto-login failed:", err);
-      // Still show success but user might need to login manually
-      setCurrentStep(3);
-      
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
+// In Register.jsx, update handleEmailVerificationSuccess:
+const handleEmailVerificationSuccess = async () => {
+  try {
+    // Auto-login after verification
+    const loginResponse = await authService.login({
+      email: registeredEmail || formData.email,
+      password: formData.password
+    });
+    
+    if (loginResponse.success && loginResponse.data?.token) {
+      // Use the new method
+      completeRegistration(
+        {
+          id: userId,
+          email: registeredEmail || formData.email,
+          name: `${formData.firstName} ${formData.lastName}`,
+          role: "user",
+          is_active: true,
+          email_verified: true
+        },
+        loginResponse.data.token
+      );
     }
-  };
+    
+    setCurrentStep(3);
+    
+    setTimeout(() => {
+      navigate("/dashboard");
+    }, 3000);
+  } catch (err) {
+    console.error("Auto-login failed:", err);
+    // Still show success
+    setCurrentStep(3);
+  }
+};
 
   const handleVerificationFailed = (msg) => {
     setError(msg);
