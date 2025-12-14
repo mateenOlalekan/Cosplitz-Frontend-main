@@ -1,38 +1,43 @@
-import { Check, X } from "lucide-react";
+// src/pages/Auth/Register/PasswordValidation.jsx
+import React from "react";
+import { CheckCircle, XCircle } from "lucide-react";
 
-function PasswordValidation({ password }) {
+const PasswordValidation = ({ password }) => {
   const validations = [
-    { label: "8+ characters", isValid: password.length >= 8 },
-    { label: "Uppercase letter", isValid: /[A-Z]/.test(password) },
-    { label: "Digit", isValid: /\d/.test(password) },
+    {
+      label: "At least 8 characters",
+      isValid: password.length >= 8,
+    },
+    {
+      label: "Contains uppercase letter",
+      isValid: /[A-Z]/.test(password),
+    },
+    {
+      label: "Contains a number",
+      isValid: /\d/.test(password),
+    },
   ];
 
   return (
-    <div className="flex flex-col gap-2 mt-2">
-      {validations.map((v, i) => (
-        <div key={i} className="flex items-center gap-3">
-          <div
-            className={`w-5 h-5 rounded-full flex items-center justify-center ${
-              v.isValid ? "bg-green-100" : "bg-gray-100"
-            }`}
-          >
-            {v.isValid ? (
-              <Check size={14} className="text-green-600" />
-            ) : (
-              <X size={14} className="text-gray-400" />
-            )}
-          </div>
+    <div className="mt-2 space-y-1">
+      {validations.map((validation, index) => (
+        <div key={index} className="flex items-center gap-2">
+          {validation.isValid ? (
+            <CheckCircle size={14} className="text-green-500" />
+          ) : (
+            <XCircle size={14} className="text-gray-300" />
+          )}
           <span
             className={`text-xs ${
-              v.isValid ? "text-green-600" : "text-gray-500"
+              validation.isValid ? "text-green-600" : "text-gray-400"
             }`}
           >
-            {v.label}
+            {validation.label}
           </span>
         </div>
       ))}
     </div>
   );
-}
+};
 
 export default PasswordValidation;

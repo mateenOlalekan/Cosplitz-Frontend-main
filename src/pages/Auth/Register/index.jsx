@@ -1,4 +1,4 @@
-// src/pages/Register.jsx
+// src/pages/Auth/Register/index.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
@@ -14,14 +14,15 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [registeredPassword, setRegisteredPassword] = useState("");
   const navigate = useNavigate();
 
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
-  const registerStore = useAuthStore((state) => state.register);
   const setUser = useAuthStore((state) => state.setUser);
   const setToken = useAuthStore((state) => state.setToken);
+  const loginStore = useAuthStore((state) => state.login);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -42,9 +43,13 @@ export default function Register() {
     clearError();
   }, [currentStep]);
 
-  // -------------------------
-  // HANDLE REGISTER SUBMIT
-  // -------------------------
+  // Handle form input changes
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (error) clearError();
+  };
+
+  // Handle registration form submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     clearError();
@@ -87,109 +92,144 @@ export default function Register() {
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0], // fallback username
+      username: formData.email.split("@")[0],
+      nationality: formData.nationality || "Nigeria"
     };
 
     try {
+      // STEP 1: Register user
+      console.log("Registering user...", registrationData);
       const response = await authService.register(registrationData);
       console.log("REGISTER RESPONSE =>", response);
 
       if (!response.success) {
-        setError(response.message || "Registration failed.");
+        const errorMsg = response.data?.message || 
+                        response.data?.detail || 
+                        "Registration failed. Please try again.";
+        setError(errorMsg);
         setLoading(false);
         return;
       }
 
       // Extract user information
-      const backendUserId =
-        response.user?.id ||
-        response.user_id ||
-        response.id ||
-        null;
-
-      const userEmail =
-        response.user?.email ||
-        formData.email;
+      const backendUserId = response.data?.user?.id || 
+                           response.data?.id || 
+                           response.user?.id;
+      const userEmail = response.data?.user?.email || 
+                       response.data?.email || 
+                       formData.email;
 
       if (!backendUserId) {
-        setError("Registration worked, but user ID is missing. Try logging in.");
+        setError("Registration successful, but user ID is missing. Please try logging in.");
         setLoading(false);
         return;
       }
 
       setUserId(backendUserId);
       setRegisteredEmail(userEmail);
+      setRegisteredPassword(formData.password);
 
-      // Store registration info in global store
-      registerStore({
-        email: userEmail,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        userId: backendUserId,
-      });
-
-      // Save token if provided
-      if (response.token) {
-        setToken(response.token);
-        setUser({
-          id: backendUserId,
-          email: userEmail,
-          name: `${formData.firstName} ${formData.lastName}`,
-          role: "user",
-          isVerified: false
-        });
-      }
-
-      // Move to Step 2 (email verification)
-      setCurrentStep(2);
-
-      // AUTO SEND OTP
+      // STEP 2: HIDDEN LOGIN (Auto-login after registration)
       try {
-        await authService.resendOTP(userEmail);
-      } catch (otpError) {
-        console.warn("OTP sending failed:", otpError);
+        console.log("Auto-logging in user...");
+        const loginResponse = await authService.login({
+          email: userEmail,
+          password: formData.password
+        });
+
+        console.log("HIDDEN LOGIN RESPONSE =>", loginResponse);
+
+        if (loginResponse.success && (loginResponse.data?.access_token || loginResponse.data?.token)) {
+          const token = loginResponse.data.access_token || loginResponse.data.token;
+          const user = loginResponse.data.user || response.data?.user || {
+            id: backendUserId,
+            email: userEmail,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            is_verified: false,
+            role: "user"
+          };
+
+          // Store token and user info
+          localStorage.setItem("authToken", token);
+          localStorage.setItem("userInfo", JSON.stringify(user));
+          
+          setToken(token);
+          setUser(user);
+          loginStore(user, token);
+
+          // STEP 3: Advance to Step 2 (email verification)
+          setCurrentStep(2);
+          
+          // STEP 4: AUTO SEND OTP
+          try {
+            console.log("Sending OTP to user...");
+            await authService.resendOTP(backendUserId);
+          } catch (otpError) {
+            console.warn("OTP sending failed:", otpError);
+            // Don't set error here - user can still request OTP manually
+          }
+        } else {
+          setError("Account created but automatic login failed. Please login manually.");
+          setLoading(false);
+        }
+      } catch (loginError) {
+        console.error("Hidden login failed:", loginError);
+        setError("Account created but login failed. Please try logging in manually.");
+        setLoading(false);
       }
 
     } catch (err) {
       console.error("REGISTRATION ERROR =>", err);
-      setError(err.message || "Network error.");
-    } finally {
+      setError(err.message || "Network error. Please check your connection.");
       setLoading(false);
     }
   };
 
-
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (error) clearError();
-  };
-
-  const handleEmailVerificationSuccess = () => {
+  // Handle successful email verification
+  const handleEmailVerificationSuccess = async () => {
+    try {
+      // Fetch updated user info after verification
+      const userInfo = await authService.getUserInfo();
+      if (userInfo.success && userInfo.data) {
+        const updatedUser = { ...userInfo.data, is_verified: true };
+        setUser(updatedUser);
+        localStorage.setItem("userInfo", JSON.stringify(updatedUser));
+      }
+    } catch (err) {
+      console.error("Failed to fetch updated user info:", err);
+    }
+    
+    // Advance to success step
     setCurrentStep(3);
-
+    
+    // Auto-redirect to dashboard after 3 seconds
     setTimeout(() => {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }, 3000);
   };
 
+  // Handle verification failure
   const handleVerificationFailed = (msg) => {
     setError(msg);
   };
 
+  // Go back to registration form
   const handleBackToStep1 = () => {
     clearError();
     setCurrentStep(1);
   };
 
-  // ---------------------------------------------------
-  // 🎨 UI SECTION (UNCHANGED — EXACTLY AS YOU PROVIDED)
-  // ---------------------------------------------------
+  // Handle social registration (optional)
+  const handleSocialRegister = (provider) => {
+    setError(`${provider} registration is not available yet. Please use email registration.`);
+  };
 
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
 
-        {/* LEFT */}
+        {/* LEFT SIDE - IMAGE & TEXT */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
             <img 
@@ -208,7 +248,7 @@ export default function Register() {
           </div>
         </div>
 
-        {/* RIGHT */}
+        {/* RIGHT SIDE - FORM */}
         <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
@@ -216,12 +256,13 @@ export default function Register() {
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
 
-            {/* STEPS */}
+            {/* STEP PROGRESS INDICATOR */}
             <div className="w-full flex flex-col items-center py-4 mb-4">
               <div className="flex items-center gap-2 justify-center mb-2">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${currentStep >= s.id 
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                      currentStep >= s.id 
                         ? "bg-green-600 border-green-600 text-white" 
                         : "bg-white border-gray-300 text-gray-400"
                     }`}>
@@ -248,6 +289,7 @@ export default function Register() {
                 formData={formData}
                 handleInputChange={handleInputChange}
                 handleFormSubmit={handleFormSubmit}
+                handleSocialRegister={handleSocialRegister}
                 loading={loading}
                 error={error}
               />
@@ -255,7 +297,7 @@ export default function Register() {
 
             {currentStep === 2 && (
               <EmailVerificationStep
-                email={registeredEmail || formData.email}
+                email={registeredEmail}
                 userId={userId}
                 onBack={handleBackToStep1}
                 onSuccess={handleEmailVerificationSuccess}

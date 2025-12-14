@@ -98,7 +98,7 @@ async function request(path, options = {}) {
 }
 
 /* -------------------------------------------------------------
-   AUTH SERVICE — MATCHED EXACTLY WITH YOUR BACKEND
+   AUTH SERVICE — UPDATED TO MATCH FLOW
 ----------------------------------------------------------------*/
 export const authService = {
   /** REGISTER — /api/register/ */
@@ -109,7 +109,7 @@ export const authService = {
     });
   },
 
-  /** LOGIN — Backend uses: http://localhost:8000/api/login/ */
+  /** LOGIN — After registration, automatically login */
   login: async (credentials) => {
     return await request("/login/", {
       method: "POST",
@@ -127,17 +127,17 @@ export const authService = {
     return await request(`/otp/${userId}/`, { method: "GET" });
   },
 
-  /** VERIFY OTP — MUST SEND email + otp */
+  /** VERIFY OTP — FIXED: MUST SEND email + otp (not userId) */
   verifyOTP: async (email, otp) => {
     return await request("/verify_otp", {
       method: "POST",
-      body: { email, otp },
+      body: { email, otp }, // Send email, not userId
     });
   },
 
-  /** RESEND OTP — backend uses SAME endpoint as getOTP */
+  /** RESEND OTP — Using correct backend endpoint */
   resendOTP: async (userId) => {
-    return await authService.getOTP(userId);
+    return await request(`/otp/${userId}/`, { method: "GET" });
   },
 
   forgotPassword: async (email) =>
@@ -174,52 +174,7 @@ export const authService = {
     request("/logout/", { method: "POST" }),
 };
 
-/* -------------------------------------------------------------
-   DASHBOARD SERVICE
-----------------------------------------------------------------*/
-export const dashboardService = {
-  getOverview: async () =>
-    request("/dashboard/overview", { method: "GET" }),
-
-  getAnalytics: async (period = "monthly") =>
-    request(`/dashboard/analytics?period=${period}`, {
-      method: "GET",
-    }),
-
-  createSplit: async (splitData) =>
-    request("/splits/create", {
-      method: "POST",
-      body: splitData,
-    }),
-
-  getWalletBalance: async () =>
-    request("/wallet/balance", { method: "GET" }),
-
-  getNotifications: async () =>
-    request("/notifications", { method: "GET" }),
-};
-
-/* -------------------------------------------------------------
-   ADMIN SERVICE
-----------------------------------------------------------------*/
-export const adminService = {
-  getDashboardStats: async () =>
-    request("/admin/dashboard", { method: "GET" }),
-
-  getUsers: async (page = 1, limit = 20) =>
-    request(`/admin/users?page=${page}&limit=${limit}`, {
-      method: "GET",
-    }),
-
-  getSplits: async (page = 1, limit = 20) =>
-    request(`/admin/splits?page=${page}&limit=${limit}`, {
-      method: "GET",
-    }),
-};
-
 export default {
   request,
   authService,
-  dashboardService,
-  adminService,
 };
