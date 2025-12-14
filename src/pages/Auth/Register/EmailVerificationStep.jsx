@@ -7,7 +7,6 @@ export default function EmailVerificationStep({
   userId,
   onBack,
   onSuccess,
-  onVerificationFailed,
 }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
@@ -66,7 +65,7 @@ export default function EmailVerificationStep({
     }
   };
 
-  // Verify OTP - FIXED: Now sends email + otp
+  // Verify OTP
   const handleVerify = async (code = null) => {
     const otpCode = code || otp.join("");
 
@@ -75,81 +74,51 @@ export default function EmailVerificationStep({
       return;
     }
 
-    if (!email) {
-      setError("Email is missing. Please go back and try again.");
-      return;
-    }
-
     setLoading(true);
     setError("");
 
     try {
-      // Now correctly passing email and otp
-      const response = await authService.verifyOTP(email, otpCode);
-      console.log("OTP Verification Response:", response);
+      const response = await authService.verifyOTP(userId, otpCode);
 
+      // Your fetch service returns:
+      // { success: true/false, message, ... }
       if (response?.success) {
-        // Success - activate user and set is_active=true
         onSuccess();
       } else {
-        const errorMsg = response?.data?.message || response?.message || "Invalid OTP. Please try again.";
-        setError(errorMsg);
-        if (onVerificationFailed) {
-          onVerificationFailed(errorMsg);
-        }
+        setError(response?.message || "Invalid OTP. Please try again.");
       }
     } catch (err) {
       console.error("OTP verification error:", err);
       setError("Verification failed. Please try again.");
-      if (onVerificationFailed) {
-        onVerificationFailed("Verification failed. Please try again.");
-      }
     }
 
     setLoading(false);
   };
 
-  // Resend OTP - FIXED: Use getOTP endpoint with userId
-// In EmailVerificationStep.jsx - Update handleResend function:
-const handleResend = async () => {
-  if (timer > 0) return;
+  // Resend OTP
+  const handleResend = async () => {
+    if (timer > 0) return;
 
-  setResendLoading(true);
-  setError("");
+    setResendLoading(true);
+    setError("");
 
-  try {
-    console.log("Resending OTP for userId:", userId);
-    
-    // Clear any previous OTP from input
-    setOtp(["", "", "", "", "", ""]);
-    
-    const response = await authService.getOTP(userId);
-    console.log("Resend OTP Response:", response);
+    try {
+      const response = await authService.resendOTP(userId);
 
-    if (response?.success || response?.status === 200) {
-      setTimer(180);
-      document.getElementById(`otp-input-0`)?.focus();
-      
-      // Show success message
-      setError("OTP resent successfully! Check your email.");
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        if (error === "OTP resent successfully! Check your email.") {
-          setError("");
-        }
-      }, 3000);
-    } else {
-      const errorMsg = response?.data?.message || response?.message || "Could not resend OTP.";
-      setError(errorMsg);
+      if (response?.success) {
+        setTimer(180);
+        setOtp(["", "", "", "", "", ""]);
+        document.getElementById(`otp-input-0`)?.focus();
+      } else {
+        setError(response?.message || "Could not resend OTP.");
+      }
+    } catch (err) {
+      console.error("OTP resend error:", err);
+      setError("Failed to resend OTP. Try again.");
     }
-  } catch (err) {
-    console.error("OTP resend error:", err);
-    setError("Failed to resend OTP. Try again.");
-  }
 
-  setResendLoading(false);
-};
+    setResendLoading(false);
+  };
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
