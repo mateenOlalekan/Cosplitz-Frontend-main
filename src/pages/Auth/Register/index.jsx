@@ -14,7 +14,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const [registeredEmail, setRegisteredEmail] = useState("");
-  const [registeredPassword, setRegisteredPassword] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
 
   const setError = useAuthStore((state) => state.setError);
@@ -92,31 +92,31 @@ export default function Register() {
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0],
+      username: formData.email.split("@")[0].replace(/[^a-zA-Z0-9]/g, ""), // Clean username
       nationality: formData.nationality || "Nigeria"
     };
 
     try {
+      console.log("Step 1: Registering user...", registrationData);
+      
       // STEP 1: Register user
-      console.log("Registering user...", registrationData);
-      const response = await authService.register(registrationData);
-      console.log("REGISTER RESPONSE =>", response);
+      const registerResponse = await authService.register(registrationData);
+      console.log("Register Response:", registerResponse);
 
-      if (!response.success) {
-        const errorMsg = response.data?.message || 
-                        response.data?.detail || 
+      if (!registerResponse.success) {
+        const errorMsg = registerResponse.data?.message || 
+                        registerResponse.data?.detail || 
                         "Registration failed. Please try again.";
         setError(errorMsg);
         setLoading(false);
         return;
       }
 
-      // Extract user information
-      const backendUserId = response.data?.user?.id || 
-                           response.data?.id || 
-                           response.user?.id;
-      const userEmail = response.data?.user?.email || 
-                       response.data?.email || 
+      // Extract user information from response
+      const backendUserId = registerResponse.data?.user?.id || 
+                           registerResponse.data?.id;
+      const userEmail = registerResponse.data?.user?.email || 
+                       registerResponse.data?.email || 
                        formData.email;
 
       if (!backendUserId) {
@@ -127,21 +127,21 @@ export default function Register() {
 
       setUserId(backendUserId);
       setRegisteredEmail(userEmail);
-      setRegisteredPassword(formData.password);
+      console.log("User registered. ID:", backendUserId, "Email:", userEmail);
 
-      // STEP 2: HIDDEN LOGIN (Auto-login after registration)
+      // STEP 2: Auto-login after registration
       try {
-        console.log("Auto-logging in user...");
+        console.log("Step 2: Auto-logging in...");
         const loginResponse = await authService.login({
           email: userEmail,
           password: formData.password
         });
 
-        console.log("HIDDEN LOGIN RESPONSE =>", loginResponse);
+        console.log("Login Response:", loginResponse);
 
         if (loginResponse.success && (loginResponse.data?.access_token || loginResponse.data?.token)) {
           const token = loginResponse.data.access_token || loginResponse.data.token;
-          const user = loginResponse.data.user || response.data?.user || {
+          const user = loginResponse.data.user || registerResponse.data?.user || {
             id: backendUserId,
             email: userEmail,
             first_name: formData.firstName,
@@ -150,6 +150,8 @@ export default function Register() {
             role: "user"
           };
 
+          console.log("Login successful. Token received.");
+          
           // Store token and user info
           localStorage.setItem("authToken", token);
           localStorage.setItem("userInfo", JSON.stringify(user));
@@ -158,30 +160,46 @@ export default function Register() {
           setUser(user);
           loginStore(user, token);
 
-          // STEP 3: Advance to Step 2 (email verification)
-          setCurrentStep(2);
-          
-          // STEP 4: AUTO SEND OTP
+          // STEP 3: Send OTP for verification
+          console.log("Step 3: Sending OTP email...");
           try {
-            console.log("Sending OTP to user...");
-            await authService.resendOTP(backendUserId);
+            const otpResponse = await authService.sendOTP(backendUserId);
+            console.log("OTP Response:", otpResponse);
+            
+            if (otpResponse.success) {
+              console.log("OTP email sent successfully");
+              setOtpSent(true);
+              
+              // STEP 4: Advance to verification step
+              setCurrentStep(2);
+            } else {
+              console.warn("OTP sending response not successful:", otpResponse.data);
+              // Still advance to verification step - user can request OTP manually
+              setCurrentStep(2);
+              setError("OTP email not sent. Please request a new code.");
+            }
           } catch (otpError) {
-            console.warn("OTP sending failed:", otpError);
-            // Don't set error here - user can still request OTP manually
+            console.error("OTP sending error:", otpError);
+            // Still advance to verification step
+            setCurrentStep(2);
+            setError("Failed to send OTP. Please request a new code.");
           }
         } else {
-          setError("Account created but automatic login failed. Please login manually.");
-          setLoading(false);
+          // Login failed but registration succeeded
+          console.warn("Auto-login failed, but registration succeeded");
+          setCurrentStep(2); // Still go to verification step
+          setError("Account created! Please login manually and verify your email.");
         }
       } catch (loginError) {
-        console.error("Hidden login failed:", loginError);
-        setError("Account created but login failed. Please try logging in manually.");
-        setLoading(false);
+        console.error("Auto-login error:", loginError);
+        setCurrentStep(2); // Still go to verification step
+        setError("Account created! Please login and verify your email.");
       }
 
     } catch (err) {
-      console.error("REGISTRATION ERROR =>", err);
+      console.error("Registration error:", err);
       setError(err.message || "Network error. Please check your connection.");
+    } finally {
       setLoading(false);
     }
   };
@@ -189,7 +207,7 @@ export default function Register() {
   // Handle successful email verification
   const handleEmailVerificationSuccess = async () => {
     try {
-      // Fetch updated user info after verification
+      // Update user verification status
       const userInfo = await authService.getUserInfo();
       if (userInfo.success && userInfo.data) {
         const updatedUser = { ...userInfo.data, is_verified: true };
@@ -198,6 +216,13 @@ export default function Register() {
       }
     } catch (err) {
       console.error("Failed to fetch updated user info:", err);
+      // Still mark as verified locally
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        const updatedUser = { ...currentUser, is_verified: true };
+        setUser(updatedUser);
+        localStorage.setItem("userInfo", JSON.stringify(updatedUser));
+      }
     }
     
     // Advance to success step
@@ -299,6 +324,7 @@ export default function Register() {
               <EmailVerificationStep
                 email={registeredEmail}
                 userId={userId}
+                otpSent={otpSent}
                 onBack={handleBackToStep1}
                 onSuccess={handleEmailVerificationSuccess}
                 onVerificationFailed={handleVerificationFailed}
