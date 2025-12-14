@@ -1,165 +1,148 @@
-// src/pages/RegistrationForm.jsx
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { FcGoogle } from "react-icons/fc";
-import { PiAppleLogoBold } from "react-icons/pi";
-import { Eye, EyeOff } from "lucide-react";
-import PasswordValidation from "./PasswordValidation";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import loginlogo from "../../../assets/login.jpg";
+import logo from "../../../assets/logo.svg";
+import { authService } from "../../../services/api";
+import { useAuthStore } from "../../../store/authStore";
+import EmailVerificationStep from "./EmailVerificationStep";
+import RegistrationForm from "./RegistrationForm";
+import Successful from "./Successful";
 
-function RegistrationForm({
-  formData,
-  handleInputChange,
-  handleFormSubmit,
-  handleSocialRegister,
-  loading,
-  error,
-}) {
-  const [showPassword, setShowPassword] = useState(false);
+export default function Register() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+
+  const navigate = useNavigate();
+
+  const setError = useAuthStore((s) => s.setError);
+  const clearError = useAuthStore((s) => s.clearError);
+  const error = useAuthStore((s) => s.error);
+  const registerStore = useAuthStore((s) => s.register);
+
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    nationality: "",
+    password: "",
+    agreeToTerms: false,
+  });
+
+  useEffect(() => {
+    clearError();
+  }, [currentStep]);
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    clearError();
+    setLoading(true);
+
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.password
+    ) {
+      setError("Please fill out all required fields.");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.agreeToTerms) {
+      setError("Please agree to the terms & conditions.");
+      setLoading(false);
+      return;
+    }
+
+    const payload = {
+      first_name: formData.firstName.trim(),
+      last_name: formData.lastName.trim(),
+      email: formData.email.toLowerCase().trim(),
+      password: formData.password,
+      username: formData.email.split("@")[0],
+    };
+
+    const response = await authService.register(payload);
+    console.log("REGISTER RESPONSE:", response);
+
+    if (!response.success) {
+      setError(response.data?.message || "Registration failed.");
+      setLoading(false);
+      return;
+    }
+
+    const backendUser =
+      response.data?.user || response.data;
+
+    if (!backendUser?.id) {
+      setError("User created but ID missing. Please login.");
+      setLoading(false);
+      return;
+    }
+
+    setUserId(backendUser.id);
+    setRegisteredEmail(backendUser.email);
+
+    registerStore({
+      userId: backendUser.id,
+      email: backendUser.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+    });
+
+    // ⚠️ DO NOT resend OTP here (backend already sent it)
+    setCurrentStep(2);
+    setLoading(false);
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData((p) => ({ ...p, [field]: value }));
+    if (error) clearError();
+  };
+
+  const handleEmailVerificationSuccess = () => {
+    setCurrentStep(3);
+    setTimeout(() => navigate("/login"), 2500);
+  };
 
   return (
-    <div>
-      <h1 className="text-2xl sm:text-3xl text-center font-bold text-gray-900">
-        Create Your Account
-      </h1>
-      <p className="text-gray-500 text-center text-sm mt-1 mb-4">
-        Let's get started with real-time cost sharing.
-      </p>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mb-3 text-center">
-          {error}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={() => handleSocialRegister("google")}
-          className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <FcGoogle size={20} />
-          <span className="text-gray-700 text-sm">Sign Up with Google</span>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={() => handleSocialRegister("apple")}
-          className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <PiAppleLogoBold size={20} />
-          <span className="text-gray-700 text-sm">Sign Up with Apple</span>
-        </motion.button>
-      </div>
-
-      <div className="flex items-center my-4">
-        <div className="flex-grow border-t border-gray-300"></div>
-        <span className="mx-2 text-gray-500 text-sm">Or</span>
-        <div className="flex-grow border-t border-gray-300"></div>
-      </div>
-
-      <form onSubmit={handleFormSubmit} className="space-y-3">
-        {[
-          { key: "firstName", label: "First Name", type: "text" },
-          { key: "lastName", label: "Last Name", type: "text" },
-          { key: "email", label: "Email Address", type: "email" },
-          { key: "nationality", label: "Nationality", type: "text" },
-        ].map((field) => (
-          <div key={field.key}>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
-              {field.label} *
-            </label>
-            <input
-              type={field.type}
-              value={formData[field.key]}
-              placeholder={`Enter your ${field.label.toLowerCase()}`}
-              onChange={(e) => handleInputChange(field.key, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-              required
-            />
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
+      <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
+        {/* LEFT */}
+        <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
+          <div className="w-full flex flex-col items-center">
+            <img src={loginlogo} alt="Register" className="rounded-lg w-full max-h-[400px] object-contain" />
           </div>
-        ))}
-
-        <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1">
-            Password *
-          </label>
-          <div className="flex items-center border border-gray-300 px-3 rounded-lg focus-within:ring-2 focus-within:ring-green-500 transition-colors">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              placeholder="Create your password"
-              onChange={(e) => handleInputChange("password", e.target.value)}
-              className="w-full py-2 outline-none"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-gray-400 hover:text-gray-600 transition-colors ml-2"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          <PasswordValidation password={formData.password} />
         </div>
 
-        <label className="flex gap-2 text-sm text-gray-600 mt-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={formData.agreeToTerms}
-            onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
-            className="rounded focus:ring-green-500"
-          />
-          <span>
-            I agree to the{" "}
-            <a href="/terms" className="text-green-600 hover:underline font-medium">
-              Terms
-            </a>
-            ,{" "}
-            <a href="/privacy" className="text-green-600 hover:underline font-medium">
-              Privacy
-            </a>{" "}
-            &{" "}
-            <a href="/fees" className="text-green-600 hover:underline font-medium">
-              Fees
-            </a>
-            .
-          </span>
-        </label>
+        {/* RIGHT */}
+        <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
+          <img src={logo} alt="Logo" className="h-10 md:h-12 mb-4" />
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="submit"
-          disabled={loading}
-          className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold transition-all duration-200 ${
-            loading ? "opacity-60 cursor-not-allowed" : "hover:bg-green-700"
-          }`}
-        >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              Creating Account...
-            </span>
-          ) : (
-            "Create Account"
+          {currentStep === 1 && (
+            <RegistrationForm
+              formData={formData}
+              handleInputChange={handleInputChange}
+              handleFormSubmit={handleFormSubmit}
+              loading={loading}
+              error={error}
+            />
           )}
-        </motion.button>
 
-        <p className="text-center text-sm text-gray-600 mt-3">
-          Already have an account?{" "}
-          <Link to="/login" className="text-green-600 hover:underline font-medium">
-            Log In
-          </Link>
-        </p>
-      </form>
+          {currentStep === 2 && (
+            <EmailVerificationStep
+              email={registeredEmail}
+              userId={userId}
+              onBack={() => setCurrentStep(1)}
+              onSuccess={handleEmailVerificationSuccess}
+            />
+          )}
+
+          {currentStep === 3 && <Successful />}
+        </div>
+      </div>
     </div>
   );
 }
-
-export default RegistrationForm;
