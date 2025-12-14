@@ -1,4 +1,4 @@
-// src/pages/Auth/Register/index.jsx
+// src/pages/Register.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
@@ -14,15 +14,14 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState(null);
   const [registeredEmail, setRegisteredEmail] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const navigate = useNavigate();
 
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
+  const registerStore = useAuthStore((state) => state.register);
   const setUser = useAuthStore((state) => state.setUser);
   const setToken = useAuthStore((state) => state.setToken);
-  const loginStore = useAuthStore((state) => state.login);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -43,13 +42,9 @@ export default function Register() {
     clearError();
   }, [currentStep]);
 
-  // Handle form input changes
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (error) clearError();
-  };
-
-  // Handle registration form submission
+  // -------------------------
+  // HANDLE REGISTER SUBMIT
+  // -------------------------
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     clearError();
@@ -92,169 +87,145 @@ export default function Register() {
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0].replace(/[^a-zA-Z0-9]/g, ""), // Clean username
-      nationality: formData.nationality || "Nigeria"
+      username: formData.email.split("@")[0], // fallback username
     };
 
     try {
-      console.log("Step 1: Registering user...", registrationData);
-      
-      // STEP 1: Register user
-      const registerResponse = await authService.register(registrationData);
-      console.log("Register Response:", registerResponse);
+      const response = await authService.register(registrationData);
+      console.log("REGISTER RESPONSE =>", response);
 
-      if (!registerResponse.success) {
-        const errorMsg = registerResponse.data?.message || 
-                        registerResponse.data?.detail || 
-                        "Registration failed. Please try again.";
-        setError(errorMsg);
+      if (!response.success) {
+        setError(response.data?.message || response.message || "Registration failed.");
         setLoading(false);
         return;
       }
 
       // Extract user information from response
-      const backendUserId = registerResponse.data?.user?.id || 
-                           registerResponse.data?.id;
-      const userEmail = registerResponse.data?.user?.email || 
-                       registerResponse.data?.email || 
-                       formData.email;
+      const backendUserId =
+        response.data?.user?.id ||
+        response.data?.user_id ||
+        response.data?.id ||
+        response.user?.id ||
+        null;
+
+      const userEmail =
+        response.data?.user?.email ||
+        response.data?.email ||
+        formData.email;
 
       if (!backendUserId) {
-        setError("Registration successful, but user ID is missing. Please try logging in.");
+        setError("Registration worked, but user ID is missing. Try logging in.");
         setLoading(false);
         return;
       }
 
       setUserId(backendUserId);
       setRegisteredEmail(userEmail);
-      console.log("User registered. ID:", backendUserId, "Email:", userEmail);
 
-      // STEP 2: Auto-login after registration
-      try {
-        console.log("Step 2: Auto-logging in...");
-        const loginResponse = await authService.login({
+      // Store registration info in global store
+      registerStore({
+        email: userEmail,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        userId: backendUserId,
+      });
+
+      // Save token if provided
+      if (response.data?.token || response.token) {
+        const token = response.data?.token || response.token;
+        setToken(token);
+        setUser({
+          id: backendUserId,
           email: userEmail,
-          password: formData.password
+          name: `${formData.firstName} ${formData.lastName}`,
+          role: "user",
+          isVerified: false
         });
+      }
 
-        console.log("Login Response:", loginResponse);
+      // Move to Step 2 (email verification)
+      setCurrentStep(2);
 
-        if (loginResponse.success && (loginResponse.data?.access_token || loginResponse.data?.token)) {
-          const token = loginResponse.data.access_token || loginResponse.data.token;
-          const user = loginResponse.data.user || registerResponse.data?.user || {
-            id: backendUserId,
-            email: userEmail,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            is_verified: false,
-            role: "user"
-          };
-
-          console.log("Login successful. Token received.");
-          
-          // Store token and user info
-          localStorage.setItem("authToken", token);
-          localStorage.setItem("userInfo", JSON.stringify(user));
-          
-          setToken(token);
-          setUser(user);
-          loginStore(user, token);
-
-          // STEP 3: Send OTP for verification
-          console.log("Step 3: Sending OTP email...");
-          try {
-            const otpResponse = await authService.sendOTP(backendUserId);
-            console.log("OTP Response:", otpResponse);
-            
-            if (otpResponse.success) {
-              console.log("OTP email sent successfully");
-              setOtpSent(true);
-              
-              // STEP 4: Advance to verification step
-              setCurrentStep(2);
-            } else {
-              console.warn("OTP sending response not successful:", otpResponse.data);
-              // Still advance to verification step - user can request OTP manually
-              setCurrentStep(2);
-              setError("OTP email not sent. Please request a new code.");
-            }
-          } catch (otpError) {
-            console.error("OTP sending error:", otpError);
-            // Still advance to verification step
-            setCurrentStep(2);
-            setError("Failed to send OTP. Please request a new code.");
-          }
-        } else {
-          // Login failed but registration succeeded
-          console.warn("Auto-login failed, but registration succeeded");
-          setCurrentStep(2); // Still go to verification step
-          setError("Account created! Please login manually and verify your email.");
-        }
-      } catch (loginError) {
-        console.error("Auto-login error:", loginError);
-        setCurrentStep(2); // Still go to verification step
-        setError("Account created! Please login and verify your email.");
+      // AUTO SEND OTP - Use getOTP endpoint with userId
+      try {
+        await authService.getOTP(backendUserId);
+      } catch (otpError) {
+        console.warn("OTP sending failed:", otpError);
+        // Don't fail registration if OTP sending fails
+        // User can manually request OTP later
       }
 
     } catch (err) {
-      console.error("Registration error:", err);
-      setError(err.message || "Network error. Please check your connection.");
+      console.error("REGISTRATION ERROR =>", err);
+      setError(err.message || "Network error.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle successful email verification
-  const handleEmailVerificationSuccess = async () => {
-    try {
-      // Update user verification status
-      const userInfo = await authService.getUserInfo();
-      if (userInfo.success && userInfo.data) {
-        const updatedUser = { ...userInfo.data, is_verified: true };
-        setUser(updatedUser);
-        localStorage.setItem("userInfo", JSON.stringify(updatedUser));
-      }
-    } catch (err) {
-      console.error("Failed to fetch updated user info:", err);
-      // Still mark as verified locally
-      const currentUser = useAuthStore.getState().user;
-      if (currentUser) {
-        const updatedUser = { ...currentUser, is_verified: true };
-        setUser(updatedUser);
-        localStorage.setItem("userInfo", JSON.stringify(updatedUser));
-      }
-    }
-    
-    // Advance to success step
-    setCurrentStep(3);
-    
-    // Auto-redirect to dashboard after 3 seconds
-    setTimeout(() => {
-      navigate("/dashboard", { replace: true });
-    }, 3000);
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (error) clearError();
   };
 
-  // Handle verification failure
+  const handleEmailVerificationSuccess = async () => {
+    try {
+      // Auto-login after successful verification
+      const loginResponse = await authService.login({
+        email: registeredEmail || formData.email,
+        password: formData.password
+      });
+      
+      if (loginResponse.success && loginResponse.data?.token) {
+        setToken(loginResponse.data.token);
+        // Get user info
+        const userInfo = await authService.getUserInfo();
+        if (userInfo.success && userInfo.data) {
+          setUser(userInfo.data);
+        }
+      }
+      
+      setCurrentStep(3);
+      
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 3000);
+    } catch (err) {
+      console.error("Auto-login failed:", err);
+      // Still show success but user might need to login manually
+      setCurrentStep(3);
+      
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
+    }
+  };
+
   const handleVerificationFailed = (msg) => {
     setError(msg);
   };
 
-  // Go back to registration form
   const handleBackToStep1 = () => {
     clearError();
     setCurrentStep(1);
   };
 
-  // Handle social registration (optional)
+  // Handle social register
   const handleSocialRegister = (provider) => {
-    setError(`${provider} registration is not available yet. Please use email registration.`);
+    // Implementation for social registration
+    console.log(`Social register with ${provider}`);
+    // Add your social registration logic here
   };
+
+  // ---------------------------------------------------
+  // UI SECTION
+  // ---------------------------------------------------
 
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
 
-        {/* LEFT SIDE - IMAGE & TEXT */}
+        {/* LEFT */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
             <img 
@@ -273,7 +244,7 @@ export default function Register() {
           </div>
         </div>
 
-        {/* RIGHT SIDE - FORM */}
+        {/* RIGHT */}
         <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
@@ -281,13 +252,12 @@ export default function Register() {
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
 
-            {/* STEP PROGRESS INDICATOR */}
+            {/* STEPS */}
             <div className="w-full flex flex-col items-center py-4 mb-4">
               <div className="flex items-center gap-2 justify-center mb-2">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
-                      currentStep >= s.id 
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${currentStep >= s.id 
                         ? "bg-green-600 border-green-600 text-white" 
                         : "bg-white border-gray-300 text-gray-400"
                     }`}>
@@ -322,9 +292,8 @@ export default function Register() {
 
             {currentStep === 2 && (
               <EmailVerificationStep
-                email={registeredEmail}
+                email={registeredEmail || formData.email}
                 userId={userId}
-                otpSent={otpSent}
                 onBack={handleBackToStep1}
                 onSuccess={handleEmailVerificationSuccess}
                 onVerificationFailed={handleVerificationFailed}

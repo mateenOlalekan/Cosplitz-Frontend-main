@@ -50,7 +50,6 @@ async function request(path, options = {}) {
   try {
     response = await fetch(url, finalOptions);
   } catch (err) {
-    console.error("Network error:", err);
     return {
       status: 0,
       data: { message: "Network error. Please try again." },
@@ -99,7 +98,7 @@ async function request(path, options = {}) {
 }
 
 /* -------------------------------------------------------------
-   AUTH SERVICE — SIMPLIFIED FOR OTP VERIFICATION ONLY
+   AUTH SERVICE — MATCHED EXACTLY WITH YOUR BACKEND
 ----------------------------------------------------------------*/
 export const authService = {
   /** REGISTER — /api/register/ */
@@ -110,7 +109,7 @@ export const authService = {
     });
   },
 
-  /** LOGIN — /api/login/ */
+  /** LOGIN — Backend uses: http://localhost:8000/api/login/ */
   login: async (credentials) => {
     return await request("/login/", {
       method: "POST",
@@ -123,14 +122,12 @@ export const authService = {
     return await request("/user/info", { method: "GET" });
   },
 
-  /** SEND OTP — /api/otp/{user_id}/ (GET method as per your backend) */
-  sendOTP: async (userId) => {
-    return await request(`/otp/${userId}/`, { 
-      method: "GET" 
-    });
+  /** GET OTP — Backend: /api/otp/<user_id>/ */
+  getOTP: async (userId) => {
+    return await request(`/otp/${userId}/`, { method: "GET" });
   },
 
-  /** VERIFY OTP — /api/verify_otp (POST with email + otp) */
+  /** VERIFY OTP — MUST SEND email + otp */
   verifyOTP: async (email, otp) => {
     return await request("/verify_otp", {
       method: "POST",
@@ -138,33 +135,91 @@ export const authService = {
     });
   },
 
-  /** RESEND OTP — Same as sendOTP */
+  /** RESEND OTP — backend uses SAME endpoint as getOTP */
   resendOTP: async (userId) => {
-    return await request(`/otp/${userId}/`, { 
-      method: "GET" 
-    });
+    return await authService.getOTP(userId);
   },
 
-  /** FORGOT PASSWORD */
   forgotPassword: async (email) =>
     request("/forgot-password/", {
       method: "POST",
       body: { email },
     }),
 
-  /** RESET PASSWORD */
   resetPassword: async (data) =>
     request("/reset-password/", {
       method: "POST",
       body: data,
     }),
 
-  /** LOGOUT */
+  updateProfile: async (profileData) =>
+    request("/user/profile/", {
+      method: "PUT",
+      body: profileData,
+    }),
+
+  checkEmail: async (email) =>
+    request("/check-email/", {
+      method: "POST",
+      body: { email },
+    }),
+
+  socialLogin: async (provider, token) =>
+    request(`/social/${provider}/`, {
+      method: "POST",
+      body: { access_token: token },
+    }),
+
   logout: async () =>
     request("/logout/", { method: "POST" }),
+};
+
+/* -------------------------------------------------------------
+   DASHBOARD SERVICE
+----------------------------------------------------------------*/
+export const dashboardService = {
+  getOverview: async () =>
+    request("/dashboard/overview", { method: "GET" }),
+
+  getAnalytics: async (period = "monthly") =>
+    request(`/dashboard/analytics?period=${period}`, {
+      method: "GET",
+    }),
+
+  createSplit: async (splitData) =>
+    request("/splits/create", {
+      method: "POST",
+      body: splitData,
+    }),
+
+  getWalletBalance: async () =>
+    request("/wallet/balance", { method: "GET" }),
+
+  getNotifications: async () =>
+    request("/notifications", { method: "GET" }),
+};
+
+/* -------------------------------------------------------------
+   ADMIN SERVICE
+----------------------------------------------------------------*/
+export const adminService = {
+  getDashboardStats: async () =>
+    request("/admin/dashboard", { method: "GET" }),
+
+  getUsers: async (page = 1, limit = 20) =>
+    request(`/admin/users?page=${page}&limit=${limit}`, {
+      method: "GET",
+    }),
+
+  getSplits: async (page = 1, limit = 20) =>
+    request(`/admin/splits?page=${page}&limit=${limit}`, {
+      method: "GET",
+    }),
 };
 
 export default {
   request,
   authService,
+  dashboardService,
+  adminService,
 };

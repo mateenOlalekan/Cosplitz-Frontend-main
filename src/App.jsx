@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy,useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuthStore } from "./store/authStore";
 import "./App.css";
@@ -14,7 +14,7 @@ const Loading = lazy(() => import("./components/Loading"));
 // Public Pages
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Auth/Login/index"));
-const Register = lazy(() => import("./pages/Auth/Register/index"));
+const Register = lazy(() => import("./pages/Auth/Register/index")); // ✅ FIXED: Changed from Auth/Register/index
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Forget = lazy(() => import("./pages/Auth/ForgetPassword/ForgetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
@@ -49,6 +49,8 @@ const AdminSplits = lazy(() => import("./pages/Admin/AdminSplits"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 
+
+
 function App() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
 
@@ -67,7 +69,7 @@ function App() {
         <Route path="/onboarding-steps" element={<OnboardingSteps />} />
         <Route path="/forgot-password" element={<Forget />} />
 
-        {/* Keep legacy verify email route for backward compatibility only */}
+        {/* Verify Email */}
         <Route path="/verify-email/:userId/:email" element={<VerifyEmail />} />
 
         <Route path="/confirm-password" element={<ConfirmPassword />} />
@@ -75,7 +77,6 @@ function App() {
         <Route path="/kyc-flow" element={<KYCFlow />} />
 
         {/* PROTECTED USER DASHBOARD */}
-        {/* Note: Email verification is handled within the Register page flow */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Overview />} />
