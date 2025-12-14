@@ -1,9 +1,6 @@
-// src/services/api.js
+// src/services/api.js - UPDATED
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
-/**
- * Get token from storage
- */
 function getAuthToken() {
   try {
     return (
@@ -16,9 +13,6 @@ function getAuthToken() {
   }
 }
 
-/**
- * Core request handler
- */
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
 
@@ -87,6 +81,15 @@ async function request(path, options = {}) {
     };
   }
 
+  // Handle 400 - Bad Request (for OTP errors)
+  if (response.status === 400) {
+    return {
+      status: 400,
+      data: json,
+      error: true,
+    };
+  }
+
   // Generic error handling
   if (!response.ok) {
     return {
@@ -103,9 +106,6 @@ async function request(path, options = {}) {
   };
 }
 
-/* -------------------------------------------------------------
-   AUTH SERVICE
-----------------------------------------------------------------*/
 export const authService = {
   /** REGISTER — POST /api/register/ */
   register: async (userData) => {
@@ -146,27 +146,6 @@ export const authService = {
     return await authService.getOTP(userId);
   },
 
-  /** FORGOT PASSWORD */
-  forgotPassword: async (email) =>
-    request("/forgot-password/", {
-      method: "POST",
-      body: { email },
-    }),
-
-  /** RESET PASSWORD */
-  resetPassword: async (data) =>
-    request("/reset-password/", {
-      method: "POST",
-      body: data,
-    }),
-
-  /** UPDATE PROFILE */
-  updateProfile: async (profileData) =>
-    request("/user/profile/", {
-      method: "PUT",
-      body: profileData,
-    }),
-
   /** CHECK EMAIL */
   checkEmail: async (email) =>
     request("/check-email/", {
@@ -174,28 +153,24 @@ export const authService = {
       body: { email },
     }),
 
-  /** SOCIAL LOGIN */
-  socialLogin: async (provider, token) =>
-    request(`/social/${provider}/`, {
-      method: "POST",
-      body: { access_token: token },
-    }),
-
   /** LOGOUT */
   logout: async () =>
     request("/logout/", { method: "POST" }),
 
-  /** REFRESH TOKEN */
-  refreshToken: async (refreshToken) =>
-    request("/token/refresh/", {
+  // Forgot Password functions
+  forgotPassword: async (email) =>
+    request("/forgot-password/", {
       method: "POST",
-      body: { refresh: refreshToken },
+      body: { email },
+    }),
+
+  resetPassword: async (data) =>
+    request("/reset-password/", {
+      method: "POST",
+      body: data,
     }),
 };
 
-/* -------------------------------------------------------------
-   DASHBOARD SERVICE
-----------------------------------------------------------------*/
 export const dashboardService = {
   getOverview: async () =>
     request("/dashboard/overview", { method: "GET" }),
@@ -218,9 +193,6 @@ export const dashboardService = {
     request("/notifications", { method: "GET" }),
 };
 
-/* -------------------------------------------------------------
-   ADMIN SERVICE
-----------------------------------------------------------------*/
 export const adminService = {
   getDashboardStats: async () =>
     request("/admin/dashboard", { method: "GET" }),
@@ -236,42 +208,9 @@ export const adminService = {
     }),
 };
 
-/* -------------------------------------------------------------
-   UTILITY FUNCTIONS
-----------------------------------------------------------------*/
-export const apiUtils = {
-  /**
-   * Test OTP endpoint manually
-   */
-  testOTP: async (userId) => {
-    console.log(`Testing OTP for userId: ${userId}`);
-    const response = await authService.getOTP(userId);
-    console.log("OTP Test Response:", response);
-    return response;
-  },
-
-  /**
-   * Test verify OTP endpoint manually
-   */
-  testVerifyOTP: async (email, otp) => {
-    console.log(`Testing OTP verification for: ${email}`);
-    const response = await authService.verifyOTP(email, otp);
-    console.log("Verify OTP Test Response:", response);
-    return response;
-  },
-
-  /**
-   * Check API health
-   */
-  checkHealth: async () => {
-    return await request("/health/", { method: "GET" });
-  },
-};
-
 export default {
   request,
   authService,
   dashboardService,
   adminService,
-  apiUtils,
 };

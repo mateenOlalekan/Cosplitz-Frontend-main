@@ -1,3 +1,4 @@
+// src/pages/EmailVerificationStep.jsx - UPDATED
 import React, { useState, useEffect } from "react";
 import { authService } from "../../../services/api";
 import { ArrowLeft, Mail } from "lucide-react";
@@ -7,12 +8,13 @@ export default function EmailVerificationStep({
   userId,
   onBack,
   onSuccess,
+  onVerificationFailed,
 }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [timer, setTimer] = useState(300);
+  const [timer, setTimer] = useState(180); // 3 minutes
 
   // Countdown timer
   useEffect(() => {
@@ -25,7 +27,6 @@ export default function EmailVerificationStep({
     return () => clearInterval(interval);
   }, [timer]);
 
-  // Handle OTP input
   const handleChange = (value, index) => {
     if (!/^[0-9]?$/.test(value)) return;
 
@@ -50,7 +51,6 @@ export default function EmailVerificationStep({
     }
   };
 
-  // Handle paste event
   const handlePaste = (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData("text/plain").trim();
@@ -59,13 +59,11 @@ export default function EmailVerificationStep({
       const digits = pasted.split("");
       setOtp(digits);
       setError("");
-
-      document.getElementById(`otp-input-5`)?.focus();
       handleVerify(pasted);
     }
   };
 
-  // Verify OTP
+  // Verify OTP - FIXED: Now uses email instead of userId
   const handleVerify = async (code = null) => {
     const otpCode = code || otp.join("");
 
@@ -78,24 +76,32 @@ export default function EmailVerificationStep({
     setError("");
 
     try {
-      const response = await authService.verifyOTP(userId, otpCode);
+      // FIXED: Verify OTP with email, not userId
+      const response = await authService.verifyOTP(email, otpCode);
+      
+      console.log("OTP Verification Response:", response);
 
-      // Your fetch service returns:
-      // { success: true/false, message, ... }
       if (response?.success) {
         onSuccess();
       } else {
-        setError(response?.message || "Invalid OTP. Please try again.");
+        const errorMsg = response?.data?.message || "Invalid OTP. Please try again.";
+        setError(errorMsg);
+        if (onVerificationFailed) {
+          onVerificationFailed(errorMsg);
+        }
       }
     } catch (err) {
       console.error("OTP verification error:", err);
-      setError("Verification failed. Please try again.");
+      const errorMsg = "Verification failed. Please try again.";
+      setError(errorMsg);
+      if (onVerificationFailed) {
+        onVerificationFailed(errorMsg);
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // Resend OTP
   const handleResend = async () => {
     if (timer > 0) return;
 
@@ -104,13 +110,13 @@ export default function EmailVerificationStep({
 
     try {
       const response = await authService.resendOTP(userId);
-
+      
       if (response?.success) {
-        setTimer(180);
+        setTimer(180); // Reset timer to 3 minutes
         setOtp(["", "", "", "", "", ""]);
         document.getElementById(`otp-input-0`)?.focus();
       } else {
-        setError(response?.message || "Could not resend OTP.");
+        setError(response?.data?.message || "Could not resend OTP.");
       }
     } catch (err) {
       console.error("OTP resend error:", err);

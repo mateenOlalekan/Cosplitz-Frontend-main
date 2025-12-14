@@ -1,18 +1,18 @@
+// src/store/authStore.js - UPDATED
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-
       user: null,
       token: null,
       error: null,
       isLoading: true,
+      tempRegister: null,
 
       setToken: (token, persistToken = true) => {
         set({ token });
-
         try {
           if (persistToken) {
             localStorage.setItem("authToken", token);
@@ -21,28 +21,54 @@ export const useAuthStore = create(
             sessionStorage.setItem("authToken", token);
             localStorage.removeItem("authToken");
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Storage error:", e);
+        }
       },
 
       setUser: (userObj) => {
         set({ user: userObj });
         try {
-          if (userObj)
+          if (userObj) {
             localStorage.setItem("userInfo", JSON.stringify(userObj));
-          else localStorage.removeItem("userInfo");
-        } catch (e) {}
+          } else {
+            localStorage.removeItem("userInfo");
+          }
+        } catch (e) {
+          console.warn("Storage error:", e);
+        }
       },
 
-      tempRegister: null,
+      setPendingVerification: (data) => set({ tempRegister: data }),
+
       register: (payload) => set({ tempRegister: payload }),
 
-      logout: () => {
-        set({ user: null, token: null, error: null });
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userInfo");
-        sessionStorage.removeItem("authToken");
-        sessionStorage.removeItem("userInfo");
+      // NEW FUNCTION: Complete registration flow
+      completeRegistration: (userData, token) => {
+        set({
+          user: userData,
+          token: token,
+          tempRegister: null,
+          error: null
+        });
+        try {
+          localStorage.setItem("authToken", token);
+          localStorage.setItem("userInfo", JSON.stringify(userData));
+        } catch (e) {
+          console.warn("Storage error:", e);
+        }
+      },
 
+      logout: () => {
+        set({ user: null, token: null, error: null, tempRegister: null });
+        try {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userInfo");
+          sessionStorage.removeItem("authToken");
+          sessionStorage.removeItem("userInfo");
+        } catch (e) {
+          console.warn("Storage error:", e);
+        }
         window.location.href = "/login";
       },
 
@@ -71,12 +97,12 @@ export const useAuthStore = create(
             user: userRaw ? JSON.parse(userRaw) : null,
             isLoading: false,
           });
-        } catch {
+        } catch (err) {
+          console.error("Auth initialization error:", err);
           set({ token: null, user: null, isLoading: false });
         }
       },
     }),
-
     {
       name: "auth-storage",
       partialize: (state) => ({

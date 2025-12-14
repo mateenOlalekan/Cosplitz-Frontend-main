@@ -1,4 +1,4 @@
-// src/pages/Register.jsx
+// src/pages/Register.jsx - UPDATED
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
@@ -43,15 +43,12 @@ export default function Register() {
     clearError();
   }, [currentStep]);
 
-  // -------------------------
-  // HANDLE REGISTER SUBMIT
-  // -------------------------
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     clearError();
     setLoading(true);
 
-    // --- BASIC VALIDATION ---
+    // Validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -82,7 +79,6 @@ export default function Register() {
       return;
     }
 
-    // --- PREPARE BACKEND DATA ---
     const registrationData = {
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
@@ -96,24 +92,15 @@ export default function Register() {
       const response = await authService.register(registrationData);
       console.log("REGISTER RESPONSE =>", response);
 
-      if (!response.success) {
+      if (response.error) {
         setError(response.data?.message || response.message || "Registration failed.");
         setLoading(false);
         return;
       }
 
-      // Extract user information from response
-      const backendUserId =
-        response.data?.user?.id ||
-        response.data?.user_id ||
-        response.data?.id ||
-        response.user?.id ||
-        null;
-
-      const userEmail =
-        response.data?.user?.email ||
-        response.data?.email ||
-        formData.email;
+      // Extract user information
+      const backendUserId = response.data?.user?.id || response.data?.user_id || response.data?.id;
+      const userEmail = response.data?.user?.email || response.data?.email || formData.email;
 
       if (!backendUserId) {
         setError("Registration worked, but user ID is missing. Try logging in.");
@@ -124,7 +111,7 @@ export default function Register() {
       setUserId(backendUserId);
       setRegisteredEmail(userEmail);
 
-      // Store pending verification in auth store
+      // Store pending verification
       setPendingVerification({
         email: userEmail,
         userId: backendUserId,
@@ -132,46 +119,26 @@ export default function Register() {
         lastName: formData.lastName,
       });
 
-      // Save token if provided (some backends return token on register)
-      if (response.data?.token || response.token) {
-        const token = response.data?.token || response.token;
-        setToken(token);
-        setUser({
-          id: backendUserId,
-          email: userEmail,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          name: `${formData.firstName} ${formData.lastName}`,
-          role: "user",
-          is_active: false,
-          email_verified: false
-        });
-      }
-
-      // Move to Step 2 (email verification)
+      // Move to Step 2
       setCurrentStep(2);
 
-      // AUTO SEND OTP - Use getOTP with userId
+      // Auto-send OTP
       setTimeout(async () => {
         try {
-          console.log("Sending OTP to userId:", backendUserId);
           const otpResponse = await authService.getOTP(backendUserId);
           console.log("OTP Response:", otpResponse);
           
-          if (!otpResponse.success) {
+          if (otpResponse.error) {
             console.warn("OTP sending failed:", otpResponse.data?.message);
-            // User can resend manually
           }
         } catch (otpError) {
           console.error("OTP sending error:", otpError);
-          // Don't fail the flow
         }
       }, 500);
 
     } catch (err) {
       console.error("REGISTRATION ERROR =>", err);
       setError(err.message || "Network error.");
-    } finally {
       setLoading(false);
     }
   };
@@ -183,7 +150,7 @@ export default function Register() {
 
   const handleEmailVerificationSuccess = async () => {
     try {
-      // Auto-login after successful verification
+      // Auto-login after verification
       const loginResponse = await authService.login({
         email: registeredEmail || formData.email,
         password: formData.password
@@ -192,7 +159,7 @@ export default function Register() {
       console.log("Auto-login response:", loginResponse);
       
       if (loginResponse.success && loginResponse.data?.token) {
-        // Use completeRegistration to update store
+        // Complete registration
         completeRegistration(
           {
             id: userId,
@@ -208,39 +175,28 @@ export default function Register() {
           loginResponse.data.token
         );
         
-        // Also get full user info if available
-        try {
-          const userInfo = await authService.getUserInfo();
-          if (userInfo.success && userInfo.data) {
-            setUser(userInfo.data);
-          }
-        } catch (userInfoError) {
-          console.warn("Could not fetch user info:", userInfoError);
-        }
-        
         setCurrentStep(3);
         
         setTimeout(() => {
           navigate("/dashboard");
-        }, 3000);
+        }, 2000);
       } else {
-        // Login failed but OTP verified
-        setError("Account verified! Please login manually.");
+        // OTP verified but login failed
+        setError("Email verified! Please login manually.");
         setCurrentStep(3);
         
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 2000);
       }
     } catch (err) {
       console.error("Auto-login failed:", err);
-      // OTP verified but login failed
       setError("Email verified! Please login with your credentials.");
       setCurrentStep(3);
       
       setTimeout(() => {
         navigate("/login");
-      }, 3000);
+      }, 2000);
     }
   };
 
@@ -254,7 +210,6 @@ export default function Register() {
   };
 
   const handleSocialRegister = (provider) => {
-    // Placeholder for social registration
     console.log(`Social register with ${provider}`);
     setError(`${provider} registration coming soon!`);
   };
@@ -262,7 +217,6 @@ export default function Register() {
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
-
         {/* LEFT */}
         <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
           <div className="w-full flex flex-col items-center">
@@ -289,13 +243,13 @@ export default function Register() {
           </div>
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
-
             {/* STEPS */}
             <div className="w-full flex flex-col items-center py-4 mb-4">
               <div className="flex items-center gap-2 justify-center mb-2">
                 {steps.map((s, i) => (
                   <div key={s.id} className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${currentStep >= s.id 
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${
+                      currentStep >= s.id 
                         ? "bg-green-600 border-green-600 text-white" 
                         : "bg-white border-gray-300 text-gray-400"
                     }`}>
