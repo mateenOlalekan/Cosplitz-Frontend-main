@@ -195,7 +195,7 @@ export default function Register() {
       setCurrentStep(3);
       
       setTimeout(() => {
-        navigate("/login");
+        navigate("/dashboard");
       }, 2000);
     }
   };
