@@ -6,6 +6,7 @@ import Header from "../../components/Layout/DashHeader";
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Detect screen size
   useEffect(() => {
@@ -15,8 +16,20 @@ export default function DashboardLayout() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const handleSidebarToggle = () => {
+    if (isAnimating) return;
+    
+    setIsAnimating(true);
+    setSidebarOpen(!sidebarOpen);
+    
+    // Reset animation state after animation completes
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 700); // Match the sidebar animation duration
+  };
+
   return (
-    <div className="flex min-h-screen h-screen w-full  overflow-hidden">
+    <div className="flex min-h-screen h-screen w-full overflow-hidden">
       {/* Sidebar */}
       <Sidebar
         sidebarOpen={sidebarOpen}
@@ -25,16 +38,16 @@ export default function DashboardLayout() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col h-full overflow-y-auto">
+      <div className="flex-1 flex flex-col h-full overflow-hidden transition-all duration-700 ease-in-out">
         {/* Header */}
         <Header
           sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
+          setSidebarOpen={handleSidebarToggle}
           isMobile={isMobile}
         />
 
         {/* Outlet renders nested dashboard pages */}
-        <main className="flex-1 overflow-y-auto  bg-white">
+        <main className="flex-1 overflow-y-auto bg-white transition-all duration-700 ease-in-out">
           <Outlet />
         </main>
       </div>

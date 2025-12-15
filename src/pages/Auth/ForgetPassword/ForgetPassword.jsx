@@ -19,7 +19,8 @@ export default function PasswordResetSuccess() {
   };
 
   return (
-    <div className="h-screen flex flex-col px-8 py-4 lg:flex-row bg-white relative  xl:flex-row  w-full overflow-hidden  p-4 rounded-2xl">
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl ">
+      <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden"></div>
       {/* === LEFT PANEL === */}
       <motion.div
         initial={{ opacity: 0, x: -60 }}
@@ -66,6 +67,8 @@ export default function PasswordResetSuccess() {
             className="w-32 sm:w-28"
           />
         </div>
+
+
 
         {/* === FORM CONTENT === */}
         <motion.div

@@ -9,6 +9,7 @@ import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
+import LeftPanel from "../LeftPanel";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -88,31 +89,15 @@ export default function Login() {
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
         {/* LEFT */}
-        <div className="hidden lg:flex w-1/2 bg-[#F8EACD] rounded-xl p-6 items-center justify-center">
-          <div className="w-full flex flex-col items-center">
-            <img 
-              src={loginlogo} 
-              alt="Login" 
-              className="rounded-lg w-full h-auto max-h-[400px] object-contain"
-            />
-            <div className="bg-gradient-to-br max-w-lg from-[#FAF3E8] to-[#F8EACD] mt-4 p-4 rounded-2xl shadow-sm text-center">
-              <h1 className="text-3xl font-semibold text-[#2D0D23] mb-1">
-                Welcome Back!
-              </h1>
-              <p className="text-xl font-medium text-[#4B4B4B] leading-relaxed">
-                Continue managing costs and resources with your community.
-              </p>
-            </div>
-          </div>
-        </div>
+        <LeftPanel />
 
         {/* RIGHT */}
-        <div className="flex flex-1 flex-col items-center p-3 sm:p-5 overflow-y-auto">
+        <div className="flex flex-1 flex-col items-center p-3  overflow-y-auto">
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
 
-          <div className="w-full max-w-md p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
+          <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white space-y-6">
             <h1 className="text-2xl sm:text-3xl text-center font-bold text-gray-900">
               Welcome Back
             </h1>
@@ -126,7 +111,7 @@ export default function Login() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+            <div className="grid grid-cols-1  gap-2 mb-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

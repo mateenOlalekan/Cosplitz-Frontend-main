@@ -1,4 +1,3 @@
-// src/components/Layout/Sidebar.jsx
 import { NavLink } from "react-router-dom";
 import {
   Home,
@@ -14,10 +13,7 @@ import {
 import logo from "../../assets/logo.svg";
 import userImg from "../../assets/user.svg";
 
-
 const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
-// logged-in user data
-
   const handleOverlayClick = () => {
     if (isMobile) setSidebarOpen(false);
   };
@@ -34,44 +30,44 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile overlay with smooth fade */}
       {sidebarOpen && isMobile && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300 ease-in-out"
           onClick={handleOverlayClick}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar with smooth animation */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 transition-transform duration-300 z-50
-        ${isMobile ? "w-2/3" : "w-64"}
+        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-50
+        ${isMobile ? "w-64" : "w-64"}
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0 lg:static lg:z-auto`}
+        lg:translate-x-0 lg:static lg:z-auto
+        transition-all duration-700 ease-in-out`}
       >
-        <div className="p-4 lg:p-6 h-full flex flex-col relative">
-
+        <div className="p-6 h-full flex flex-col relative">
           {/* Close btn (mobile only) */}
           {isMobile && (
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden absolute top-4 right-4 p-1 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors duration-300"
             >
               <X size={20} />
             </button>
           )}
 
           {/* Logo */}
-          <div className="w-full mb-6 flex justify-start">
+          <div className="w-full mb-8 flex justify-start">
             <img
               src={logo}
               alt="Logo"
-              className="h-10 md:h-12 object-cover w-auto select-none pointer-events-none"
+              className="h-10 object-cover w-auto select-none pointer-events-none"
             />
           </div>
 
-          {/* Navigation */}
-          <nav className="space-y-1 flex-1">
+          {/* Navigation with staggered animation */}
+          <nav className="space-y-2 flex-1">
             {navItems.map((item, i) => (
               <NavLink
                 key={i}
@@ -79,20 +75,20 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
                 end
                 onClick={() => isMobile && setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `w-full flex items-center justify-between p-2 rounded-lg transition-colors text-sm ${
-                    isActive
-                      ? "bg-green-600 text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                  `w-full flex items-center justify-between p-3 rounded-lg transition-all duration-300
+                  ${isActive
+                    ? "bg-green-600 text-white shadow-md"
+                    : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
                   }`
                 }
               >
-                <div className="flex items-center gap-2">
-                  <item.icon size={18} />
-                  <span className="font-medium">{item.label}</span>
+                <div className="flex items-center gap-3">
+                  <item.icon size={20} className="transition-transform duration-300" />
+                  <span className="font-medium text-sm">{item.label}</span>
                 </div>
 
                 {item.count && (
-                  <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-gray-200 px-2 py-1 rounded-full min-w-[24px] text-center transition-all duration-300">
                     {item.count}
                   </span>
                 )}
@@ -100,20 +96,23 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
             ))}
           </nav>
 
-          {/* Community Card */}
-          <div className="mt-6 p-4 bg-[#1F8225] rounded-xl text-white">
-            <div className="flex items-center gap-1 mb-2">
+          {/* Community Card with animation */}
+          <div className="mt-6 p-4 bg-[#1F8225] rounded-xl text-white shadow-lg">
+            <div className="flex items-center gap-1 mb-3">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-1 h-1 bg-white rounded-full" />
+                <div 
+                  key={i} 
+                  className="w-1 h-1 bg-white rounded-full"
+                />
               ))}
             </div>
 
-            <h3 className="font-bold text-sm mb-1">Community Bonding</h3>
-            <p className="text-xs mb-1">Level 4</p>
-            <p className="text-xs mb-2">23 completed split</p>
+            <h3 className="font-bold text-sm mb-2">Community Bonding</h3>
+            <p className="text-xs mb-2">Level 4</p>
+            <p className="text-xs mb-3">23 completed split</p>
 
-            <div className="w-full h-1 bg-green-700 rounded-full overflow-hidden">
-              <div className="h-full w-3/4 bg-white" />
+            <div className="w-full h-2 bg-green-800/50 rounded-full overflow-hidden mb-2">
+              <div className="h-full w-3/4 bg-white rounded-full" />
             </div>
 
             <p className="text-xs mt-2">Reliability Score: 87%</p>
@@ -121,30 +120,29 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
 
           {/* Logged-in User */}
           <div className="mt-6">
-            <div className="w-full flex items-center gap-3 py-2 cursor-pointer hover:bg-gray-50 rounded-lg">
+            <div className="w-full flex items-center gap-3 py-3 px-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-all duration-300">
               <img
-                src={user?.avatar || userImg}
+                src={userImg}
                 alt="Profile"
-                className="w-12 h-12 rounded-full"
+                className="w-12 h-12 rounded-full border-2 border-gray-200 transition-all duration-300"
               />
 
-              <div className="text-left">
+              <div className="text-left flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900 truncate">
-                  {user?.name || "User name"}
+                  ddwdwdwdd
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {user?.email || "User email"}
+                  user email
                 </p>
               </div>
             </div>
 
             {/* Logout Btn */}
             <button
-              onClick={logout}
-              className="mt-3 w-full flex items-center gap-2 text-red-600 text-sm p-2 rounded-lg hover:bg-red-50"
+              className="mt-4 w-full flex items-center justify-center gap-3 text-red-600 text-sm p-3 rounded-lg hover:bg-red-50 hover:shadow-sm transition-all duration-300"
             >
               <LogOut size={18} />
-              Logout
+              <span>Logout</span>
             </button>
           </div>
         </div>

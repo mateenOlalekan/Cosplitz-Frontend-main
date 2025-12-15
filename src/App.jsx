@@ -69,8 +69,7 @@ function App() {
         <Route path="/onboarding-steps" element={<OnboardingSteps />} />
         <Route path="/forgot-password" element={<Forget />} />
 
-        {/* Verify Email */}
-        <Route path="/verify-email/:userId/:email" element={<VerifyEmail />} />
+
 
         <Route path="/confirm-password" element={<ConfirmPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
@@ -78,6 +77,7 @@ function App() {
 
         {/* PROTECTED USER DASHBOARD */}
         <Route element={<ProtectedRoute />}>
+        <Route path="/onboarding-steps" element={<OnboardingSteps />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Overview />} />
             <Route path="analytics" element={<Analytics />} />
