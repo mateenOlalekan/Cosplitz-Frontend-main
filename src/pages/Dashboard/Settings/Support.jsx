@@ -44,34 +44,6 @@ export default function Support() {
           </div>
         </div>
       </div>
-
-      <div className="mt-6 bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Submit a Request</h3>
-        <form className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Subject</label>
-            <input
-              type="text"
-              placeholder="Enter subject"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">Description</label>
-            <textarea
-              rows={4}
-              placeholder="Describe your issue"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none"
-            ></textarea>
-          </div>
-          <button
-            type="submit"
-            className="px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors"
-          >
-            Submit Request
-          </button>
-        </form>
-      </div>
     </div>
   );
 }

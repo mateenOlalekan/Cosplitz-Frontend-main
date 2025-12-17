@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { splits } from "../../Data/Alldata";
-import { Heart, Share2, Users, Clock, MapPin } from "lucide-react";
+import { splits } from "../../Data/Alldata"; // Import your splits data
+import { Heart, Share2, Users, Clock, MapPin, Users2 } from "lucide-react";
 
 export default function Filter() {
+  // Add missing properties to splits data for filtering
+  const enhancedSplits = splits.map((item) => ({
+    ...item,
+    category: item.badge || item.name, // Use badge as category if available
+    priceValue: parseFloat(item.price.replace("₦", "").replace(",", "")) || 0,
+    distanceValue: parseFloat(item.distance.replace(" km", "")) || 0,
+  }));
+
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [priceRange, setPriceRange] = useState(0);
+  const [priceRange, setPriceRange] = useState(5000); // Set max price range
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
 
   const categories = [
@@ -28,15 +36,18 @@ export default function Filter() {
 
   const getKmValue = (loc) => {
     if (loc === "All Locations") return Infinity;
-    return parseInt(loc.replace("Within ", "").replace("km", ""));
+    return parseFloat(loc.replace("Within ", "").replace("km", ""));
   };
 
-  const filteredSplits = splits.filter((item) => {
+  const filteredSplits = enhancedSplits.filter((item) => {
+    // Category filter
     const categoryMatch =
       selectedCategory === "All" || item.category === selectedCategory;
 
+    // Price filter
     const priceMatch = item.priceValue <= priceRange;
 
+    // Location filter
     const locationMatch =
       selectedLocation === "All Locations" ||
       item.distanceValue <= getKmValue(selectedLocation);
@@ -46,9 +57,12 @@ export default function Filter() {
 
   const clearAll = () => {
     setSelectedCategory("All");
-    setPriceRange(100);
+    setPriceRange(5000); // Reset to max price
     setSelectedLocation("All Locations");
   };
+
+  // Calculate max price for range slider
+  const maxPrice = Math.max(...enhancedSplits.map(item => item.priceValue));
 
   return (
     <div className="min-h-screen px-4 md:px-6 py-2">
@@ -87,24 +101,24 @@ export default function Filter() {
       {/* Price Range */}
       <div className="mt-3">
         <label className="font-semibold text-gray-800 block text-sm mb-2">
-          Price Range: <span className="text-green-600">$0 - ${priceRange}</span>
+          Price Range: <span className="text-green-600">₦0 - ₦{priceRange}</span>
         </label>
 
         <div className="px-1">
           <input
             type="range"
             min="0"
-            max="100"
+            max={maxPrice}
             value={priceRange}
-            onChange={(e) => setPriceRange(e.target.value)}
+            onChange={(e) => setPriceRange(parseInt(e.target.value))}
             className="w-full h-1.5 accent-green-600 cursor-pointer rounded-full"
           />
         </div>
 
         <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>$0</span>
-          <span>$50</span>
-          <span>$100</span>
+          <span>₦0</span>
+          <span>₦{Math.floor(maxPrice/2)}</span>
+          <span>₦{maxPrice}</span>
         </div>
       </div>
 
@@ -132,7 +146,7 @@ export default function Filter() {
       </div>
 
       {/* Results Count */}
-      <div className="mt-3 mb-2">
+      <div className="mt-3 mb-4">
         <div className="flex items-center justify-between">
           <span className="text-gray-700 font-medium text-sm">
             Showing {filteredSplits.length} results
@@ -143,79 +157,129 @@ export default function Filter() {
         </div>
       </div>
 
-      {/* Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-2">
-        {filteredSplits.map((split) => (
+      {/* Splits Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-8">
+        {filteredSplits.map((item) => (
           <div
-            key={split.id}
-            className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 overflow-hidden"
+            key={item.id}
+            className="relative flex flex-col justify-between rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 group bg-white h-fit"
           >
             {/* Image Section */}
-            <div className="relative">
+            <div className="relative h-40 overflow-hidden">
               <img
-                src={split.image}
-                alt={split.title}
-                className="w-full h-44 sm:h-48 object-cover"
+                src={item.image}
+                alt={item.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
-
-              <span className="absolute top-2 left-2 bg-green-600 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                {split.badge}
-              </span>
-
-              <div className="absolute top-2 right-2 flex gap-1.5">
-                <button className="bg-black/70 hover:bg-white p-1.5 rounded-full transition-colors">
-                  <Heart size={14} className="text-white hover:text-red-500" />
+              <div className="absolute top-3 left-3">
+                <div
+                  className="rounded-xl py-1 px-3 text-sm font-medium"
+                  style={{
+                    backgroundColor: item.descbg,
+                    color: item.desctext,
+                  }}
+                >
+                  {item.special}
+                </div>
+              </div>
+              <div className="absolute top-3 right-3 flex gap-2">
+                <button className="bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors">
+                  <Heart size={16} className="text-gray-700" />
                 </button>
-
-                <button className="bg-black/70 hover:bg-white p-1.5 rounded-full transition-colors">
-                  <Share2 size={14} className="text-white hover:text-green-600" />
+                <button className="bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors">
+                  <Share2 size={16} className="text-gray-700" />
                 </button>
               </div>
             </div>
 
-            {/* Content */}
-            <div className="p-3 space-y-2">
-              {/* Title and Category */}
+            {/* Content Section */}
+            <div className="p-4 flex flex-col gap-3">
+              {/* Title and Badge */}
               <div className="flex justify-between items-start">
-                <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 pr-2">
-                  {split.title}
+                <h3 className="text-lg font-bold text-gray-800 line-clamp-1">
+                  {item.title}
                 </h3>
-                <span className={`${split.bgtext} text-xs px-2 py-1 rounded-full flex-shrink-0`}>
-                  {split.name}
-                </span>
-              </div>
-
-              {/* Distance */}
-              <p className="text-xs text-gray-600 flex items-center">
-                <MapPin className="inline-block w-3 h-3 mr-1 text-gray-500" />
-                {split.distance}
-              </p>
-
-              {/* Participants & Time */}
-              <div className="flex items-center justify-between text-xs text-gray-700 pt-1">
-                <div className="flex items-center gap-1">
-                  <Users size={12} className="text-gray-500" />
-                  <span>{split.participants}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock size={12} className="text-gray-500" />
-                  <span>{split.timeLeft}</span>
+                <div
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${item.bgtext}`}
+                  style={{ color: item.textcolor }}
+                >
+                  {item.badge}
                 </div>
               </div>
 
-              {/* Price and Join Button */}
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-green-600 font-bold text-sm">
-                  {split.price}
-                </span>
-                <button className="text-sm font-medium text-green-600 hover:text-green-700 transition-colors">
-                  Join
+              {/* Description */}
+              <div
+                className="px-3 py-1.5 rounded-lg text-sm font-medium inline-flex w-fit"
+                style={{
+                  backgroundColor: item.descbg,
+                  color: item.desctext,
+                }}
+              >
+                {item.desc}
+              </div>
+
+              {/* Creator Info */}
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold">
+                  {item.creator.charAt(0)}
+                </div>
+                <span className="text-sm text-gray-600">{item.creator}</span>
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <span>★ {item.rating}</span>
+                  <span className="text-green-600 ml-2">Trust {item.trust}</span>
+                </div>
+              </div>
+
+              {/* Details */}
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <Users size={14} />
+                    <span>{item.participants}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock size={14} />
+                    <span>{item.timeLeft}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MapPin size={14} />
+                    <span>{item.distance}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price and Action */}
+              <div className="flex items-center justify-between pt-3 border-t">
+                <div className="text-left">
+                  <div className="text-2xl font-bold text-gray-900">
+                    {item.price}
+                  </div>
+                  <div className="text-xs text-gray-500">per person</div>
+                </div>
+                <button className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                  Join Now
                 </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* No Results Message */}
+      {filteredSplits.length === 0 && (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-2">No results found</div>
+          <p className="text-gray-500 text-sm mb-4">
+            Try adjusting your filters
+          </p>
+          <button
+            onClick={clearAll}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Clear All Filters
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -36,7 +36,7 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
             {categories.map((cat, i) => (
               <button
                 key={i}
-                className="rounded-xl py-4 bg-white transition text-center"
+                className="rounded-xl py-4  transition text-center"
               >
                 <img src={cat.icon} alt={cat.label} className="w-15 h-15 mx-auto mb-2" />
                 <p className="text-[10px] md:text-[12px] font-medium text-gray-900">{cat.label}</p>

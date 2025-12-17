@@ -146,10 +146,10 @@ export const authService = {
     return await authService.getOTP(userId);
   },
 
-  /** CHECK EMAIL */
-  checkEmail: async (email) =>
-    request("/check-email/", {
-      method: "POST",
+  /** User Data */
+  userInfo: async (email) =>
+    request("/user/info", {
+      method: "GET",
       body: { email },
     }),
 

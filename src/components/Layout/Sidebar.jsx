@@ -21,7 +21,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
   // User navigation links only
   const navItems = [
     { icon: Home, label: "Home", url: "/dashboard" },
-    { icon: Share2, label: "My Splitz", url: "/dashboard/create-split", count: 3 },
+    { icon: Share2, label: "My Splitz", url: "/dashboard/mysplitz", count: 3 },
     { icon: MessageSquare, label: "Messages", url: "/dashboard/messages", count: 8 },
     { icon: Wallet, label: "Wallet", url: "/dashboard/payment" },
     { icon: MapPin, label: "Nearby", url: "/dashboard/nearby", count: 12 },
@@ -41,12 +41,12 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
       {/* Sidebar with smooth animation */}
       <aside
         className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-50
-        ${isMobile ? "w-64" : "w-64"}
+        ${isMobile ? "w-60" : "w-60"}
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0 lg:static lg:z-auto
         transition-all duration-700 ease-in-out`}
       >
-        <div className="p-6 h-full flex flex-col relative">
+        <div className="px-4 py-3 h-full flex flex-col relative">
           {/* Close btn (mobile only) */}
           {isMobile && (
             <button
@@ -67,7 +67,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
           </div>
 
           {/* Navigation with staggered animation */}
-          <nav className="space-y-2 flex-1">
+          <nav className="space-y-1 flex-1">
             {navItems.map((item, i) => (
               <NavLink
                 key={i}
@@ -75,14 +75,14 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
                 end
                 onClick={() => isMobile && setSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `w-full flex items-center justify-between p-3 rounded-lg transition-all duration-300
+                  `w-full flex items-center justify-between p-2 rounded-lg transition-all duration-300
                   ${isActive
                     ? "bg-green-600 text-white shadow-md"
                     : "text-gray-700 hover:bg-gray-100 hover:shadow-sm"
                   }`
                 }
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <item.icon size={20} className="transition-transform duration-300" />
                   <span className="font-medium text-sm">{item.label}</span>
                 </div>
@@ -97,8 +97,8 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
           </nav>
 
           {/* Community Card with animation */}
-          <div className="mt-6 p-4 bg-[#1F8225] rounded-xl text-white shadow-lg">
-            <div className="flex items-center gap-1 mb-3">
+          <div className="mt-4 p-3 bg-[#1F8225] rounded-xl text-white shadow-lg">
+            <div className="flex items-center gap-1 mb-2">
               {[...Array(5)].map((_, i) => (
                 <div 
                   key={i} 
@@ -119,7 +119,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
           </div>
 
           {/* Logged-in User */}
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="w-full flex items-center gap-3 py-3 px-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-all duration-300">
               <img
                 src={userImg}
@@ -137,13 +137,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
               </div>
             </div>
 
-            {/* Logout Btn */}
-            <button
-              className="mt-4 w-full flex items-center justify-center gap-3 text-red-600 text-sm p-3 rounded-lg hover:bg-red-50 hover:shadow-sm transition-all duration-300"
-            >
-              <LogOut size={18} />
-              <span>Logout</span>
-            </button>
+
           </div>
         </div>
       </aside>

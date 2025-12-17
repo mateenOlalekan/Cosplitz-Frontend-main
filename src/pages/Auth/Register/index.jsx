@@ -1,5 +1,5 @@
 // src/pages/Register.jsx - UPDATED
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
@@ -15,7 +15,7 @@ export default function Register() {
   const [userId, setUserId] = useState(null);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const navigate = useNavigate();
-
+  const reloadTimer = useRef(null);
   const setError = useAuthStore((state) => state.setError);
   const clearError = useAuthStore((state) => state.clearError);
   const error = useAuthStore((state) => state.error);
@@ -186,7 +186,7 @@ export default function Register() {
         setCurrentStep(3);
         
         setTimeout(() => {
-          navigate("/login");
+          navigate("/register");
         }, 2000);
       }
     } catch (err) {
@@ -200,9 +200,21 @@ export default function Register() {
     }
   };
 
-  const handleVerificationFailed = (msg) => {
-    setError(msg);
+const handleVerificationFailed = (msg) => {
+  setError(msg);
+
+  reloadTimer.current = setTimeout(() => {
+    window.location.reload();
+  }, 1500);
+};
+
+useEffect(() => {
+  return () => {
+    if (reloadTimer.current) {
+      clearTimeout(reloadTimer.current);
+    }
   };
+}, []);
 
   const handleBackToStep1 = () => {
     clearError();

@@ -21,7 +21,7 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const ConfirmPassword = lazy(() => import("./pages/Auth/ConfirmPassword/ConfirmPassword"));
 const PasswordResetSuccess = lazy(() => import("./pages/PasswordResetSuccess"));
 const OnboardingSteps = lazy(() => import("./pages/OnBoardingSteps"));
-const KYCFlow = lazy(() => import("./pages/Identification/KYCFlow"));
+
 
 // Dashboard Pages
 const DashboardLayout = lazy(() => import("./components/Layout/DashboardLayout"));
@@ -36,8 +36,10 @@ const Payment = lazy(() => import("./pages/Dashboard/Payment"));
 const Successful = lazy(() => import("./pages/Dashboard/SplitzSuccessful"));
 const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
 const CreateSplitzPage = lazy(() => import("./pages/Dashboard/CreateSplitz"));
+const ResetPassword = lazy(()=>import("./pages/Dashboard/Settings/ResetPassword"));
 const NotificationPage = lazy(() => import("./pages/Dashboard/Notification"));
 const Filter = lazy(() => import("./pages/Dashboard/Filter"));
+const KYCFlow = lazy(() => import("./pages/Identification/KYCFlow"));
 
 // Admin Pages
 const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
@@ -93,6 +95,7 @@ function App() {
               <Route path="profile" element={<MyProfile />} />
               <Route path="notifications" element={<NotificationSettings />} />
               <Route path="verification" element={<Verification />} />
+              <Route path="resetpassword" element={<ResetPassword />} />
               <Route path="support" element={<Support />} />
             </Route>
           </Route>

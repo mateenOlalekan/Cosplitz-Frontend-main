@@ -1,51 +1,77 @@
-import React from 'react';
+import { useState } from 'react';
+
+const NOTIFICATIONS = [
+  { id: 'all', label: 'Turn off all notifications', defaultChecked: false },
+  { id: 'comments', label: 'Turn off all comments', defaultChecked: true },
+  { id: 'posts', label: 'Turn off all posts', defaultChecked: true },
+  { id: 'news', label: 'News and updates', defaultChecked: false },
+  { id: 'reminders', label: 'Reminders', defaultChecked: false },
+];
 
 export default function Notifications() {
+  const [settings, setSettings] = useState(
+    Object.fromEntries(
+      NOTIFICATIONS.map(n => [n.id, n.defaultChecked])
+    )
+  );
+
+  const toggleSetting = id => {
+    setSettings(prev => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-bold text-gray-900">Notifications</h2>
+    <div className="p-3 sm:p-4 w-full bg-gray-100 overflow-y-auto">
+      
+      {/* ===== HEADER ===== */}
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+          Notifications
+        </h2>
       </div>
 
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Notification Preferences</h3>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                <p className="text-sm text-gray-600">Receive updates via email</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-gray-900">Push Notifications</h4>
-                <p className="text-sm text-gray-600">Receive browser notifications</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium text-gray-900">SMS Notifications</h4>
-                <p className="text-sm text-gray-600">Receive text messages</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-              </label>
-            </div>
-          </div>
+      {/* ===== CARD ===== */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+        
+        <div className="mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+            Push Notifications
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
+            Get push notifications in the app to stay updated when you are offline.
+          </p>
         </div>
+
+        {/* ===== SETTINGS LIST ===== */}
+        <div className="divide-y divide-gray-200">
+          {NOTIFICATIONS.map(({ id, label }) => (
+            <div
+              key={id}
+              className="flex items-center justify-between gap-3 py-3"
+            >
+              <span className="text-sm sm:text-base text-gray-900">
+                {label}
+              </span>
+
+              {/* Toggle */}
+              <button
+                onClick={() => toggleSetting(id)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition
+                  ${settings[id] ? 'bg-green-500' : 'bg-gray-200'}
+                `}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition
+                    ${settings[id] ? 'translate-x-5' : 'translate-x-1'}
+                  `}
+                />
+              </button>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
