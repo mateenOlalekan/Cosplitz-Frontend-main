@@ -31,6 +31,8 @@ const NotificationPage = lazy(() => import("./pages/Dashboard/Notification"));
 const Filter = lazy(() => import("./pages/Dashboard/Filter"));
 const AllTasksPage = lazy(() => import("./pages/Dashboard/AllTasksPage"));
 const SplitzDescriptionPage = lazy(() => import("./pages/Dashboard/SplitzDescriptionPage"));
+const SplitDetailPage = lazy(() => import("./pages/Dashboard/splitCardPage"));
+const SplitCardPage = lazy(() => import("./pages/Dashboard/splitCardPage"));
 const Other = lazy(() => import("./pages/Dashboard/Other"));
 
 /* Settings */
@@ -40,6 +42,10 @@ const NotificationSettings = lazy(() => import("./pages/Dashboard/Settings/Notif
 const Verification = lazy(() => import("./pages/Dashboard/Settings/Verification"));
 const Support = lazy(() => import("./pages/Dashboard/Settings/Support"));
 const ResetPassword = lazy(() => import("./pages/Dashboard/Settings/ResetPassword"));
+
+
+
+
 
 /* KYC */
 const KYCConfirmation = lazy(() =>

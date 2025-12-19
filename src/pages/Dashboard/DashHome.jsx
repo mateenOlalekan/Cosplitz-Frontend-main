@@ -20,7 +20,7 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
   const navigate = useNavigate();
 
   const CreateSplitz = () => {
-    navigate("/dashboard/create-split");
+    navigate("/dashboard/create-splitz");
   };
 
   return (

@@ -84,7 +84,6 @@ export default function Register() {
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0],
       nationality: formData.nationality || "",
     };
 
@@ -170,7 +169,6 @@ export default function Register() {
             role: "user",
             is_active: true,
             email_verified: true,
-            username: formData.email.split("@")[0]
           },
           loginResponse.data.token
         );

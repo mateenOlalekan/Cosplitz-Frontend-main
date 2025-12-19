@@ -175,22 +175,7 @@ export const authService = {
     }),
 };
 
-export const splitService = {
-  getSplits: async () =>
-    request("/api/splits/", { method: "GET" }),
 
-  createSplit: async (splitData) =>
-    request("/api/splits/", {
-      method: "POST",
-      body: splitData,
-    }),
-
-  updateSplit: async (id, splitData) =>
-    request(`/api/splits/${id}/`, {
-      method: "PATCH",
-      body: splitData,
-    }),
-};
 
 
 export const dashboardService = {
