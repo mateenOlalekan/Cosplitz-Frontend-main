@@ -1,5 +1,5 @@
 // src/pages/Register.jsx - UPDATED
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
@@ -48,16 +48,9 @@ export default function Register() {
     clearError();
     setLoading(true);
 
-    // Enhanced validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.nationality) {
+    // Validation
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
-      setLoading(false);
-      return;
-    }
-
-    // Validate nationality - ensure it's not empty after trimming
-    if (!formData.nationality.trim()) {
-      setError("Please select a valid nationality from the list.");
       setLoading(false);
       return;
     }
@@ -86,23 +79,14 @@ export default function Register() {
       return;
     }
 
-    // Optional: Validate nationality length (countries usually have names between 3-56 characters)
-    if (formData.nationality.length < 3 || formData.nationality.length > 56) {
-      setError("Please select a valid country from the list.");
-      setLoading(false);
-      return;
-    }
-
     const registrationData = {
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
       username: formData.email.split("@")[0],
-      nationality: formData.nationality.trim(), // Ensure trimmed nationality
+      nationality: formData.nationality || "",
     };
-
-    console.log("Registration data being sent:", registrationData);
 
     try {
       const response = await authService.register(registrationData);
@@ -133,7 +117,6 @@ export default function Register() {
         userId: backendUserId,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        nationality: formData.nationality, // Store nationality for later use if needed
       });
 
       // Move to Step 2
@@ -147,7 +130,6 @@ export default function Register() {
           
           if (otpResponse.error) {
             console.warn("OTP sending failed:", otpResponse.data?.message);
-            // Don't show error to user - they can request OTP again
           }
         } catch (otpError) {
           console.error("OTP sending error:", otpError);
@@ -156,10 +138,7 @@ export default function Register() {
 
     } catch (err) {
       console.error("REGISTRATION ERROR =>", err);
-      const errorMessage = err.response?.data?.message || 
-                          err.message || 
-                          "Network error. Please check your connection and try again.";
-      setError(errorMessage);
+      setError(err.message || "Network error.");
       setLoading(false);
     }
   };
@@ -188,7 +167,6 @@ export default function Register() {
             first_name: formData.firstName,
             last_name: formData.lastName,
             name: `${formData.firstName} ${formData.lastName}`,
-            nationality: formData.nationality, // Include nationality in user data
             role: "user",
             is_active: true,
             email_verified: true,
@@ -204,12 +182,11 @@ export default function Register() {
         }, 2000);
       } else {
         // OTP verified but login failed
-        console.warn("Auto-login failed, response:", loginResponse);
         setError("Email verified! Please login manually.");
         setCurrentStep(3);
         
         setTimeout(() => {
-          navigate("/login");
+          navigate("/register");
         }, 2000);
       }
     } catch (err) {
@@ -218,26 +195,26 @@ export default function Register() {
       setCurrentStep(3);
       
       setTimeout(() => {
-        navigate("/login");
+        navigate("/dashboard");
       }, 2000);
     }
   };
 
-  const handleVerificationFailed = (msg) => {
-    setError(msg);
+const handleVerificationFailed = (msg) => {
+  setError(msg);
 
-    reloadTimer.current = setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+  reloadTimer.current = setTimeout(() => {
+    window.location.reload();
+  }, 1500);
+};
+
+useEffect(() => {
+  return () => {
+    if (reloadTimer.current) {
+      clearTimeout(reloadTimer.current);
+    }
   };
-
-  useEffect(() => {
-    return () => {
-      if (reloadTimer.current) {
-        clearTimeout(reloadTimer.current);
-      }
-    };
-  }, []);
+}, []);
 
   const handleBackToStep1 = () => {
     clearError();
