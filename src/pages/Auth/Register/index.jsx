@@ -1,4 +1,4 @@
-// src/pages/Register.jsx - FIXED VERSION
+// src/pages/Register.jsx - FULL FIXED VERSION
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
@@ -43,28 +43,40 @@ export default function Register() {
     clearError();
   }, [currentStep]);
 
-  // Debug utility to understand API response structure
+  // Enhanced debug function
   const debugAPIResponse = (response, endpoint) => {
     console.group(`🔍 API Response Debug - ${endpoint}`);
     console.log("Full response:", response);
     console.log("Response keys:", Object.keys(response));
-    console.log("Response.data:", response.data);
+    
     if (response.data) {
-      console.log("Response.data keys:", Object.keys(response.data));
-      if (response.data.data) {
-        console.log("Response.data.data:", response.data.data);
+      console.log("response.data:", response.data);
+      console.log("Type of response.data:", typeof response.data);
+      
+      if (typeof response.data === 'object') {
+        console.log("response.data keys:", Object.keys(response.data));
+        
+        // Check for common Django/DRF structures
+        const commonFields = ['non_field_errors', 'email', 'password', 'username', 
+                             'first_name', 'last_name', 'details', 'error', 'message'];
+        
+        commonFields.forEach(field => {
+          if (response.data[field]) {
+            console.log(`response.data.${field}:`, response.data[field]);
+          }
+        });
       }
     }
+    
     console.groupEnd();
     
-    // Find the most likely user ID in the response
+    // Find user ID in various possible locations
     const possiblePaths = [
       response.data?.data?.user?.id,
-      response.data?.data?.id,
       response.data?.user?.id,
+      response.data?.data?.id,
       response.data?.id,
       response.data?.user_id,
-      response.user?.id,
     ];
     
     return possiblePaths.find(id => id !== undefined);
@@ -75,7 +87,9 @@ export default function Register() {
     clearError();
     setLoading(true);
 
-    // Validation
+    console.log("=== REGISTRATION STARTED ===");
+
+    // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -106,104 +120,247 @@ export default function Register() {
       return;
     }
 
+    // TEST WITH DIFFERENT PAYLOADS - Try one at a time
+    
+    // Option 1: Minimal required fields (most likely to work)
     const registrationData = {
-      first_name: formData.firstName.trim(),
-      last_name: formData.lastName.trim(),
       email: formData.email.toLowerCase().trim(),
       password: formData.password,
-      username: formData.email.split("@")[0],
-      nationality: formData.nationality || "",
-      is_verified: false,
-      is_active: true,   
+      first_name: formData.firstName.trim(),
+      last_name: formData.lastName.trim(),
     };
 
-try {
-    const response = await authService.register(registrationData);
-    
-    console.log("REGISTRATION RESPONSE:", response);
-    
-    if (response.error || response.status === 400) {
-      // Improved error handling
-      const errorMsg = response.data?.details || 
-                      response.data?.error || 
-                      "Registration failed. Please try again.";
+    // Option 2: Add optional fields
+    // const registrationData = {
+    //   email: formData.email.toLowerCase().trim(),
+    //   password: formData.password,
+    //   first_name: formData.firstName.trim(),
+    //   last_name: formData.lastName.trim(),
+    //   username: formData.email.split("@")[0],
+    //   nationality: formData.nationality || null,
+    // };
+
+    // Option 3: With boolean fields from previous error
+    // const registrationData = {
+    //   email: formData.email.toLowerCase().trim(),
+    //   password: formData.password,
+    //   first_name: formData.firstName.trim(),
+    //   last_name: formData.lastName.trim(),
+    //   is_verified: false,
+    //   is_active: true,
+    // };
+
+    console.log("📤 Sending registration data:", registrationData);
+    console.log("📤 JSON stringified:", JSON.stringify(registrationData));
+
+    try {
+      console.log("📤 Calling authService.register()...");
+      const response = await authService.register(registrationData);
       
-      console.error("Registration error details:", errorMsg);
+      // Debug the response
+      const backendUserId = debugAPIResponse(response, "register");
       
-      // Check if it's a field-specific error
-      if (errorMsg.includes("null value in column")) {
-        const columnMatch = errorMsg.match(/column "(\w+)"/);
-        if (columnMatch) {
-          setError(`Missing required field: ${columnMatch[1]}. Please contact support.`);
-        } else {
-          setError("Database error. Some required information is missing.");
+      console.log("📥 Raw API Response Status:", response.status);
+      console.log("📥 Has error flag:", response.error);
+      console.log("📥 Has success flag:", response.success);
+      
+      // Check for errors
+      if (response.error || response.status === 400 || response.status >= 300) {
+        console.error("❌ REGISTRATION FAILED");
+        
+        let errorMessage = "Registration failed. Please try again.";
+        
+        if (response.data) {
+          // Handle Django/DRF error structures
+          if (Array.isArray(response.data.non_field_errors)) {
+            errorMessage = response.data.non_field_errors[0];
+          } 
+          else if (Array.isArray(response.data.email)) {
+            errorMessage = `Email: ${response.data.email[0]}`;
+          }
+          else if (Array.isArray(response.data.password)) {
+            errorMessage = `Password: ${response.data.password[0]}`;
+          }
+          else if (Array.isArray(response.data.username)) {
+            errorMessage = `Username: ${response.data.username[0]}`;
+          }
+          else if (response.data.details) {
+            errorMessage = response.data.details;
+          }
+          else if (response.data.error) {
+            errorMessage = response.data.error;
+          }
+          else if (response.data.message) {
+            errorMessage = response.data.message;
+          }
+          else if (typeof response.data === 'string') {
+            errorMessage = response.data;
+          }
+          else {
+            // Show first error found
+            const errorKeys = Object.keys(response.data);
+            if (errorKeys.length > 0) {
+              const firstError = response.data[errorKeys[0]];
+              if (Array.isArray(firstError)) {
+                errorMessage = `${errorKeys[0]}: ${firstError[0]}`;
+              } else {
+                errorMessage = `${errorKeys[0]}: ${firstError}`;
+              }
+            }
+          }
         }
-      } else {
-        setError(errorMsg);
+        
+        console.error("Error to display:", errorMessage);
+        setError(errorMessage);
+        setLoading(false);
+        return;
       }
-      
-      setLoading(false);
-      return;
-    }
 
-    // Check for success response
-    if (response.success) {
-      // Debug the response to find user ID
-      console.log("Success response structure:", response);
+      // Handle success
+      console.log("✅ REGISTRATION SUCCESSFUL");
       
-      // Try different possible locations for user data
-      const userData = response.data?.user || 
-                      response.data?.data?.user || 
-                      response.data;
-      
-      const backendUserId = userData?.id || response.data?.user_id;
-      const userEmail = userData?.email || formData.email;
-
       if (!backendUserId) {
-        console.warn("User ID not found in success response:", response);
-        // Still proceed if email verification works
-        setUserId("pending"); // Placeholder
-        setRegisteredEmail(userEmail);
-      } else {
-        setUserId(backendUserId);
-        setRegisteredEmail(userEmail);
+        console.warn("⚠️ No user ID found in response. Checking alternative locations...");
+        
+        // Try direct access if nested structure exists
+        if (response.data?.data?.user) {
+          console.log("Found user in response.data.data.user:", response.data.data.user);
+        } else if (response.data?.user) {
+          console.log("Found user in response.data.user:", response.data.user);
+        } else if (response.data) {
+          console.log("response.data might be the user object:", response.data);
+        }
       }
+
+      const userEmail = response.data?.user?.email || 
+                       response.data?.data?.user?.email || 
+                       response.data?.email || 
+                       formData.email;
+
+      console.log("Extracted user ID:", backendUserId);
+      console.log("Extracted email:", userEmail);
+
+      // Store user info
+      if (backendUserId) {
+        setUserId(backendUserId);
+      } else {
+        // Generate temporary ID if not provided
+        const tempId = `temp-${Date.now()}`;
+        setUserId(tempId);
+        console.warn("Using temporary ID:", tempId);
+      }
+      
+      setRegisteredEmail(userEmail);
 
       // Store pending verification
       setPendingVerification({
         email: userEmail,
-        userId: backendUserId || "pending",
+        userId: backendUserId || `temp-${Date.now()}`,
         firstName: formData.firstName,
         lastName: formData.lastName,
       });
 
       // Move to verification step
+      console.log("➡️ Moving to email verification step");
       setCurrentStep(2);
 
-      // Try to send OTP (optional - user can resend if needed)
-      if (backendUserId && backendUserId !== "pending") {
+      // Try to auto-send OTP (non-critical)
+      if (backendUserId && !backendUserId.toString().startsWith('temp-')) {
         setTimeout(async () => {
           try {
+            console.log("📤 Auto-sending OTP...");
             const otpResponse = await authService.getOTP(backendUserId);
-            console.log("OTP auto-send response:", otpResponse);
+            console.log("📥 OTP auto-send response:", otpResponse);
           } catch (otpError) {
-            console.warn("OTP auto-send failed (user can manually resend):", otpError);
+            console.warn("OTP auto-send failed (user can resend manually):", otpError);
           }
-        }, 500);
+        }, 1000);
       }
-    } else {
-      // Unexpected response format
-      console.error("Unexpected response format:", response);
-      setError("Unexpected server response. Please try again.");
+
+      setLoading(false);
+
+    } catch (err) {
+      console.error("💥 UNEXPECTED ERROR:", err);
+      console.error("Error details:", {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+      });
+      
+      let errorMsg = "Registration failed. Please try again.";
+      
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        errorMsg = "Network error. Please check your internet connection.";
+      } else if (err.message.includes('Network')) {
+        errorMsg = "Network error. Please check your connection and try again.";
+      }
+      
+      setError(errorMsg);
       setLoading(false);
     }
+  };
 
-  } catch (err) {
-    console.error("Registration network error:", err);
-    setError("Network error. Please check your connection and try again.");
-    setLoading(false);
-  }
-};
+  // Alternative test function (for debugging)
+  const testRegistrationAPI = async () => {
+    console.group("🧪 TESTING REGISTRATION API");
+    
+    const testPayloads = [
+      {
+        name: "Minimal Test",
+        data: {
+          email: `test_${Date.now()}@example.com`,
+          password: "Test123!",
+          first_name: "Test",
+          last_name: "User"
+        }
+      },
+      {
+        name: "With Username",
+        data: {
+          email: `test_${Date.now() + 1}@example.com`,
+          password: "Test123!",
+          first_name: "Test",
+          last_name: "User",
+          username: `testuser_${Date.now()}`
+        }
+      },
+      {
+        name: "Full Data",
+        data: {
+          email: `test_${Date.now() + 2}@example.com`,
+          password: "Test123!",
+          first_name: "Test",
+          last_name: "User",
+          username: `testuser_${Date.now() + 1}`,
+          nationality: "Testland",
+          is_verified: false,
+          is_active: true
+        }
+      }
+    ];
+
+    for (const test of testPayloads) {
+      console.log(`\n📤 Testing: ${test.name}`);
+      console.log("Payload:", test.data);
+      
+      try {
+        const response = await authService.register(test.data);
+        console.log("Response:", response);
+        
+        if (response.success) {
+          console.log(`✅ ${test.name}: SUCCESS`);
+        } else {
+          console.log(`❌ ${test.name}: FAILED -`, response.data);
+        }
+      } catch (err) {
+        console.log(`💥 ${test.name}: ERROR -`, err.message);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 sec between tests
+    }
+    
+    console.groupEnd();
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -212,9 +369,8 @@ try {
 
   const handleEmailVerificationSuccess = async () => {
     try {
-      console.log("Email verification successful, attempting auto-login...");
+      console.log("✅ Email verified, attempting auto-login...");
       
-      // Try auto-login with registered credentials
       const loginResponse = await authService.login({
         email: registeredEmail || formData.email,
         password: formData.password
@@ -223,7 +379,6 @@ try {
       console.log("Auto-login response:", loginResponse);
       
       if (loginResponse.success && loginResponse.data?.token) {
-        // Extract user data from login response
         const userData = loginResponse.data?.user || loginResponse.data?.data?.user || {
           id: userId,
           email: registeredEmail || formData.email,
@@ -231,48 +386,37 @@ try {
           last_name: formData.lastName,
           name: `${formData.firstName} ${formData.lastName}`,
           email_verified: true,
-          role: "user",
-          is_active: true,
-          username: formData.email.split("@")[0]
+          role: "user"
         };
         
-        // Complete the registration process
         completeRegistration(userData, loginResponse.data.token);
-        
-        // Move to success step
         setCurrentStep(3);
         
-        // Redirect to dashboard after delay
         setTimeout(() => {
           navigate("/dashboard");
         }, 2000);
-        
       } else {
-        // OTP verified but login failed - guide user to manual login
-        console.log("Auto-login failed, preparing for manual login");
+        console.log("Auto-login failed, redirecting to login page");
         setCurrentStep(3);
         
-        // Store email for pre-filling login
         setTimeout(() => {
           navigate("/login", { 
             state: { 
               preFilledEmail: registeredEmail || formData.email,
-              message: "Email verified successfully! Please sign in to continue." 
+              message: "Email verified! Please sign in." 
             }
           });
         }, 3000);
       }
     } catch (err) {
-      console.error("Auto-login failed:", err);
-      // Still mark verification as successful
+      console.error("Auto-login error:", err);
       setCurrentStep(3);
       
-      // Redirect to login page
       setTimeout(() => {
         navigate("/login", { 
           state: { 
             preFilledEmail: registeredEmail || formData.email,
-            message: "Email verified! Please sign in to access your account." 
+            message: "Email verified! Please sign in." 
           }
         });
       }, 3000);
@@ -332,6 +476,14 @@ try {
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
+
+          {/* DEBUG BUTTON - Temporary */}
+          <button 
+            onClick={testRegistrationAPI}
+            className="mb-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+          >
+            Test API (Dev Only)
+          </button>
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
             {/* STEPS */}
