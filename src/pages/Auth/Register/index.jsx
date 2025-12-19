@@ -1,5 +1,5 @@
-// src/pages/Register.jsx - FULL FIXED VERSION
-import { useState, useEffect, useRef } from "react";
+// src/pages/Register.jsx - UPDATED
+import { useState, useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
@@ -43,53 +43,12 @@ export default function Register() {
     clearError();
   }, [currentStep]);
 
-  // Enhanced debug function
-  const debugAPIResponse = (response, endpoint) => {
-    console.group(`🔍 API Response Debug - ${endpoint}`);
-    console.log("Full response:", response);
-    console.log("Response keys:", Object.keys(response));
-    
-    if (response.data) {
-      console.log("response.data:", response.data);
-      console.log("Type of response.data:", typeof response.data);
-      
-      if (typeof response.data === 'object') {
-        console.log("response.data keys:", Object.keys(response.data));
-        
-        // Check for common Django/DRF structures
-        const commonFields = ['non_field_errors', 'email', 'password', 'username', 
-                             'first_name', 'last_name', 'details', 'error', 'message'];
-        
-        commonFields.forEach(field => {
-          if (response.data[field]) {
-            console.log(`response.data.${field}:`, response.data[field]);
-          }
-        });
-      }
-    }
-    
-    console.groupEnd();
-    
-    // Find user ID in various possible locations
-    const possiblePaths = [
-      response.data?.data?.user?.id,
-      response.data?.user?.id,
-      response.data?.data?.id,
-      response.data?.id,
-      response.data?.user_id,
-    ];
-    
-    return possiblePaths.find(id => id !== undefined);
-  };
-
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     clearError();
     setLoading(true);
 
-    console.log("=== REGISTRATION STARTED ===");
-
-    // Basic validation
+    // Validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("Please fill out all required fields.");
       setLoading(false);
@@ -120,246 +79,68 @@ export default function Register() {
       return;
     }
 
-    // TEST WITH DIFFERENT PAYLOADS - Try one at a time
-    
-    // Option 1: Minimal required fields (most likely to work)
     const registrationData = {
-      email: formData.email.toLowerCase().trim(),
-      password: formData.password,
       first_name: formData.firstName.trim(),
       last_name: formData.lastName.trim(),
+      email: formData.email.toLowerCase().trim(),
+      password: formData.password,
+      username: formData.email.split("@")[0],
+      nationality: formData.nationality || "",
     };
 
-    // Option 2: Add optional fields
-    // const registrationData = {
-    //   email: formData.email.toLowerCase().trim(),
-    //   password: formData.password,
-    //   first_name: formData.firstName.trim(),
-    //   last_name: formData.lastName.trim(),
-    //   username: formData.email.split("@")[0],
-    //   nationality: formData.nationality || null,
-    // };
-
-    // Option 3: With boolean fields from previous error
-    // const registrationData = {
-    //   email: formData.email.toLowerCase().trim(),
-    //   password: formData.password,
-    //   first_name: formData.firstName.trim(),
-    //   last_name: formData.lastName.trim(),
-    //   is_verified: false,
-    //   is_active: true,
-    // };
-
-    console.log("📤 Sending registration data:", registrationData);
-    console.log("📤 JSON stringified:", JSON.stringify(registrationData));
-
     try {
-      console.log("📤 Calling authService.register()...");
       const response = await authService.register(registrationData);
-      
-      // Debug the response
-      const backendUserId = debugAPIResponse(response, "register");
-      
-      console.log("📥 Raw API Response Status:", response.status);
-      console.log("📥 Has error flag:", response.error);
-      console.log("📥 Has success flag:", response.success);
-      
-      // Check for errors
-      if (response.error || response.status === 400 || response.status >= 300) {
-        console.error("❌ REGISTRATION FAILED");
-        
-        let errorMessage = "Registration failed. Please try again.";
-        
-        if (response.data) {
-          // Handle Django/DRF error structures
-          if (Array.isArray(response.data.non_field_errors)) {
-            errorMessage = response.data.non_field_errors[0];
-          } 
-          else if (Array.isArray(response.data.email)) {
-            errorMessage = `Email: ${response.data.email[0]}`;
-          }
-          else if (Array.isArray(response.data.password)) {
-            errorMessage = `Password: ${response.data.password[0]}`;
-          }
-          else if (Array.isArray(response.data.username)) {
-            errorMessage = `Username: ${response.data.username[0]}`;
-          }
-          else if (response.data.details) {
-            errorMessage = response.data.details;
-          }
-          else if (response.data.error) {
-            errorMessage = response.data.error;
-          }
-          else if (response.data.message) {
-            errorMessage = response.data.message;
-          }
-          else if (typeof response.data === 'string') {
-            errorMessage = response.data;
-          }
-          else {
-            // Show first error found
-            const errorKeys = Object.keys(response.data);
-            if (errorKeys.length > 0) {
-              const firstError = response.data[errorKeys[0]];
-              if (Array.isArray(firstError)) {
-                errorMessage = `${errorKeys[0]}: ${firstError[0]}`;
-              } else {
-                errorMessage = `${errorKeys[0]}: ${firstError}`;
-              }
-            }
-          }
-        }
-        
-        console.error("Error to display:", errorMessage);
-        setError(errorMessage);
+      console.log("REGISTER RESPONSE =>", response);
+
+      if (response.error) {
+        setError(response.data?.message || response.message || "Registration failed.");
         setLoading(false);
         return;
       }
 
-      // Handle success
-      console.log("✅ REGISTRATION SUCCESSFUL");
-      
+      // Extract user information
+      const backendUserId = response.data?.user?.id || response.data?.user_id || response.data?.id;
+      const userEmail = response.data?.user?.email || response.data?.email || formData.email;
+
       if (!backendUserId) {
-        console.warn("⚠️ No user ID found in response. Checking alternative locations...");
-        
-        // Try direct access if nested structure exists
-        if (response.data?.data?.user) {
-          console.log("Found user in response.data.data.user:", response.data.data.user);
-        } else if (response.data?.user) {
-          console.log("Found user in response.data.user:", response.data.user);
-        } else if (response.data) {
-          console.log("response.data might be the user object:", response.data);
-        }
+        setError("Registration worked, but user ID is missing. Try logging in.");
+        setLoading(false);
+        return;
       }
 
-      const userEmail = response.data?.user?.email || 
-                       response.data?.data?.user?.email || 
-                       response.data?.email || 
-                       formData.email;
-
-      console.log("Extracted user ID:", backendUserId);
-      console.log("Extracted email:", userEmail);
-
-      // Store user info
-      if (backendUserId) {
-        setUserId(backendUserId);
-      } else {
-        // Generate temporary ID if not provided
-        const tempId = `temp-${Date.now()}`;
-        setUserId(tempId);
-        console.warn("Using temporary ID:", tempId);
-      }
-      
+      setUserId(backendUserId);
       setRegisteredEmail(userEmail);
 
       // Store pending verification
       setPendingVerification({
         email: userEmail,
-        userId: backendUserId || `temp-${Date.now()}`,
+        userId: backendUserId,
         firstName: formData.firstName,
         lastName: formData.lastName,
       });
 
-      // Move to verification step
-      console.log("➡️ Moving to email verification step");
+      // Move to Step 2
       setCurrentStep(2);
 
-      // Try to auto-send OTP (non-critical)
-      if (backendUserId && !backendUserId.toString().startsWith('temp-')) {
-        setTimeout(async () => {
-          try {
-            console.log("📤 Auto-sending OTP...");
-            const otpResponse = await authService.getOTP(backendUserId);
-            console.log("📥 OTP auto-send response:", otpResponse);
-          } catch (otpError) {
-            console.warn("OTP auto-send failed (user can resend manually):", otpError);
+      // Auto-send OTP
+      setTimeout(async () => {
+        try {
+          const otpResponse = await authService.getOTP(backendUserId);
+          console.log("OTP Response:", otpResponse);
+          
+          if (otpResponse.error) {
+            console.warn("OTP sending failed:", otpResponse.data?.message);
           }
-        }, 1000);
-      }
-
-      setLoading(false);
+        } catch (otpError) {
+          console.error("OTP sending error:", otpError);
+        }
+      }, 500);
 
     } catch (err) {
-      console.error("💥 UNEXPECTED ERROR:", err);
-      console.error("Error details:", {
-        name: err.name,
-        message: err.message,
-        stack: err.stack
-      });
-      
-      let errorMsg = "Registration failed. Please try again.";
-      
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        errorMsg = "Network error. Please check your internet connection.";
-      } else if (err.message.includes('Network')) {
-        errorMsg = "Network error. Please check your connection and try again.";
-      }
-      
-      setError(errorMsg);
+      console.error("REGISTRATION ERROR =>", err);
+      setError(err.message || "Network error.");
       setLoading(false);
     }
-  };
-
-  // Alternative test function (for debugging)
-  const testRegistrationAPI = async () => {
-    console.group("🧪 TESTING REGISTRATION API");
-    
-    const testPayloads = [
-      {
-        name: "Minimal Test",
-        data: {
-          email: `test_${Date.now()}@example.com`,
-          password: "Test123!",
-          first_name: "Test",
-          last_name: "User"
-        }
-      },
-      {
-        name: "With Username",
-        data: {
-          email: `test_${Date.now() + 1}@example.com`,
-          password: "Test123!",
-          first_name: "Test",
-          last_name: "User",
-          username: `testuser_${Date.now()}`
-        }
-      },
-      {
-        name: "Full Data",
-        data: {
-          email: `test_${Date.now() + 2}@example.com`,
-          password: "Test123!",
-          first_name: "Test",
-          last_name: "User",
-          username: `testuser_${Date.now() + 1}`,
-          nationality: "Testland",
-          is_verified: false,
-          is_active: true
-        }
-      }
-    ];
-
-    for (const test of testPayloads) {
-      console.log(`\n📤 Testing: ${test.name}`);
-      console.log("Payload:", test.data);
-      
-      try {
-        const response = await authService.register(test.data);
-        console.log("Response:", response);
-        
-        if (response.success) {
-          console.log(`✅ ${test.name}: SUCCESS`);
-        } else {
-          console.log(`❌ ${test.name}: FAILED -`, response.data);
-        }
-      } catch (err) {
-        console.log(`💥 ${test.name}: ERROR -`, err.message);
-      }
-      
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 sec between tests
-    }
-    
-    console.groupEnd();
   };
 
   const handleInputChange = (field, value) => {
@@ -369,8 +150,7 @@ export default function Register() {
 
   const handleEmailVerificationSuccess = async () => {
     try {
-      console.log("✅ Email verified, attempting auto-login...");
-      
+      // Auto-login after verification
       const loginResponse = await authService.login({
         email: registeredEmail || formData.email,
         password: formData.password
@@ -379,65 +159,62 @@ export default function Register() {
       console.log("Auto-login response:", loginResponse);
       
       if (loginResponse.success && loginResponse.data?.token) {
-        const userData = loginResponse.data?.user || loginResponse.data?.data?.user || {
-          id: userId,
-          email: registeredEmail || formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          name: `${formData.firstName} ${formData.lastName}`,
-          email_verified: true,
-          role: "user"
-        };
+        // Complete registration
+        completeRegistration(
+          {
+            id: userId,
+            email: registeredEmail || formData.email,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            name: `${formData.firstName} ${formData.lastName}`,
+            role: "user",
+            is_active: true,
+            email_verified: true,
+            username: formData.email.split("@")[0]
+          },
+          loginResponse.data.token
+        );
         
-        completeRegistration(userData, loginResponse.data.token);
         setCurrentStep(3);
         
         setTimeout(() => {
           navigate("/dashboard");
         }, 2000);
       } else {
-        console.log("Auto-login failed, redirecting to login page");
+        // OTP verified but login failed
+        setError("Email verified! Please login manually.");
         setCurrentStep(3);
         
         setTimeout(() => {
-          navigate("/login", { 
-            state: { 
-              preFilledEmail: registeredEmail || formData.email,
-              message: "Email verified! Please sign in." 
-            }
-          });
-        }, 3000);
+          navigate("/register");
+        }, 2000);
       }
     } catch (err) {
-      console.error("Auto-login error:", err);
+      console.error("Auto-login failed:", err);
+      setError("Email verified! Please login with your credentials.");
       setCurrentStep(3);
       
       setTimeout(() => {
-        navigate("/login", { 
-          state: { 
-            preFilledEmail: registeredEmail || formData.email,
-            message: "Email verified! Please sign in." 
-          }
-        });
-      }, 3000);
+        navigate("/dashboard");
+      }, 2000);
     }
   };
 
-  const handleVerificationFailed = (msg) => {
-    setError(msg || "Verification failed. Please try again.");
+const handleVerificationFailed = (msg) => {
+  setError(msg);
 
-    reloadTimer.current = setTimeout(() => {
-      window.location.reload();
-    }, 1500);
+  reloadTimer.current = setTimeout(() => {
+    window.location.reload();
+  }, 1500);
+};
+
+useEffect(() => {
+  return () => {
+    if (reloadTimer.current) {
+      clearTimeout(reloadTimer.current);
+    }
   };
-
-  useEffect(() => {
-    return () => {
-      if (reloadTimer.current) {
-        clearTimeout(reloadTimer.current);
-      }
-    };
-  }, []);
+}, []);
 
   const handleBackToStep1 = () => {
     clearError();
@@ -476,14 +253,6 @@ export default function Register() {
           <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
-
-          {/* DEBUG BUTTON - Temporary */}
-          <button 
-            onClick={testRegistrationAPI}
-            className="mb-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-          >
-            Test API (Dev Only)
-          </button>
 
           <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white">
             {/* STEPS */}
