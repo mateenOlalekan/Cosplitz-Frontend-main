@@ -1,4 +1,4 @@
-// src/services/api.js - UPDATED
+// src/services/api.js - UPDATED & FIXED
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 function getAuthToken() {
@@ -134,10 +134,15 @@ export const authService = {
   },
 
   /** VERIFY OTP — POST /api/verify_otp */
-  verifyOTP: async (email, otp) => {
+  verifyOTP: async (identifier, otp) => {
+    // Accept either email or userId
+    const body = /@/.test(identifier) 
+      ? { email: identifier, otp }
+      : { user_id: identifier, otp };
+    
     return await request("/verify_otp", {
       method: "POST",
-      body: { email, otp },
+      body: body,
     });
   },
 
@@ -150,7 +155,6 @@ export const authService = {
   userInfo: async (email) =>
     request("/user/info", {
       method: "GET",
-      body: { email },
     }),
 
   /** LOGOUT */
@@ -170,6 +174,8 @@ export const authService = {
       body: data,
     }),
 };
+
+
 
 export const dashboardService = {
   getOverview: async () =>

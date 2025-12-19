@@ -178,7 +178,7 @@ export default function Register() {
         setCurrentStep(3);
         
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/onboarding-steps");
         }, 2000);
       } else {
         // OTP verified but login failed
@@ -195,7 +195,7 @@ export default function Register() {
       setCurrentStep(3);
       
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/onboarding-steps");
       }, 2000);
     }
   };
