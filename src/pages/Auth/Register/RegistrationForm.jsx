@@ -6,7 +6,7 @@ import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff, Search, ChevronDown } from "lucide-react";
 import PasswordValidation from "./PasswordValidation";
-import { fetchCountries, getAllCountries } from "../services/countryService";
+import { fetchCountries, getAllCountries } from "../../../services/countryService";
 import debounce from "lodash/debounce"; // Install with: npm install lodash
 
 function RegistrationForm({
