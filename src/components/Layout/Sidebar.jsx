@@ -23,7 +23,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
     { icon: Home, label: "Home", url: "/dashboard" },
     { icon: Share2, label: "My Splitz", url: "/dashboard/mysplitz", count: 3 },
     { icon: MessageSquare, label: "Messages", url: "/dashboard/messages", count: 8 },
-    { icon: Wallet, label: "Wallet", url: "/dashboard/payment" },
+    { icon: Wallet, label: "Wallet", url: "/dashboard/wallet" },
     { icon: MapPin, label: "Nearby", url: "/dashboard/nearby", count: 12 },
     { icon: BarChart3, label: "Analytics", url: "/dashboard/analytics" },
   ];

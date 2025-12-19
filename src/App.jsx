@@ -69,9 +69,6 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/onboard" element={<Onboarding />} />
         <Route path="/forgot-password" element={<Forget />} />
-
-
-
         <Route path="/confirm-password" element={<ConfirmPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
         <Route path="/kyc-flow" element={<KYCFlow />} />
