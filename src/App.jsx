@@ -40,6 +40,7 @@ const ResetPassword = lazy(()=>import("./pages/Dashboard/Settings/ResetPassword"
 const NotificationPage = lazy(() => import("./pages/Dashboard/Notification"));
 const Filter = lazy(() => import("./pages/Dashboard/Filter"));
 const KYCFlow = lazy(() => import("./pages/Identification/KYCFlow"));
+const message = lazy(() => import("./pages/Dashboard/Messages"));
 
 // Admin Pages
 const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
@@ -85,6 +86,7 @@ function App() {
             <Route path="notification" element={<NotificationPage />} />
             <Route path="filter" element={<Filter />} />
             <Route path="splitz-success" element={<Successful />} />
+            <Route path="messages" element={message}/>
 
             <Route path="settings" element={<SettingsLayout />}>
               <Route index element={<MyProfile />} />
