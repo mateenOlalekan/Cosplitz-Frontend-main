@@ -89,6 +89,10 @@ export default function App() {
           <Route path="all-tasks" element={<AllTasksPage />} />
           <Route path="splitz/:id" element={<SplitzDescriptionPage />} />
           <Route path="other" element={<Other />} />
+                  <Route path="/create-split" element={<CreateSplitzPage />} />
+        <Route path="/splits/:id" element={<SplitDetailPage />} />
+        <Route path="/split-card/:id" element={<SplitCardPage />} />
+        <Route path="/all-tasks" element={<AllTasksPage />} />
 
           {/* Settings */}
           <Route path="settings" element={<SettingsLayout />}>
