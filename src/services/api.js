@@ -1,4 +1,4 @@
-// src/services/api.js - FIXED VERSION
+// src/services/api.js - UPDATED
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 function getAuthToken() {
@@ -150,7 +150,7 @@ export const authService = {
   userInfo: async (email) =>
     request("/user/info", {
       method: "GET",
-      params: { email },
+      body: { email },
     }),
 
   /** LOGOUT */
@@ -171,40 +171,6 @@ export const authService = {
     }),
 };
 
-export const splitsService = {
-  /** GET all splits */
-  getAllSplits: async () =>
-    request("/splits/", { 
-      method: "GET" 
-    }),
-
-  /** GET single split */
-  getSplit: async (splitId) =>
-    request(`/splits/${splitId}/`, { 
-      method: "GET" 
-    }),
-
-  /** CREATE new split */
-  createSplit: async (splitData) =>
-    request("/splits/", {
-      method: "POST",
-      body: splitData,
-    }),
-
-  /** UPDATE split */
-  updateSplit: async (splitId, splitData) =>
-    request(`/splits/${splitId}/`, {
-      method: "PATCH",  // Changed from PUT to PATCH as per your API
-      body: splitData,
-    }),
-
-  /** DELETE split */
-  deleteSplit: async (splitId) =>
-    request(`/splits/${splitId}/`, {
-      method: "DELETE",
-    }),
-};
-
 export const dashboardService = {
   getOverview: async () =>
     request("/dashboard/overview", { method: "GET" }),
@@ -212,6 +178,12 @@ export const dashboardService = {
   getAnalytics: async (period = "monthly") =>
     request(`/dashboard/analytics?period=${period}`, {
       method: "GET",
+    }),
+
+  createSplit: async (splitData) =>
+    request("/splits/create", {
+      method: "POST",
+      body: splitData,
     }),
 
   getWalletBalance: async () =>
@@ -239,7 +211,6 @@ export const adminService = {
 export default {
   request,
   authService,
-  splitsService,  // Changed from duplicated functions in authService
   dashboardService,
   adminService,
 };
