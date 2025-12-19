@@ -1,5 +1,5 @@
-// src/pages/Register.jsx - UPDATED
-import { useState, useEffect,useRef } from "react";
+// src/pages/Register.jsx - FIXED VERSION
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
@@ -42,6 +42,33 @@ export default function Register() {
   useEffect(() => {
     clearError();
   }, [currentStep]);
+
+  // Debug utility to understand API response structure
+  const debugAPIResponse = (response, endpoint) => {
+    console.group(`🔍 API Response Debug - ${endpoint}`);
+    console.log("Full response:", response);
+    console.log("Response keys:", Object.keys(response));
+    console.log("Response.data:", response.data);
+    if (response.data) {
+      console.log("Response.data keys:", Object.keys(response.data));
+      if (response.data.data) {
+        console.log("Response.data.data:", response.data.data);
+      }
+    }
+    console.groupEnd();
+    
+    // Find the most likely user ID in the response
+    const possiblePaths = [
+      response.data?.data?.user?.id,
+      response.data?.data?.id,
+      response.data?.user?.id,
+      response.data?.id,
+      response.data?.user_id,
+      response.user?.id,
+    ];
+    
+    return possiblePaths.find(id => id !== undefined);
+  };
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -90,20 +117,28 @@ export default function Register() {
 
     try {
       const response = await authService.register(registrationData);
-      console.log("REGISTER RESPONSE =>", response);
-
-      if (response.error) {
-        setError(response.data?.message || response.message || "Registration failed.");
+      
+      // Debug the response structure
+      const backendUserId = debugAPIResponse(response, "register");
+      
+      if (response.error || !response.success) {
+        const errorMsg = response.data?.message || 
+                        response.data?.data?.message || 
+                        "Registration failed. Please try again.";
+        setError(errorMsg);
         setLoading(false);
         return;
       }
 
-      // Extract user information
-      const backendUserId = response.data?.user?.id || response.data?.user_id || response.data?.id;
-      const userEmail = response.data?.user?.email || response.data?.email || formData.email;
+      // Extract user information from various possible response structures
+      const userEmail = response.data?.data?.user?.email || 
+                       response.data?.user?.email || 
+                       response.data?.email || 
+                       formData.email;
 
       if (!backendUserId) {
-        setError("Registration worked, but user ID is missing. Try logging in.");
+        console.error("User ID not found in response:", response);
+        setError("Registration succeeded but user ID is missing. Please contact support.");
         setLoading(false);
         return;
       }
@@ -122,7 +157,7 @@ export default function Register() {
       // Move to Step 2
       setCurrentStep(2);
 
-      // Auto-send OTP
+      // Auto-send OTP with better error handling
       setTimeout(async () => {
         try {
           const otpResponse = await authService.getOTP(backendUserId);
@@ -130,6 +165,7 @@ export default function Register() {
           
           if (otpResponse.error) {
             console.warn("OTP sending failed:", otpResponse.data?.message);
+            // Don't show error to user - they can manually resend
           }
         } catch (otpError) {
           console.error("OTP sending error:", otpError);
@@ -138,7 +174,7 @@ export default function Register() {
 
     } catch (err) {
       console.error("REGISTRATION ERROR =>", err);
-      setError(err.message || "Network error.");
+      setError(err.message || "Network error. Please check your connection.");
       setLoading(false);
     }
   };
@@ -150,7 +186,9 @@ export default function Register() {
 
   const handleEmailVerificationSuccess = async () => {
     try {
-      // Auto-login after verification
+      console.log("Email verification successful, attempting auto-login...");
+      
+      // Try auto-login with registered credentials
       const loginResponse = await authService.login({
         email: registeredEmail || formData.email,
         password: formData.password
@@ -159,62 +197,77 @@ export default function Register() {
       console.log("Auto-login response:", loginResponse);
       
       if (loginResponse.success && loginResponse.data?.token) {
-        // Complete registration
-        completeRegistration(
-          {
-            id: userId,
-            email: registeredEmail || formData.email,
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            name: `${formData.firstName} ${formData.lastName}`,
-            role: "user",
-            is_active: true,
-            email_verified: true,
-            username: formData.email.split("@")[0]
-          },
-          loginResponse.data.token
-        );
+        // Extract user data from login response
+        const userData = loginResponse.data?.user || loginResponse.data?.data?.user || {
+          id: userId,
+          email: registeredEmail || formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          name: `${formData.firstName} ${formData.lastName}`,
+          email_verified: true,
+          role: "user",
+          is_active: true,
+          username: formData.email.split("@")[0]
+        };
         
+        // Complete the registration process
+        completeRegistration(userData, loginResponse.data.token);
+        
+        // Move to success step
         setCurrentStep(3);
         
+        // Redirect to dashboard after delay
         setTimeout(() => {
           navigate("/dashboard");
         }, 2000);
+        
       } else {
-        // OTP verified but login failed
-        setError("Email verified! Please login manually.");
+        // OTP verified but login failed - guide user to manual login
+        console.log("Auto-login failed, preparing for manual login");
         setCurrentStep(3);
         
+        // Store email for pre-filling login
         setTimeout(() => {
-          navigate("/register");
-        }, 2000);
+          navigate("/login", { 
+            state: { 
+              preFilledEmail: registeredEmail || formData.email,
+              message: "Email verified successfully! Please sign in to continue." 
+            }
+          });
+        }, 3000);
       }
     } catch (err) {
       console.error("Auto-login failed:", err);
-      setError("Email verified! Please login with your credentials.");
+      // Still mark verification as successful
       setCurrentStep(3);
       
+      // Redirect to login page
       setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+        navigate("/login", { 
+          state: { 
+            preFilledEmail: registeredEmail || formData.email,
+            message: "Email verified! Please sign in to access your account." 
+          }
+        });
+      }, 3000);
     }
   };
 
-const handleVerificationFailed = (msg) => {
-  setError(msg);
+  const handleVerificationFailed = (msg) => {
+    setError(msg || "Verification failed. Please try again.");
 
-  reloadTimer.current = setTimeout(() => {
-    window.location.reload();
-  }, 1500);
-};
-
-useEffect(() => {
-  return () => {
-    if (reloadTimer.current) {
-      clearTimeout(reloadTimer.current);
-    }
+    reloadTimer.current = setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
-}, []);
+
+  useEffect(() => {
+    return () => {
+      if (reloadTimer.current) {
+        clearTimeout(reloadTimer.current);
+      }
+    };
+  }, []);
 
   const handleBackToStep1 = () => {
     clearError();
