@@ -113,71 +113,97 @@ export default function Register() {
       password: formData.password,
       username: formData.email.split("@")[0],
       nationality: formData.nationality || "",
+      is_verified: false,
+      is_active: true,   
     };
 
-    try {
-      const response = await authService.register(registrationData);
+try {
+    const response = await authService.register(registrationData);
+    
+    console.log("REGISTRATION RESPONSE:", response);
+    
+    if (response.error || response.status === 400) {
+      // Improved error handling
+      const errorMsg = response.data?.details || 
+                      response.data?.error || 
+                      "Registration failed. Please try again.";
       
-      // Debug the response structure
-      const backendUserId = debugAPIResponse(response, "register");
+      console.error("Registration error details:", errorMsg);
       
-      if (response.error || !response.success) {
-        const errorMsg = response.data?.message || 
-                        response.data?.data?.message || 
-                        "Registration failed. Please try again.";
+      // Check if it's a field-specific error
+      if (errorMsg.includes("null value in column")) {
+        const columnMatch = errorMsg.match(/column "(\w+)"/);
+        if (columnMatch) {
+          setError(`Missing required field: ${columnMatch[1]}. Please contact support.`);
+        } else {
+          setError("Database error. Some required information is missing.");
+        }
+      } else {
         setError(errorMsg);
-        setLoading(false);
-        return;
       }
+      
+      setLoading(false);
+      return;
+    }
 
-      // Extract user information from various possible response structures
-      const userEmail = response.data?.data?.user?.email || 
-                       response.data?.user?.email || 
-                       response.data?.email || 
-                       formData.email;
+    // Check for success response
+    if (response.success) {
+      // Debug the response to find user ID
+      console.log("Success response structure:", response);
+      
+      // Try different possible locations for user data
+      const userData = response.data?.user || 
+                      response.data?.data?.user || 
+                      response.data;
+      
+      const backendUserId = userData?.id || response.data?.user_id;
+      const userEmail = userData?.email || formData.email;
 
       if (!backendUserId) {
-        console.error("User ID not found in response:", response);
-        setError("Registration succeeded but user ID is missing. Please contact support.");
-        setLoading(false);
-        return;
+        console.warn("User ID not found in success response:", response);
+        // Still proceed if email verification works
+        setUserId("pending"); // Placeholder
+        setRegisteredEmail(userEmail);
+      } else {
+        setUserId(backendUserId);
+        setRegisteredEmail(userEmail);
       }
-
-      setUserId(backendUserId);
-      setRegisteredEmail(userEmail);
 
       // Store pending verification
       setPendingVerification({
         email: userEmail,
-        userId: backendUserId,
+        userId: backendUserId || "pending",
         firstName: formData.firstName,
         lastName: formData.lastName,
       });
 
-      // Move to Step 2
+      // Move to verification step
       setCurrentStep(2);
 
-      // Auto-send OTP with better error handling
-      setTimeout(async () => {
-        try {
-          const otpResponse = await authService.getOTP(backendUserId);
-          console.log("OTP Response:", otpResponse);
-          
-          if (otpResponse.error) {
-            console.warn("OTP sending failed:", otpResponse.data?.message);
-            // Don't show error to user - they can manually resend
+      // Try to send OTP (optional - user can resend if needed)
+      if (backendUserId && backendUserId !== "pending") {
+        setTimeout(async () => {
+          try {
+            const otpResponse = await authService.getOTP(backendUserId);
+            console.log("OTP auto-send response:", otpResponse);
+          } catch (otpError) {
+            console.warn("OTP auto-send failed (user can manually resend):", otpError);
           }
-        } catch (otpError) {
-          console.error("OTP sending error:", otpError);
-        }
-      }, 500);
-
-    } catch (err) {
-      console.error("REGISTRATION ERROR =>", err);
-      setError(err.message || "Network error. Please check your connection.");
+        }, 500);
+      }
+    } else {
+      // Unexpected response format
+      console.error("Unexpected response format:", response);
+      setError("Unexpected server response. Please try again.");
       setLoading(false);
     }
-  };
+
+  } catch (err) {
+    console.error("Registration network error:", err);
+    setError("Network error. Please check your connection and try again.");
+    setLoading(false);
+  }
+};
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
