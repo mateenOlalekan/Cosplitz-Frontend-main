@@ -74,36 +74,33 @@ export default function App() {
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
 
         {/* Dashboard */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<Overview />} />
-          <Route path="mysplitz" element={<MySplitz />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="messages" element={<Messages />} />
-          <Route path="create-splitz" element={<CreateSplitzPage />} />
-          <Route path="kyc-flow" element={<KYCConfirmation />} />
-          <Route path="wallet" element={<Wallet />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="notification" element={<NotificationPage />} />
-          <Route path="filter" element={<Filter />} />
-          <Route path="splitz-success" element={<Successful />} />
-          <Route path="all-tasks" element={<AllTasksPage />} />
-          <Route path="splitz/:id" element={<SplitzDescriptionPage />} />
-          <Route path="other" element={<Other />} />
-                  <Route path="/create-split" element={<CreateSplitzPage />} />
-        <Route path="/splits/:id" element={<SplitDetailPage />} />
-        <Route path="/split-card/:id" element={<SplitCardPage />} />
-        <Route path="/all-tasks" element={<AllTasksPage />} />
+<Route path="/dashboard" element={<DashboardLayout />}>
+  <Route index element={<Overview />} />
+  <Route path="mysplitz" element={<MySplitz />} />
+  <Route path="analytics" element={<Analytics />} />
+  <Route path="messages" element={<Messages />} />
+  <Route path="create-splitz" element={<CreateSplitzPage />} />
+  <Route path="kyc-flow" element={<KYCConfirmation />} />
+  <Route path="wallet" element={<Wallet />} />
+  <Route path="payment" element={<Payment />} />
+  <Route path="notification" element={<NotificationPage />} />
+  <Route path="filter" element={<Filter />} />
+  <Route path="splitz-success" element={<Successful />} />
+  <Route path="all-tasks" element={<AllTasksPage />} />
+  <Route path="splitz/:id" element={<SplitzDescriptionPage />} />
+  <Route path="other" element={<Other />} />
 
-          {/* Settings */}
-          <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<MyProfile />} />
-            <Route path="profile" element={<MyProfile />} />
-            <Route path="notifications" element={<NotificationSettings />} />
-            <Route path="verification" element={<Verification />} />
-            <Route path="resetpassword" element={<ResetPassword />} />
-            <Route path="support" element={<Support />} />
-          </Route>
-        </Route>
+  {/* Settings */}
+  <Route path="settings" element={<SettingsLayout />}>
+    <Route index element={<MyProfile />} />
+    <Route path="profile" element={<MyProfile />} />
+    <Route path="notifications" element={<NotificationSettings />} />
+    <Route path="verification" element={<Verification />} />
+    <Route path="resetpassword" element={<ResetPassword />} />
+    <Route path="support" element={<Support />} />
+  </Route>
+</Route>
+
 
       </Routes>
     </Suspense>
