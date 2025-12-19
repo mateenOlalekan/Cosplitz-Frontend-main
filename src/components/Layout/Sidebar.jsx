@@ -20,7 +20,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
   // User navigation links (MATCHES App.js ROUTES)
   const navItems = [
     { icon: Home, label: "Home", url: "/dashboard" },
-    { icon: Share2, label: "My Splitz", url: "/dashboard/create-split", count: 3 },
+    { icon: Share2, label: "My Splitz", url: "/dashboard/mysplitz", count: 3 },
     { icon: MessageSquare, label: "Messages", url: "/dashboard/messages", count: 8 },
     { icon: Wallet, label: "Wallet", url: "/dashboard/wallet" },
     { icon: MapPin, label: "Nearby", url: "/dashboard/filter", count: 12 },
