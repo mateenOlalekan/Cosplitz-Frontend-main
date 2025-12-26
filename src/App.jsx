@@ -7,13 +7,12 @@ const SplashLogo = lazy(() => import("./components/Loading"));
 
 /* Public Pages */
 const Home = lazy(() => import("./pages/Home"));
-const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
+const Login = lazy(() => import("./pages/Auth/Login/index"));
+const Register = lazy(() => import("./pages/Auth/Register/index"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const Identify = lazy(() => import("./pages/Identification"));
-const Forget = lazy(() => import("./pages/ForgetPassword"));
+const Identify = lazy(() => import("./pages/Identification/KYCFlow"));
+const Forget = lazy(() => import("./pages/Auth/ForgetPassword/ForgetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
-const ConfirmPassword = lazy(() => import("./pages/ConfirmPassword"));
 const PasswordResetSuccess = lazy(() => import("./pages/PasswordResetSuccess"));
 const OnboardingSteps = lazy(() => import("./pages/OnBoardingSteps"));
 
@@ -22,7 +21,6 @@ const DashboardLayout = lazy(() => import("./components/Layout/DashboardLayout")
 const Overview = lazy(() => import("./pages/Dashboard/DashHome"));
 const Messages = lazy(() => import("./pages/Dashboard/Messages"));
 const Analytics = lazy(() => import("./pages/Dashboard/Analytics"));
-const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
 const Payment = lazy(() => import("./pages/Dashboard/Payment"));
 const Successful = lazy(() => import("./pages/Dashboard/SplitzSuccessful"));
 const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
@@ -30,10 +28,11 @@ const CreateSplitzPage = lazy(() => import("./pages/Dashboard/CreateSplitz"));
 const NotificationPage = lazy(() => import("./pages/Dashboard/Notification"));
 const Filter = lazy(() => import("./pages/Dashboard/Filter"));
 const AllTasksPage = lazy(() => import("./pages/Dashboard/AllTasksPage"));
-const SplitzDescriptionPage = lazy(() => import("./pages/Dashboard/SplitzDescriptionPage"));
+const mysplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
+// const SplitzDescriptionPage = lazy(() => import("./pages/Dashboard/SplitzDescriptionPage"));
 const SplitDetailPage = lazy(() => import("./pages/Dashboard/splitCardPage"));
 const SplitCardPage = lazy(() => import("./pages/Dashboard/splitCardPage"));
-const Other = lazy(() => import("./pages/Dashboard/Other"));
+
 
 /* Settings */
 const SettingsLayout = lazy(() => import("./pages/Dashboard/Settings/SettingsLayout"));
@@ -43,14 +42,9 @@ const Verification = lazy(() => import("./pages/Dashboard/Settings/Verification"
 const Support = lazy(() => import("./pages/Dashboard/Settings/Support"));
 const ResetPassword = lazy(() => import("./pages/Dashboard/Settings/ResetPassword"));
 
-
-
-
-
 /* KYC */
-const KYCConfirmation = lazy(() =>
-  import("./pages/Identification/KYCConfirmation")
-);
+const KYCConfirmation = lazy(() => import("./pages/Identification/KYCConfirmation"));
+
 
 export default function App() {
   return (
@@ -70,13 +64,11 @@ export default function App() {
         {/* Password */}
         <Route path="/forgot-password" element={<Forget />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/confirm-password" element={<ConfirmPassword />} />
         <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
 
         {/* Dashboard */}
 <Route path="/dashboard" element={<DashboardLayout />}>
   <Route index element={<Overview />} />
-  <Route path="mysplitz" element={<MySplitz />} />
   <Route path="analytics" element={<Analytics />} />
   <Route path="messages" element={<Messages />} />
   <Route path="create-splitz" element={<CreateSplitzPage />} />
@@ -85,10 +77,11 @@ export default function App() {
   <Route path="payment" element={<Payment />} />
   <Route path="notification" element={<NotificationPage />} />
   <Route path="filter" element={<Filter />} />
+  <Route path="mysplitz" element={<mysplitz />} />
   <Route path="splitz-success" element={<Successful />} />
   <Route path="all-tasks" element={<AllTasksPage />} />
-  <Route path="splitz/:id" element={<SplitzDescriptionPage />} />
-  <Route path="other" element={<Other />} />
+  {/* <Route path="splitz/:id" element={<SplitzDescriptionPage />} /> */}
+
 
   {/* Settings */}
   <Route path="settings" element={<SettingsLayout />}>

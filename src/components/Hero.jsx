@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import AOS from "aos";
 import Hero from "../assets/object.svg";
-import "aos/dist/aos.css";
 import { useNavigate } from "react-router-dom";
 
 export default function WaveBackground() {
@@ -35,8 +33,8 @@ export default function WaveBackground() {
         id="home"
         className="relative w-full pt-20 sm:pt-20 md:pt-24 md:pb-10 bg-white overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 sm:px-6  h-full">
-          <div className="w-full flex max-md:flex-col  items-center justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-12 xl:gap-16 min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-140px)] md:min-h-[calc(100vh-160px)]">
+        <div className="max-w-7xl  px-4 md:px-6 sm:px-6  h-full">
+          <div className="w-full flex  items-center justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-10  h-screen">
 
             {/* ====== Left Content ====== */}
             <div

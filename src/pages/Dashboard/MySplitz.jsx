@@ -6,7 +6,7 @@ function MySplitz() {
   const navigation = useNavigate();
 
   const goCreateSplitz =()=>{
-    navigation("/dashboard/create-split")
+    navigation("/dashboard/create-splitz")
   }
   return (
     <div className="w-full px-4 py-3 flex flex-col gap-4">
