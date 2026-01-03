@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import Hand from "../assets/Group.svg";
-import Arrow from "../assets/arrowdown.svg";
-import Work1 from "../assets/work1.svg";
-import Work2 from "../assets/work2.svg";
-import Work3 from "../assets/work3.svg";
+import Hand from "../../assets/Group.svg";
+import Arrow from "../../assets/arrowdown.svg";
+import Work1 from "../../assets/work1.svg";
+import Work2 from "../../assets/work2.svg";
+import Work3 from "../../assets/work3.svg";
 
 export default function Work() {
   useEffect(() => {

@@ -2,10 +2,10 @@ import React, { useEffect } from "react";
 import {useNavigate} from "react-router-dom"
 import AOS from "aos";
 import "aos/dist/aos.css";
-import image1 from "../assets/Frame 37.svg";
-import image2 from "../assets/Frame 36.svg";
-import image3 from "../assets/Frame 35.svg";
-import image4 from "../assets/Frame 34.svg";
+import image1 from "../../assets/Frame 37.svg";
+import image2 from "../../assets/Frame 36.svg";
+import image3 from "../../assets/Frame 35.svg";
+import image4 from "../../assets/Frame 34.svg";
 
 export default function WhoSection() {
   const navigate = useNavigate();

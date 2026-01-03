@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import loginlogo from "../assets/loginmain.jpg";
-import logo from "../assets/newlogo.svg";
+import loginlogo from "../../../assets/loginmain.jpg";
+import logo from "../../../assets/newlogo.svg";
 import { useNavigate } from "react-router-dom";
 
 export default function PasswordResetSuccess() {
@@ -67,21 +67,7 @@ export default function PasswordResetSuccess() {
         initial={{ opacity: 0, x: 60 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="
-          flex 
-          w-full 
-          lg:w-1/2 
-          flex-col 
-          bg-white 
-          px-4 
-          sm:px-8 
-          md:px-14 
-          lg:px-20 
-          py-12 
-          min-h-screen 
-          relative
-        "
-      >
+        className="flex w-full lg:w-1/2 flex-col bg-white px-4 sm:px-8 md:px-14 lg:px-20 py-12 min-h-screen relative">
         {/* LOGO */}
         <div className="absolute top-4 left-4 sm:top-6 sm:left-8">
           <motion.img

@@ -1,8 +1,35 @@
+
 import React from 'react';
-import { Headphones, FileText } from 'lucide-react';
+import { Headphones, FileText, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Support() {
+  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 768);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
+    <div className="p-2">
+      {/* Back Button for Mobile */}
+      {isMobile && (
+        <button
+          onClick={() => navigate('/dashboard/settings')}
+          className="flex items-center gap-2 mb-4 text-gray-600 hover:text-gray-900"
+        >
+          <ChevronLeft size={20} />
+          <span>Back to Settings</span>
+        </button>
+      )}
+
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold text-gray-900">Support</h2>
+      </div>
+
     <div className="p-2">
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-3xl font-bold text-gray-900">Support</h2>
@@ -44,6 +71,7 @@ export default function Support() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

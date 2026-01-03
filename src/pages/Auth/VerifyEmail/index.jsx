@@ -2,8 +2,9 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import loginlogo from "../assets/loginmain.jpg";
-import logo from "../assets/newlogo.svg";
+import loginlogo from "../../../assets/loginmain.jpg";
+import logo from "../../../assets/newlogo.svg";
+import LeftPanel from "../../../components/Other/LeftPanel";
 
 // === ZOD VALIDATION SCHEMA ===
 const schema = z.object({
@@ -61,27 +62,10 @@ export default function VerifyEmail() {
   };
 
   return (
-    <div className="h-screen flex flex-col px-8 py-4 lg:flex-row bg-white relative  xl:flex-row  w-full overflow-hidden  p-4 rounded-2xl">
-
+    <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
+      <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
       {/* === LEFT SIDE === */}
-      <div className="hidden lg:flex lg:w-1/2 relative items-center justify-center bg-gray-50">
-        <img
-          src={loginlogo}
-          alt="Illustration"
-          className="w-full h-full object-cover rounded-r-3xl"
-        />
-
-        <div className="absolute bottom-10 mx-6 bg-white/60 backdrop-blur-md rounded-2xl p-6 sm:p-8 max-w-md text-center shadow-lg">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1A051D] mb-2">
-            Share Expenses & Resources in Real Time
-          </h1>
-          <p className="text-sm sm:text-base text-[#1A051D] leading-relaxed">
-            Connect with students, travelers, and locals to manage costs and
-            resources — easily, transparently, and securely.
-          </p>
-        </div>
-      </div>
-
+      <LeftPanel/>
       {/* === RIGHT SIDE === */}
       <div className="flex w-full lg:w-1/2 flex-col justify-start lg:justify-center items-center bg-white overflow-y-auto px-4 sm:px-8 md:px-14 lg:px-20 py-8 relative">
 
@@ -125,7 +109,7 @@ export default function VerifyEmail() {
                   w-full aspect-square min-w-[44px]
                   text-center border border-gray-300 rounded-lg 
                   text-lg sm:text-xl font-semibold 
-                  focus:outline-none focus:ring-2 focus:ring-green-500
+                  focus:outline-none focus:ring-2 focus:ring-[#1F8225]
                 "
               />
             ))}
@@ -135,12 +119,12 @@ export default function VerifyEmail() {
           <div className="text-center space-y-2 px-2">
             <p className="text-gray-600 text-sm sm:text-base">
               Resend available in{" "}
-              <span className="text-green-600 font-medium">60s</span>
+              <span className="text-[#1F8225] font-medium">60s</span>
             </p>
             <button
               type="button"
               onClick={handleResend}
-              className="text-green-600 font-semibold hover:underline text-sm sm:text-base"
+              className="text-[#1F8225] font-semibold hover:underline text-sm sm:text-base"
             >
               Didn’t receive code? Resend
             </button>
@@ -151,8 +135,8 @@ export default function VerifyEmail() {
             type="submit"
             disabled={isSubmitting || code.join("").length < 6}
             className="
-              w-full rounded-xl bg-green-500 text-white py-3 
-              font-medium hover:bg-green-600 transition duration-300 
+              w-full rounded-xl bg-[#1F8225] text-white py-3 
+              font-medium hover:bg-[#1F8225]/10 transition duration-300 
               disabled:opacity-70 text-sm sm:text-base
             "
           >
@@ -167,10 +151,7 @@ export default function VerifyEmail() {
           </div>
         </form>
 
-        {/* Footer */}
-        <div className="text-center text-xs text-gray-400 mt-10 mb-4">
-          © {new Date().getFullYear()} CoSplitz. All rights reserved.
-        </div>
+      </div>
       </div>
     </div>
   );

@@ -1,3 +1,6 @@
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import Verified from '../../../assets/Verified.svg';
 import Failed from '../../../assets/Failed.svg';
 import Pending from '../../../assets/Pending.svg';
@@ -34,15 +37,32 @@ const STATUS_CONFIG = {
 };
 
 export default function Verification() {
-  // 🔁 Change this value based on API response
-  const status = 'pending'; // 'verified' | 'failed' | 'pending'
+  const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  const { image, title, description, color, action } =
-    STATUS_CONFIG[status];
+  const status = 'pending'; // 'verified' | 'failed' | 'pending'
+  const { image, title, description, color, action } = STATUS_CONFIG[status];
 
   return (
     <div className="p-4 w-full">
-      
+      {/* Back Button for Mobile */}
+      {isMobile && (
+        <button
+          onClick={() => navigate('/dashboard/settings')}
+          className="flex items-center gap-2 mb-4 text-gray-600 hover:text-gray-900"
+        >
+          <ChevronLeft size={20} />
+          <span>Back to Settings</span>
+        </button>
+      )}
+
       {/* ===== HEADER ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div className="flex flex-col">

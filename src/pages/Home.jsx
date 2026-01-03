@@ -1,9 +1,9 @@
  import Navbar from "../components/Layout/Navbar";
  import Footer from '../components/Layout/Footer';
- import Hero  from  "../components/Hero";
- import Why from '../components/Why';
- import Who from '../components/Who';
- import Work from "../components/Work";
+ import Hero  from  "../components/Other/Hero";
+ import Why from '../components/Other/Why';
+ import Who from '../components/Other/Who';
+ import Work from "../components/Other/Work";
 
  export default function Home() {
    return (

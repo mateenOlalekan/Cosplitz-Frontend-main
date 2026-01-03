@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { lazy, Suspense } from "react";
 
-const Loading = lazy(() => import("../components/Loading"));
+const Loading = lazy(() => import("../../components/Other/Loading"));
 
 const steps = [
   {

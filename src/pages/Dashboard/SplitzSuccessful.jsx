@@ -1,4 +1,4 @@
-import React from "react"; // "React" should be capitalized
+
 import CheckLast from "../../assets/CheckLast.svg";
 
 function SplitzSuccessful() {

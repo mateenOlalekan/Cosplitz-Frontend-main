@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
-import onboard1 from "../assets/onboard1.png";
-import onboard2 from "../assets/onboard2.png";
-import onboard3 from "../assets/onboard3.jpg";
+import onboard1 from "../../assets/onboard1.png";
+import onboard2 from "../../assets/onboard2.png";
+import onboard3 from "../../assets/onboard3.jpg";
 
 export default function Onboarding() {
   const navigate = useNavigate();

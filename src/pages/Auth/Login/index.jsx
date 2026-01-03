@@ -9,7 +9,7 @@ import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
-import LeftPanel from "../LeftPanel";
+import LeftPanel from "../../../components/Other/LeftPanel";
 
 export default function Login() {
   const [email, setEmail] = useState("");

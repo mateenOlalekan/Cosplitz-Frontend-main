@@ -13,7 +13,7 @@ function SplitzDetail() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 md:px-10 py-4 shadow-sm bg-white">
+      <header className="flex sticky top-0 items-center justify-between px-4 md:px-10 py-4 shadow-sm bg-white">
         <button className="flex items-center">
           <ChevronLeft size={20} />
         </button>

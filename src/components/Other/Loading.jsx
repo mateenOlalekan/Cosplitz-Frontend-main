@@ -1,4 +1,4 @@
-import SlashLogo from "../assets/splashlogo.svg";
+import SlashLogo from "../../assets/splashlogo.svg";
 
 function Loading(){
     return(

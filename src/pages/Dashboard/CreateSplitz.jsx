@@ -1,8 +1,7 @@
-// pages/CreateSplitzPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Camera, Calendar, Clock, AlertCircle, Shield } from 'lucide-react';
+import { ChevronLeft, Camera, Calendar, AlertCircle, Shield } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import useSplitStore from '../../store/splitStore';
 import { splitService } from '../../services/splitService';
@@ -15,7 +14,7 @@ const CreateSplitzPage = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [includeMe, setIncludeMe] = useState(true);
-  const [participantsCount, setParticipantsCount] = useState(4);
+  const [participantsCount, setParticipantsCount] = useState(1);
 
   const {
     register,
@@ -23,19 +22,21 @@ const CreateSplitzPage = () => {
     formState: { errors, isSubmitting },
     watch,
     setValue,
+    reset,
   } = useForm({
     resolver: zodResolver(SplitFormSchema),
     defaultValues: {
       title: '',
       category: '',
       split_method: 'SpecificAmounts',
-      start_date: '2025-05-15',
-      end_date: '2025-05-17',
-      location: 'Computer Village, Ikeja, Lagos',
-      amount: 10000,
-      max_participants: 4,
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      location: '',
+      amount: 1000,
+      max_participants: 1,
       visibility_radius: 5,
       rules: 'Mandatory Refund Rule: A 5% charge applies if the split is canceled before 70% participation.',
+      description: '',
     },
   });
 
@@ -53,6 +54,7 @@ const CreateSplitzPage = () => {
   const splitMethods = [
     { value: 'SpecificAmounts', label: 'Equal Split', description: 'All participants pay the same amount' },
     { value: 'CustomAmounts', label: 'Custom Split', description: 'Set custom amounts for each participant' },
+    { value: 'Percentage', label: 'Percentage Split', description: 'Split by percentage allocation' },
   ];
 
   const handleFileUpload = (e) => {
@@ -61,7 +63,6 @@ const CreateSplitzPage = () => {
       setImageFile(file);
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
-      setValue('image_url', previewUrl);
     }
   };
 
@@ -69,60 +70,86 @@ const CreateSplitzPage = () => {
     try {
       setLoading(true);
       
+      // Calculate final participants count
       const finalParticipants = includeMe 
-        ? Math.max(1, participantsCount - 1)
+        ? Math.max(1, participantsCount + 1) // Add creator as participant
         : participantsCount;
       
-      const splitData = {
-        ...data,
-        max_participants: finalParticipants,
-        amount: typeof data.amount === 'string' 
-          ? parseFloat(data.amount.replace(/[^\d.]/g, ''))
-          : data.amount,
-      };
-
-      const response = await splitService.createSplit(splitData);
+      // Prepare form data
+      const formData = new FormData();
       
+      // Append all form fields
+      formData.append('title', data.title);
+      formData.append('category', data.category);
+      formData.append('split_method', data.split_method);
+      formData.append('start_date', data.start_date);
+      formData.append('end_date', data.end_date);
+      formData.append('location', data.location);
+      formData.append('amount', data.amount.toString());
+      formData.append('max_participants', finalParticipants.toString());
+      formData.append('visibility_radius', data.visibility_radius.toString());
+      
+      if (data.rules) formData.append('rules', data.rules);
+      if (data.description) formData.append('description', data.description);
+      if (imageFile) formData.append('image', imageFile);
+
+      console.log('Submitting form data:', Object.fromEntries(formData.entries()));
+
+      // Create split
+      const response = await splitService.createSplit(formData);
+      console.log('Split created:', response);
+      
+      // Update store
       addSplit(response);
+      addToCardedSplits(response);
       
-      if (response.split_method === 'SpecificAmounts') {
-        addToCardedSplits(response);
-      }
-
-      if (response.split_method === 'SpecificAmounts') {
-        navigate(`/split-card/${response.id}`);
-      } else {
-        navigate(`/splits/${response.id}`);
-      }
-
+      // Reset form
+      reset();
+      setImageFile(null);
+      setImagePreview('');
+      setParticipantsCount(1);
+      
+      // Navigate to splits page
+      navigate('/splits');
+      
     } catch (error) {
+      console.error('Create split error:', error);
       setError(error.message || 'Failed to create split');
-      alert('Failed to create split. Please try again.');
+      alert(`Failed to create split: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   const gotoAllTasks = () => {
-    navigate("/all-tasks");
+    navigate("/dashboard/allsplits");
   };
 
   const selectedSplitMethod = watch('split_method');
   const amount = watch('amount');
 
+  // Cleanup image preview URLs
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
   return (
-    <div className="min-h-screen bg-white px-3 sm:px-6 lg:px-8 py-6">
-      <main className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 px-3 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-6">
           <button 
             onClick={gotoAllTasks}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm sm:text-base"
           >
-            <ChevronLeft size={18} /> <span className="hidden sm:inline">View All Tasks</span>
+            <ChevronLeft size={18} /> <span>Back to Splits</span>
           </button>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 text-center flex-1">
-            Create Splittz
+            Create New Split
           </h1>
           <div className="w-6 sm:w-8 md:w-10" />
         </div>
@@ -135,11 +162,11 @@ const CreateSplitzPage = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Split Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Split Title *</label>
               <input
                 type="text"
                 placeholder="e.g. Shared Costco Groceries"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                   errors.title ? 'border-red-500' : 'border-gray-300'
                 }`}
                 {...register('title')}
@@ -148,9 +175,9 @@ const CreateSplitzPage = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Split Type/Category</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Split Type/Category *</label>
               <select
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
                   errors.category ? 'border-red-500' : 'border-gray-300'
                 }`}
                 {...register('category')}
@@ -165,15 +192,25 @@ const CreateSplitzPage = () => {
             </div>
             
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+              <textarea
+                placeholder="Describe what this split is about..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                rows="3"
+                {...register('description')}
+              />
+            </div>
+            
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Image/Photo (Optional)
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-green-500 transition cursor-pointer">
-                <label className="flex items-center gap-4 cursor-pointer">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Camera size={20} className="text-gray-400" />
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-green-500 transition cursor-pointer">
+                <label className="flex flex-col items-center gap-4 cursor-pointer">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Camera size={24} className="text-gray-400" />
                   </div>
-                  <div className="flex-1">
+                  <div className="text-center">
                     <input
                       type="file"
                       accept="image/*"
@@ -190,11 +227,23 @@ const CreateSplitzPage = () => {
                 </label>
               </div>
               {imagePreview && (
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="mt-3 h-48 w-full object-cover rounded-lg"
-                />
+                <div className="mt-3">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-48 w-full object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview('');
+                    }}
+                    className="mt-2 text-sm text-red-600 hover:text-red-800"
+                  >
+                    Remove image
+                  </button>
+                </div>
               )}
             </div>
           </section>
@@ -206,10 +255,12 @@ const CreateSplitzPage = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Total Amount (₦)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Total Amount (₦) *</label>
               <input
                 type="number"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
+                min="1"
+                step="0.01"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
                   errors.amount ? 'border-red-500' : 'border-gray-300'
                 }`}
                 {...register('amount', { valueAsNumber: true })}
@@ -224,49 +275,58 @@ const CreateSplitzPage = () => {
               <input
                 type="number"
                 value={participantsCount}
-                onChange={(e) => setParticipantsCount(parseInt(e.target.value) || 1)}
-                min={1}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                onChange={(e) => setParticipantsCount(Math.max(0, parseInt(e.target.value) || 0))}
+                min="0"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
               />
+              <p className="mt-1 text-sm text-gray-500">
+                Total participants: {includeMe ? participantsCount + 1 : participantsCount}
+              </p>
             </div>
             
             <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Split Method *</label>
               {splitMethods.map((method) => (
                 <button
                   key={method.value}
                   type="button"
                   onClick={() => setValue('split_method', method.value)}
-                  className={`w-full p-3 border-2 rounded-lg text-left transition ${
+                  className={`w-full p-4 border-2 rounded-lg text-left transition ${
                     selectedSplitMethod === method.value
                       ? 'border-green-600 bg-green-50'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-3 mb-1">
                     <div
-                      className={`w-4 h-4 rounded-full border-2 ${
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                         selectedSplitMethod === method.value
                           ? 'bg-green-600 border-green-600'
                           : 'border-gray-400'
                       }`}
-                    />
+                    >
+                      {selectedSplitMethod === method.value && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </div>
                     <span className="font-medium text-gray-900 text-sm sm:text-base">
                       {method.label}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-600 ml-6">{method.description}</p>
+                  <p className="text-xs text-gray-600 ml-8">{method.description}</p>
                 </button>
               ))}
             </div>
             
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+            <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
               <input
                 type="checkbox"
                 checked={includeMe}
                 onChange={(e) => setIncludeMe(e.target.checked)}
-                className="w-4 h-4 accent-green-600 rounded cursor-pointer"
+                className="w-5 h-5 accent-green-600 rounded cursor-pointer"
+                id="include-me"
               />
-              <label className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label htmlFor="include-me" className="text-sm font-medium text-gray-700 cursor-pointer">
                 I want to be part of the split
               </label>
             </div>
@@ -275,17 +335,17 @@ const CreateSplitzPage = () => {
           {/* Section: Start & End Period */}
           <section className="p-6 rounded-xl shadow-sm bg-white space-y-6">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Start & End Period</h2>
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Calendar size={20} /> Start & End Period
+              </h2>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Calendar size={16} /> Start Date
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
                 <input
                   type="date"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
                     errors.start_date ? 'border-red-500' : 'border-gray-300'
                   }`}
                   {...register('start_date')}
@@ -294,12 +354,10 @@ const CreateSplitzPage = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                  <Calendar size={16} /> End Date
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date *</label>
                 <input
                   type="date"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
                     errors.end_date ? 'border-red-500' : 'border-gray-300'
                   }`}
                   {...register('end_date')}
@@ -312,15 +370,15 @@ const CreateSplitzPage = () => {
           {/* Section: Location & Visibility */}
           <section className="p-6 rounded-xl shadow-sm bg-white space-y-6">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Location and Timing</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Location and Visibility</h2>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Split Location</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Split Location *</label>
               <input
                 type="text"
-                placeholder="Computer Village, Ikeja, Lagos"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
+                placeholder="e.g., Computer Village, Ikeja, Lagos"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none ${
                   errors.location ? 'border-red-500' : 'border-gray-300'
                 }`}
                 {...register('location')}
@@ -336,8 +394,23 @@ const CreateSplitzPage = () => {
                 type="range"
                 min="0"
                 max="10"
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                step="1"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-600"
                 {...register('visibility_radius', { valueAsNumber: true })}
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0 km</span>
+                <span>10 km</span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rules (Optional)</label>
+              <textarea
+                placeholder="Set any rules or conditions for this split..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
+                rows="3"
+                {...register('rules')}
               />
             </div>
           </section>
@@ -345,11 +418,11 @@ const CreateSplitzPage = () => {
           {/* Section: Rules & Safety */}
           <section className="p-6 rounded-xl shadow-sm bg-white space-y-6">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Rules and Safety</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Safety Information</h2>
             </div>
             
             <div className="p-4 border-l-4 border-red-500 bg-red-50 rounded flex items-start gap-3">
-              <AlertCircle size={18} className="text-red-600 mt-0.5" />
+              <AlertCircle size={20} className="text-red-600 mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-red-700 text-sm mb-1">Mandatory Refund Rule</h4>
                 <p className="text-xs text-red-600">A 5% charge applies if the split is canceled before 70% participation.</p>
@@ -357,22 +430,27 @@ const CreateSplitzPage = () => {
             </div>
             
             <div className="p-4 border-l-4 border-green-600 bg-green-50 rounded flex items-start gap-3">
-              <Shield size={18} className="text-green-600 mt-0.5" />
+              <Shield size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
               <div>
                 <h4 className="font-semibold text-green-700 text-sm mb-1">Secure Payment Protection</h4>
-                <p className="text-xs text-green-600">Always active for verified users.</p>
+                <p className="text-xs text-green-600">All payments are protected and released only when conditions are met.</p>
               </div>
             </div>
           </section>
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'Creating Splittz...' : 'Create Splittz'}
-          </button>
+          <div className="sticky bottom-6 bg-white p-4 rounded-xl shadow-lg">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 transition disabled:opacity-70 disabled:cursor-not-allowed shadow-md"
+            >
+              {isSubmitting ? 'Creating Split...' : 'Create Split'}
+            </button>
+            <p className="text-xs text-center text-gray-500 mt-2">
+              By creating this split, you agree to our terms and conditions
+            </p>
+          </div>
         </form>
       </main>
     </div>

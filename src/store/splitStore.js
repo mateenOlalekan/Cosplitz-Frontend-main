@@ -1,9 +1,9 @@
-// stores/splitStore.js
 import { create } from 'zustand';
 
-const useSplitStore = create((set) => ({
+const useSplitStore = create((set, get) => ({
   splits: [],
   cardedSplits: [],
+  mySplits: [],
   currentSplit: null,
   isLoading: false,
   error: null,
@@ -13,12 +13,13 @@ const useSplitStore = create((set) => ({
   
   setCardedSplits: (splits) => set({ cardedSplits: splits }),
   
+  setMySplits: (splits) => set({ mySplits: splits }),
+  
   addSplit: (split) => 
     set((state) => ({ 
       splits: [split, ...state.splits],
-      cardedSplits: split.split_method === 'SpecificAmounts' 
-        ? [split, ...state.cardedSplits] 
-        : state.cardedSplits 
+      mySplits: [split, ...state.mySplits],
+      cardedSplits: [split, ...state.cardedSplits]
     })),
   
   addToCardedSplits: (split) => 
@@ -34,6 +35,9 @@ const useSplitStore = create((set) => ({
       cardedSplits: state.cardedSplits.map(split =>
         split.id === id ? { ...split, ...splitData } : split
       ),
+      mySplits: state.mySplits.map(split =>
+        split.id === id ? { ...split, ...splitData } : split
+      ),
       currentSplit: state.currentSplit?.id === id 
         ? { ...state.currentSplit, ...splitData }
         : state.currentSplit,
@@ -43,6 +47,7 @@ const useSplitStore = create((set) => ({
     set((state) => ({
       splits: state.splits.filter(split => split.id !== id),
       cardedSplits: state.cardedSplits.filter(split => split.id !== id),
+      mySplits: state.mySplits.filter(split => split.id !== id),
       currentSplit: state.currentSplit?.id === id ? null : state.currentSplit,
     })),
 
@@ -62,6 +67,14 @@ const useSplitStore = create((set) => ({
             }
           : split
       ),
+      cardedSplits: state.cardedSplits.map(split =>
+        split.id === splitId
+          ? {
+              ...split,
+              participants: [...(split.participants || []), participant],
+            }
+          : split
+      ),
       currentSplit: state.currentSplit?.id === splitId
         ? {
             ...state.currentSplit,
@@ -69,6 +82,40 @@ const useSplitStore = create((set) => ({
           }
         : state.currentSplit,
     })),
+
+  // Load all splits
+  loadSplits: async () => {
+    set({ isLoading: true });
+    try {
+      const splits = await get().fetchAllSplits();
+      set({ splits, isLoading: false });
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Load my splits
+  loadMySplits: async () => {
+    set({ isLoading: true });
+    try {
+      const mySplits = await get().fetchMySplits();
+      set({ mySplits, isLoading: false });
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Fetch all splits (internal)
+  fetchAllSplits: async () => {
+    const { splitService } = await import('../services/splitService');
+    return await splitService.getSplits();
+  },
+
+  // Fetch my splits (internal)
+  fetchMySplits: async () => {
+    const { splitService } = await import('../services/splitService');
+    return await splitService.getMySplits();
+  },
 }));
 
 export default useSplitStore;
