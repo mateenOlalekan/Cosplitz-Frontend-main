@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import useAuthStore from "./authStore";
-import { splitService } from "../services/SplitServices";
+import { splitService } from "../services/splitService";
 
 const useSplitStore = create((set, get) => ({
   splits: [],
@@ -18,7 +18,6 @@ const useSplitStore = create((set, get) => ({
     });
   },
 
-  // Fetch all splits
   loadSplits: async () => {
     const { token } = useAuthStore.getState();
     if (!token) return;
@@ -32,7 +31,6 @@ const useSplitStore = create((set, get) => ({
     }
   },
 
-  // Fetch my splits
   loadMySplits: async () => {
     const { token } = useAuthStore.getState();
     if (!token) return;
@@ -46,9 +44,8 @@ const useSplitStore = create((set, get) => ({
     }
   },
 
-  // Create split
   createSplit: async (payload) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const split = await splitService.createSplit(payload);
       set((state) => ({
@@ -63,7 +60,6 @@ const useSplitStore = create((set, get) => ({
     }
   },
 
-  // Join split
   joinSplit: async (id) => {
     set({ isLoading: true });
     try {
