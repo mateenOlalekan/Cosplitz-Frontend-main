@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import useAuthStore from "./authStore";
-import { splitService } from "../services/splitService";
+import { splitService } from "../services/SplitServices";
 
 const useSplitStore = create((set, get) => ({
   splits: [],
