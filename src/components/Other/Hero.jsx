@@ -23,8 +23,9 @@ const HomePage = () => {
   return (
     <>
       <div className="bg-white px-4 sm:px-6 md:px-8">
-        <div className="mx-auto max-w-7xl pt-20 md:pt-28 md:pb-14 lg:pt-32 lg:pb-20">
-          <section className="flex max-md:flex-col items-center justify-between gap-2">
+        <div className="mx-auto max-w-7xl pt-20 md:pt-28   md:pb-14 lg:pt-32 lg:pb-20 sm:pb-10">
+          <section className="flex ma
+          x-md:flex-col items-center justify-between gap-2">
             
             {/* LEFT CONTENT */}
             <div
