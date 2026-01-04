@@ -1,17 +1,20 @@
-import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
-const Loading = React.lazy(() => import("../components/Loading"));
+import useAuthStore from "../store/authStore";
 
+const AdminRoute = () => {
+  const { user, isAuthenticated, loading } = useAuthStore();
 
-const AdminProtectedRoute = () => {
-  const { isAuthenticated, isLoading, isAdmin } = useAuthStore();
+  if (loading) return null;
 
-  if (isLoading) return <Loading />;
-  if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
-  if (!isAdmin()) return <Navigate to="/dashboard" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return <Outlet />;
 };
 
-export default AdminProtectedRoute;
+export default AdminRoute;

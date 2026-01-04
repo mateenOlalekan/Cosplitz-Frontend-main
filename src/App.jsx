@@ -2,6 +2,10 @@ import { Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import "./App.css";
 
+/* Route Guards */
+const ProtectedRoute = lazy(()=>import("./routes/ProtectedRoute"));
+const AdminRoute = lazy(() => import("./routes/AdminRoute"))
+
 /* Loading */
 const SplashLogo = lazy(() => import("./components/Other/Loading"));
 
@@ -63,36 +67,43 @@ export default function App() {
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/password-reset-success"  element={<PasswordResetSuccess />}/>
 
-        {/* Dashboard */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<Overview />} />
-          <Route path="post-onboarding" element={<PostOnboard />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="messages" element={<Messages />} />
+        <Route element={<ProtectedRoute />}>
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Overview />} />
+            <Route path="post-onboarding" element={<PostOnboard />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="messages" element={<Messages />} />
 
-          <Route path="kyc-flow" element={<KYCConfirmation />} />
-          <Route path="wallet" element={<Wallet />} />
-          <Route path="payment" element={<Payment />} />
-          <Route path="notification" element={<NotificationPage />} />
-          <Route path="SplitzDetail" element={<SplitzDetail/>}/>
-          <Route path="mysplitz" element={<MySplitz />} />
-          <Route path="splitz-success" element={<Successful />} />
+            <Route path="kyc-flow" element={<KYCConfirmation />} />
+            <Route path="wallet" element={<Wallet />} />
+            <Route path="payment" element={<Payment />} />
+            <Route path="notification" element={<NotificationPage />} />
+            <Route path="SplitzDetail" element={<SplitzDetail/>}/>
+            <Route path="mysplitz" element={<MySplitz />} />
+            <Route path="splitz-success" element={<Successful />} />
 
-          <Route path="create-splitz" element={<CreateSplitzPage/>} />
-          <Route path="Allsplits" element={<AllSplitsPage />} />
-          <Route path="my-splits" element={<MySplitsPage />} />
-          <Route path="other" element={<AllSplitsPage />} />
+            <Route path="create-splitz" element={<CreateSplitzPage/>} />
+            <Route path="Allsplits" element={<AllSplitsPage />} />
+            <Route path="my-splits" element={<MySplitsPage />} />
+            <Route path="other" element={<AllSplitsPage />} />
 
-          {/* Settings */}
-          <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<MyProfile />} />
-            <Route path="profile" element={<MyProfile />} />
-            <Route path="notifications" element={<NotificationSettings />}/>
-            <Route path="verification" element={<Verification />} />
-            <Route path="reset-password" element={<ResetPassword />} />
-            <Route path="support" element={<Support />} />
+            {/* Settings */}
+            <Route path="settings" element={<SettingsLayout />}>
+              <Route index element={<MyProfile />} />
+              <Route path="profile" element={<MyProfile />} />
+              <Route path="notifications" element={<NotificationSettings />}/>
+              <Route path="verification" element={<Verification />} />
+              <Route path="reset-password" element={<ResetPassword />} />
+              <Route path="support" element={<Support />} />
+            </Route>
           </Route>
         </Route>
+
+        {/* ============ ADMIN ONLY ROUTES ============
+        <Route element={<AdminRoute />}>
+          <Route path="/dashboard/analytics" element={<Analytics />} />
+        </Route> */}
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
