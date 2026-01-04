@@ -117,7 +117,7 @@ export default function Navbar() {
           <button
             onClick={toggleMenu}
             aria-label={menu ? "Close menu" : "Open menu"}
-            className="lg:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="lg:hidden p-2 font-extrabold text-black rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
             {menu ? <X size={26} /> : <Menu size={26} />}
           </button>
