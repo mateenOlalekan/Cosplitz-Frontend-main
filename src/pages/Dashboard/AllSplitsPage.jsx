@@ -14,8 +14,10 @@ const AllSplitsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
-    loadSplits();
-  }, [loadSplits]);
+    if (!isLoading) {
+      loadSplits();
+    }
+  }, [isLoading, loadSplits]);
 
   const categories = [
     'All',

@@ -3,53 +3,46 @@ import { Suspense, lazy } from "react";
 import "./App.css";
 
 /* Route Guards */
-const ProtectedRoute = lazy(()=>import("./routes/ProtectedRoute"));
-const AdminRoute = lazy(() => import("./routes/AdminRoute"))
-
+const ProtectedRoute   = lazy(()=>import("./routes/ProtectedRoute"));
+const AdminRoute       = lazy(() => import("./routes/AdminRoute"))
 /* Loading */
-const SplashLogo = lazy(() => import("./components/Other/Loading"));
-
+const SplashLogo       = lazy(() => import("./components/Other/Loading"));
 /* Public Pages */
-const Home = lazy(() => import("./pages/Home"));
-const Login = lazy(() => import("./pages/Auth/Login/index"));
-const Register = lazy(() => import("./pages/Auth/Register/index"));
-const PreOnboard = lazy(() => import("./pages/Onboard/pre-onboarding"));
-const PostOnboard = lazy(() => import("./pages/Onboard/post-onboard"));
-const Identify = lazy(() => import("./pages/Identification/KYCFlow"));
-const ForgetPassword = lazy(() =>  import("./pages/Auth/ForgetPassword/index"));
-const VerifyEmail = lazy(() => import("./pages/Auth/VerifyEmail/index"));
+const Home             = lazy(() => import("./pages/Home"));
+const Login            = lazy(() => import("./pages/Auth/Login/index"));
+const Register         = lazy(() => import("./pages/Auth/Register/index"));
+const PreOnboard       = lazy(() => import("./pages/Onboard/pre-onboarding"));
+const PostOnboard      = lazy(() => import("./pages/Onboard/post-onboard"));
+const Identify         = lazy(() => import("./pages/Identification/KYCFlow"));
+const ForgetPassword   = lazy(() =>  import("./pages/Auth/ForgetPassword/index"));
+const VerifyEmail      = lazy(() => import("./pages/Auth/VerifyEmail/index"));
 const PasswordResetSuccess = lazy(() => import("./pages/Auth/PasswordReset/index"));
-
 /* Dashboard Layout */
-const DashboardLayout = lazy(() => import("./components/Layout/DashboardLayout"));
-
+const DashboardLayout  = lazy(() => import("./components/Layout/DashboardLayout"));
 /* Dashboard Pages */
-const Overview = lazy(() => import("./pages/Dashboard/Overview"));
-const Messages = lazy(() => import("./pages/Dashboard/Messages"));
-const Analytics = lazy(() => import("./pages/Dashboard/Analytics"));
-const Payment = lazy(() => import("./pages/Dashboard/Payment"));
-const Successful = lazy(() =>  import("./pages/Dashboard/SplitzSuccessful"));
-const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
+const Overview         = lazy(() => import("./pages/Dashboard/Overview"));
+const Messages         = lazy(() => import("./pages/Dashboard/Messages"));
+const Analytics        = lazy(() => import("./pages/Dashboard/Analytics"));
+const Payment          = lazy(() => import("./pages/Dashboard/Payment"));
+const Successful       = lazy(() =>  import("./pages/Dashboard/SplitzSuccessful"));
+const Wallet           = lazy(() => import("./pages/Dashboard/Wallet"));
 const CreateSplitzPage = lazy(() =>  import("./pages/Dashboard/CreateSplitz"));
 const NotificationPage = lazy(() =>  import("./pages/Dashboard/Notification"));
-const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
-const SplitzDetail = lazy(() => import("./components/SplitCard/index"));
-const AllSplitsPage = lazy(()=> import("./pages/Dashboard/AllSplitsPage"));
-const MySplitsPage = lazy(()=> import("./pages/Dashboard/MySplitsPage"));
-
+const MySplitz         = lazy(() => import("./pages/Dashboard/MySplitz"));
+const SplitzDetail     = lazy(() => import("./pages/Dashboard/SplitDetailPage"));
+const AllSplitsPage    = lazy(()=> import("./pages/Dashboard/AllSplitsPage"));
+const MySplitsPage     = lazy(()=> import("./pages/Dashboard/MySplitsPage"));
 /* Settings */
-const SettingsLayout = lazy(() =>  import("./pages/Dashboard/Settings/SettingsLayout"));
-const MyProfile = lazy(() =>  import("./pages/Dashboard/Settings/MyProfile"));
+const SettingsLayout   = lazy(() =>  import("./pages/Dashboard/Settings/SettingsLayout"));
+const MyProfile        = lazy(() =>  import("./pages/Dashboard/Settings/MyProfile"));
 const NotificationSettings = lazy(() =>  import("./pages/Dashboard/Settings/Notifications"));
-const Verification = lazy(() =>  import("./pages/Dashboard/Settings/Verification"));
-const Support = lazy(() =>  import("./pages/Dashboard/Settings/Support"));
-const ResetPassword = lazy(() =>  import("./pages/Dashboard/Settings/ResetPassword"));
-
+const Verification     = lazy(() =>  import("./pages/Dashboard/Settings/Verification"));
+const Support          = lazy(() =>  import("./pages/Dashboard/Settings/Support"));
+const ResetPassword    = lazy(() =>  import("./pages/Dashboard/Settings/ResetPassword"));
 /* KYC */
-const KYCConfirmation = lazy(() =>  import("./pages/Identification/KYCConfirmation"));
-
+const KYCConfirmation  = lazy(() =>  import("./pages/Identification/KYCConfirmation"));
 /* 404 */
-const NotFound = lazy(() => import("./pages/NotFound"));
+const NotFound         = lazy(() => import("./pages/NotFound"));
 
 export default function App() {
   return (
@@ -87,6 +80,8 @@ export default function App() {
             <Route path="Allsplits" element={<AllSplitsPage />} />
             <Route path="my-splits" element={<MySplitsPage />} />
             <Route path="other" element={<AllSplitsPage />} />
+            
+<Route path="/dashboard/split/:id" element={<SplitDetailPage />} />
 
             {/* Settings */}
             <Route path="settings" element={<SettingsLayout />}>
