@@ -22,14 +22,7 @@ const CreateSplitzPage = () => {
   const [includeMe, setIncludeMe] = useState(true);
   const [participantsCount, setParticipantsCount] = useState(1);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue,
-    reset,
-  } = useForm({
+  const {register,handleSubmit,formState: { errors, isSubmitting }, watch,setValue, reset,} = useForm({
     resolver: zodResolver(SplitFormSchema),
     defaultValues: {
       title: '',
@@ -88,11 +81,6 @@ const CreateSplitzPage = () => {
 
   // ✅ SAFE SUBMIT (NO EVENT LEAKING)
   const onSubmit = async (data) => {
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
-
     try {
       const totalParticipants = includeMe
         ? participantsCount + 1
@@ -449,7 +437,7 @@ const CreateSplitzPage = () => {
               </div>
             </div>
           </section>
-          <div className=" bg-white px-4 rounded-xl shadow-lg">
+          
             <button
               type="submit"
               disabled={isSubmitting || isLoading}
@@ -457,7 +445,6 @@ const CreateSplitzPage = () => {
             >
               {isSubmitting || isLoading ? 'Creating Split...' : 'Create Split'}
             </button>
-          </div>
         </form>
       </main>
     </div>
