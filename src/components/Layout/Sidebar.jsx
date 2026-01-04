@@ -128,7 +128,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50
+          fixed top-0 left-0 h-full w-68 bg-white border-r border-gray-200 z-50
           flex flex-col
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0 lg:static
