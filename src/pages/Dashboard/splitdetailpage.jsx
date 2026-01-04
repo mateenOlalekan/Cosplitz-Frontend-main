@@ -368,7 +368,7 @@ import {
   ArrowLeft, Users, Calendar, DollarSign, MapPin, 
   Shield, AlertCircle, CheckCircle, UserPlus 
 } from 'lucide-react';
-import api from '../services/splitApi';
+import api from '../../services/splitApi';
 
 const SplitDetailPage = () => {
   const { id } = useParams();
