@@ -141,48 +141,50 @@ export default function Login() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) clearError();
-                  }}
-                  placeholder="Enter your email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                  required
-                />
-              </div>
+<div className="mb-4">
+  <label className="text-sm font-medium text-gray-700 mb-1 block">
+    Email Address *
+  </label>
+  <div className="relative">
+    <input
+      type="email"
+      value={email}
+      onChange={(e) => {
+        setEmail(e.target.value);
+        if (error) clearError();
+      }}
+      placeholder="Enter your email"
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-colors"
+      required
+    />
+  </div>
+</div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Password *
-                </label>
-                <div className="flex items-center border border-gray-300 px-3 rounded-lg focus-within:ring-2 focus-within:ring-green-500 transition-colors">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (error) clearError();
-                    }}
-                    placeholder="Enter your password"
-                    className="w-full py-2 outline-none"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors ml-2"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-              </div>
+<div className="mb-4">
+  <label className="text-sm font-medium text-gray-700 mb-1 block">
+    Password *
+  </label>
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => {
+        setPassword(e.target.value);
+        if (error) clearError();
+      }}
+      placeholder="Enter your password"
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-colors pr-10"
+      required
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+    >
+      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  </div>
+</div>
 
               <div className="flex justify-between items-center">
                 <label className="flex gap-2 text-sm text-gray-600 cursor-pointer">
