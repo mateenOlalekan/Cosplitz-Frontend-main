@@ -36,7 +36,11 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
 
   const navItems = useMemo(() => {
     const common = [
-      { icon: Home, label: "Home", url: "/dashboard", count: null },
+      { icon: Home, 
+        label: "Home", 
+        url: "/dashboard", 
+        count: null 
+      },
       {
         icon: Share2,
         label: "My Splits",
@@ -55,7 +59,10 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
         url: "/dashboard/wallet",
         count: notifications.wallet,
       },
-      { icon: MapPin, label: "Nearby", url: "/dashboard/filter", count: null },
+      { icon: MapPin, 
+        label: "Nearby", 
+        url: "/dashboard/filter", 
+        count: null },
       {
         icon: BarChart3,
         label: "Analytics",

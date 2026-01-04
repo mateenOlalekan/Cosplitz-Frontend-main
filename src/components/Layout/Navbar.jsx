@@ -64,11 +64,11 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-[9999] bg-white md:bg-[#F7F5F9] transition-all duration-300 ${
-          isScrolled ? "shadow-md" : ""
+        className={`fixed top-0 left-0 w-full z-[9999] bg-white transition-all duration-300 ${
+          isScrolled ? "shadow-lg" : "shadow-sm"
         }`}
       >
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between max-lg:px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           {/* Logo */}
           <Link
             to="/"
@@ -79,37 +79,38 @@ export default function Navbar() {
             <img
               src={NavbarLogo}
               alt="CoSplitz logo"
-              className="w-28 lg:w-36 select-none pointer-events-none"
+              className="w-32 sm:w-36 md:w-40 lg:w-44 select-none pointer-events-none"
             />
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-8 lg:gap-12">
+          <nav className="hidden lg:flex items-center gap-8 xl:gap-10">
             {navItems.map((item) => (
               <button
                 key={item.to}
                 onClick={() => handleNavClick(item.to)}
-                className="text-gray-700 hover:text-[#1f8225] transition-colors text-[16px] font-medium whitespace-nowrap"
+                className="text-gray-800 hover:text-green-700 transition-colors text-[17px] font-semibold whitespace-nowrap relative group"
               >
                 {item.title}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-green-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
             ))}
           </nav>
 
           {/* Desktop Buttons */}
-          <div className="hidden lg:flex items-center gap-4 text-[16px]">
+          <div className="hidden lg:flex items-center gap-5">
             <button
-              onClick={handleSignupClick}
-              className="px-5 py-2.5 rounded-sm border-2 border-green-600 bg-white text-green-600 hover:bg-green-50 transition-colors font-medium"
+              onClick={handleLoginClick}
+              className="px-6 py-2.5 rounded-md text-gray-700 hover:text-green-700 hover:bg-green-50 transition-colors font-semibold text-[16px]"
             >
-              SIGN UP
+              LOG IN
             </button>
 
             <button
-              onClick={handleLoginClick}
-              className="px-5 py-2.5 rounded-sm bg-green-600 hover:bg-green-700 text-white transition-colors font-medium"
+              onClick={handleSignupClick}
+              className="px-6 py-2.5 rounded-md bg-green-600 hover:bg-green-700 text-white transition-all font-semibold text-[16px] shadow-md hover:shadow-lg"
             >
-              LOG IN
+              SIGN UP
             </button>
           </div>
 
@@ -117,15 +118,15 @@ export default function Navbar() {
           <button
             onClick={toggleMenu}
             aria-label={menu ? "Close menu" : "Open menu"}
-            className="lg:hidden p-2 font-extrabold text-black rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="lg:hidden p-2.5 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
           >
-            {menu ? <X size={26} /> : <Menu size={26} />}
+            {menu ? <X size={28} strokeWidth={2.5} /> : <Menu size={28} strokeWidth={2.5} />}
           </button>
         </div>
 
         {/* Overlay */}
         <div
-          className={`fixed inset-0 bg-black/50 transition-opacity duration-500 md:hidden ${
+          className={`fixed inset-0 bg-black/70 transition-opacity duration-300 lg:hidden ${
             menu ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           }`}
           onClick={() => setMenu(false)}
@@ -133,46 +134,59 @@ export default function Navbar() {
 
         {/* Mobile Drawer */}
         <div
-          className={`fixed top-0 right-0 h-full w-72 sm:w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-[10000] md:hidden ${
+          className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-[10000] lg:hidden ${
             menu ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <img src={NavbarLogo} alt="CoSplitz" className="h-8" />
-            <button onClick={toggleMenu} className="p-2 rounded-md hover:bg-gray-100">
-              <X size={24} />
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 bg-white">
+            <img 
+              src={NavbarLogo} 
+              alt="CoSplitz" 
+              className="h-10" 
+            />
+            <button 
+              onClick={toggleMenu} 
+              className="p-2.5 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Close menu"
+            >
+              <X size={24} strokeWidth={2.5} />
             </button>
           </div>
 
-          <nav className="flex flex-col px-6 py-6 space-y-5">
+          <nav className="flex flex-col px-6 py-8 space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.to}
                 onClick={() => handleNavClick(item.to)}
-                className="text-sm md:text-lg font-medium text-gray-700 hover:text-green-600 transition-colors text-left py-2"
+                className="text-lg font-semibold text-gray-800 hover:text-green-700 hover:bg-green-50 transition-colors text-left py-4 px-4 rounded-lg"
               >
                 {item.title}
               </button>
             ))}
           </nav>
 
-          <div className="mt-8 px-6 flex flex-col gap-4">
-            <button
-              onClick={handleSignupClick}
-              className="w-full text-center px-5 py-3 rounded-sm border-2 border-green-600 bg-white text-green-600 hover:bg-green-50 font-medium"
-            >
-              SIGN UP
-            </button>
+          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200 bg-white">
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={handleLoginClick}
+                className="w-full text-center px-5 py-3.5 rounded-lg text-gray-800 hover:text-green-700 hover:bg-green-50 font-semibold text-lg border border-gray-300 transition-colors"
+              >
+                LOG IN
+              </button>
 
-            <button
-              onClick={handleLoginClick}
-              className="w-full text-center px-5 py-3 rounded-sm bg-green-600 hover:bg-green-700 text-white font-medium"
-            >
-              LOG IN
-            </button>
+              <button
+                onClick={handleSignupClick}
+                className="w-full text-center px-5 py-3.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-lg shadow-md hover:shadow-lg transition-all"
+              >
+                SIGN UP
+              </button>
+            </div>
           </div>
         </div>
       </header>
+      
+      {/* Spacer to prevent content from hiding behind fixed navbar */}
+      <div className="h-16 sm:h-20"></div>
     </>
   );
 }
