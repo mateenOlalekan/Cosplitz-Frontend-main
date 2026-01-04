@@ -1,120 +1,78 @@
-import { create } from 'zustand';
+import { create } from "zustand";
+import useAuthStore from "./authStore";
+import { splitService } from "../services/SplitServices";
 
 const useSplitStore = create((set, get) => ({
   splits: [],
-  cardedSplits: [],
   mySplits: [],
   currentSplit: null,
   isLoading: false,
   error: null,
 
-  // Actions
-  setSplits: (splits) => set({ splits }),
-  
-  setCardedSplits: (splits) => set({ cardedSplits: splits }),
-  
-  setMySplits: (splits) => set({ mySplits: splits }),
-  
-  addSplit: (split) => 
-    set((state) => ({ 
-      splits: [split, ...state.splits],
-      mySplits: [split, ...state.mySplits],
-      cardedSplits: [split, ...state.cardedSplits]
-    })),
-  
-  addToCardedSplits: (split) => 
-    set((state) => ({ 
-      cardedSplits: [split, ...state.cardedSplits] 
-    })),
+  reset: () => {
+    set({
+      splits: [],
+      mySplits: [],
+      currentSplit: null,
+      error: null,
+    });
+  },
 
-  updateSplit: (id, splitData) =>
-    set((state) => ({
-      splits: state.splits.map(split =>
-        split.id === id ? { ...split, ...splitData } : split
-      ),
-      cardedSplits: state.cardedSplits.map(split =>
-        split.id === id ? { ...split, ...splitData } : split
-      ),
-      mySplits: state.mySplits.map(split =>
-        split.id === id ? { ...split, ...splitData } : split
-      ),
-      currentSplit: state.currentSplit?.id === id 
-        ? { ...state.currentSplit, ...splitData }
-        : state.currentSplit,
-    })),
-
-  removeSplit: (id) =>
-    set((state) => ({
-      splits: state.splits.filter(split => split.id !== id),
-      cardedSplits: state.cardedSplits.filter(split => split.id !== id),
-      mySplits: state.mySplits.filter(split => split.id !== id),
-      currentSplit: state.currentSplit?.id === id ? null : state.currentSplit,
-    })),
-
-  setCurrentSplit: (split) => set({ currentSplit: split }),
-
-  setLoading: (loading) => set({ isLoading: loading }),
-
-  setError: (error) => set({ error }),
-
-  addParticipant: (splitId, participant) =>
-    set((state) => ({
-      splits: state.splits.map(split =>
-        split.id === splitId
-          ? {
-              ...split,
-              participants: [...(split.participants || []), participant],
-            }
-          : split
-      ),
-      cardedSplits: state.cardedSplits.map(split =>
-        split.id === splitId
-          ? {
-              ...split,
-              participants: [...(split.participants || []), participant],
-            }
-          : split
-      ),
-      currentSplit: state.currentSplit?.id === splitId
-        ? {
-            ...state.currentSplit,
-            participants: [...(state.currentSplit.participants || []), participant],
-          }
-        : state.currentSplit,
-    })),
-
-  // Load all splits
+  // Fetch all splits
   loadSplits: async () => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+
     set({ isLoading: true });
     try {
-      const splits = await get().fetchAllSplits();
+      const splits = await splitService.getSplits();
       set({ splits, isLoading: false });
-    } catch (error) {
-      set({ error: error.message, isLoading: false });
+    } catch (err) {
+      set({ error: err.message, isLoading: false });
     }
   },
 
-  // Load my splits
+  // Fetch my splits
   loadMySplits: async () => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+
     set({ isLoading: true });
     try {
-      const mySplits = await get().fetchMySplits();
+      const mySplits = await splitService.getMySplits();
       set({ mySplits, isLoading: false });
-    } catch (error) {
-      set({ error: error.message, isLoading: false });
+    } catch (err) {
+      set({ error: err.message, isLoading: false });
     }
   },
 
-  // Fetch all splits (internal)
-  fetchAllSplits: async () => {
-    const { splitService } = await import('../services/splitService');
-    return await splitService.getSplits();
+  // Create split
+  createSplit: async (payload) => {
+    set({ isLoading: true });
+    try {
+      const split = await splitService.createSplit(payload);
+      set((state) => ({
+        splits: [split, ...state.splits],
+        mySplits: [split, ...state.mySplits],
+        isLoading: false,
+      }));
+      return split;
+    } catch (err) {
+      set({ error: err.message, isLoading: false });
+      throw err;
+    }
   },
 
-  // Fetch my splits (internal)
-  fetchMySplits: async () => {
-    const { splitService } = await import('../services/splitService');
-    return await splitService.getMySplits();
+  // Join split
+  joinSplit: async (id) => {
+    set({ isLoading: true });
+    try {
+      await splitService.joinSplit(id);
+      await get().loadMySplits();
+      set({ isLoading: false });
+    } catch (err) {
+      set({ error: err.message, isLoading: false });
+    }
   },
 }));
 

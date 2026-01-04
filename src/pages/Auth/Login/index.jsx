@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
-import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
 import LeftPanel from "../../../components/Other/LeftPanel";
 

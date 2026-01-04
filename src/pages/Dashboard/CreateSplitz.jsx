@@ -1,16 +1,20 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, Camera, Calendar, AlertCircle, Shield } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+
 import useSplitStore from '../../store/splitStore';
-import { splitService } from '../../services/splitService';
+import useAuthStore from '../../store/authStore';
 import { SplitFormSchema } from '../../schemas/splitSchemas';
 
 const CreateSplitzPage = () => {
   const navigate = useNavigate();
-  const { addSplit, addToCardedSplits, setLoading, setError } = useSplitStore();
-  
+
+  const { createSplit } = useSplitStore();
+  const { isAuthenticated } = useAuthStore();
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [includeMe, setIncludeMe] = useState(true);
@@ -30,12 +34,15 @@ const CreateSplitzPage = () => {
       category: '',
       split_method: 'SpecificAmounts',
       start_date: new Date().toISOString().split('T')[0],
-      end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split('T')[0],
       location: '',
       amount: 1000,
       max_participants: 1,
       visibility_radius: 5,
-      rules: 'Mandatory Refund Rule: A 5% charge applies if the split is canceled before 70% participation.',
+      rules:
+        'Mandatory Refund Rule: A 5% charge applies if the split is canceled before 70% participation.',
       description: '',
     },
   });
@@ -52,72 +59,77 @@ const CreateSplitzPage = () => {
   ];
 
   const splitMethods = [
-    { value: 'SpecificAmounts', label: 'Equal Split', description: 'All participants pay the same amount' },
-    { value: 'CustomAmounts', label: 'Custom Split', description: 'Set custom amounts for each participant' },
-    { value: 'Percentage', label: 'Percentage Split', description: 'Split by percentage allocation' },
+    {
+      value: 'SpecificAmounts',
+      label: 'Equal Split',
+      description: 'All participants pay the same amount',
+    },
+    {
+      value: 'CustomAmounts',
+      label: 'Custom Split',
+      description: 'Set custom amounts for each participant',
+    },
+    {
+      value: 'Percentage',
+      label: 'Percentage Split',
+      description: 'Split by percentage allocation',
+    },
   ];
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
   const onSubmit = async (data) => {
+    if (!isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+
     try {
-      setLoading(true);
-      
-      // Calculate final participants count
-      const finalParticipants = includeMe 
-        ? Math.max(1, participantsCount + 1) // Add creator as participant
+      const totalParticipants = includeMe
+        ? participantsCount + 1
         : participantsCount;
-      
-      // Prepare form data
+
       const formData = new FormData();
-      
-      // Append all form fields
-      formData.append('title', data.title);
-      formData.append('category', data.category);
-      formData.append('split_method', data.split_method);
-      formData.append('start_date', data.start_date);
-      formData.append('end_date', data.end_date);
-      formData.append('location', data.location);
-      formData.append('amount', data.amount.toString());
-      formData.append('max_participants', finalParticipants.toString());
-      formData.append('visibility_radius', data.visibility_radius.toString());
-      
-      if (data.rules) formData.append('rules', data.rules);
-      if (data.description) formData.append('description', data.description);
-      if (imageFile) formData.append('image', imageFile);
 
-      console.log('Submitting form data:', Object.fromEntries(formData.entries()));
+      Object.entries({
+        title: data.title,
+        category: data.category,
+        split_method: data.split_method,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        location: data.location,
+        amount: data.amount,
+        max_participants: totalParticipants,
+        visibility_radius: data.visibility_radius,
+        rules: data.rules,
+        description: data.description,
+      }).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
 
-      // Create split
-      const response = await splitService.createSplit(formData);
-      console.log('Split created:', response);
-      
-      // Update store
-      addSplit(response);
-      addToCardedSplits(response);
-      
-      // Reset form
+      if (imageFile) {
+        // Backend expects "image"
+        formData.append('image', imageFile);
+      }
+
+      await createSplit(formData);
+
       reset();
       setImageFile(null);
       setImagePreview('');
       setParticipantsCount(1);
-      
-      // Navigate to splits page
-      navigate('/splits');
-      
+
+      navigate('/dashboard/allsplits');
     } catch (error) {
-      console.error('Create split error:', error);
-      setError(error.message || 'Failed to create split');
-      alert(`Failed to create split: ${error.message}`);
-    } finally {
-      setLoading(false);
+      alert(error.message || 'Failed to create split');
     }
   };
 
@@ -126,9 +138,7 @@ const CreateSplitzPage = () => {
   };
 
   const selectedSplitMethod = watch('split_method');
-  const amount = watch('amount');
 
-  // Cleanup image preview URLs
   useEffect(() => {
     return () => {
       if (imagePreview) {
@@ -140,9 +150,8 @@ const CreateSplitzPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 px-3 sm:px-6 lg:px-8 py-6">
       <main className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <button 
+          <button
             onClick={gotoAllTasks}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-medium text-sm sm:text-base"
           >
@@ -439,7 +448,7 @@ const CreateSplitzPage = () => {
           </section>
 
           {/* Submit Button */}
-          <div className="sticky bottom-6 bg-white p-4 rounded-xl shadow-lg">
+          <div className=" bg-white px-4 rounded-xl shadow-lg">
             <button
               type="submit"
               disabled={isSubmitting}
@@ -447,9 +456,6 @@ const CreateSplitzPage = () => {
             >
               {isSubmitting ? 'Creating Split...' : 'Create Split'}
             </button>
-            <p className="text-xs text-center text-gray-500 mt-2">
-              By creating this split, you agree to our terms and conditions
-            </p>
           </div>
         </form>
       </main>
