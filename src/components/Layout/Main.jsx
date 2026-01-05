@@ -21,7 +21,11 @@ import shop from "../../assets/shop.jpg";
 import car from "../../assets/car.jpg";
 import pizza from "../../assets/pizza.jpg";
 
-const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {} }) => {
+const Main = ({
+  sidebarOpen = false,
+  isMobile = false,
+  setSidebarOpen = () => {},
+}) => {
   const [activeTab, setActiveTab] = useState("All Active");
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -150,7 +154,9 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
             </button>
           </div>
         </div>
-        <div className="px-4 py-1 text-sm text-gray-600">Ikeja, Lagos, Nigeria</div>
+        <div className="px-4 py-1 text-sm text-gray-600">
+          Ikeja, Lagos, Nigeria
+        </div>
       </header>
 
       {/* Main Content */}
@@ -179,7 +185,9 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
 
         {/* #SpecialForYou Section */}
         <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-5">#SpecialForYou</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-5">
+            #SpecialForYou
+          </h2>
           <div className="overflow-x-auto scrollbar-hide">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
               {deals.map((deal, idx) => (
@@ -214,13 +222,19 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
 
                     <div className="mt-6 mb-4">
                       <h3 className="text-xl font-bold mb-1">{deal.title}</h3>
-                      <p className="text-emerald-100 text-sm">{deal.description}</p>
-                      <p className="text-emerald-100 text-xs mt-1">{deal.details}</p>
+                      <p className="text-emerald-100 text-sm">
+                        {deal.description}
+                      </p>
+                      <p className="text-emerald-100 text-xs mt-1">
+                        {deal.details}
+                      </p>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <div className="flex items-center justify-between text-xs text-white gap-4">
-                        <div className="flex items-center gap-1">⏱ {deal.time}</div>
+                        <div className="flex items-center gap-1">
+                          ⏱ {deal.time}
+                        </div>
                         <div className="flex items-center gap-1">
                           <Users2 className="text-[2px]" />
                           <span>{deal.participants}</span>
@@ -244,7 +258,9 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
                 key={idx}
                 onClick={() => setActiveSlide(idx)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  activeSlide === idx ? "bg-emerald-600 w-8" : "bg-gray-300 hover:bg-gray-400"
+                  activeSlide === idx
+                    ? "bg-emerald-600 w-8"
+                    : "bg-gray-300 hover:bg-gray-400"
                 }`}
               />
             ))}
@@ -258,19 +274,21 @@ const Main = ({ sidebarOpen = false, isMobile = false, setSidebarOpen = () => {}
           </h2>
 
           <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-            {["All Active", "Popular", "Newest", "Food", "Rides", "Tools"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap ${
-                  activeTab === tab
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+            {["All Active", "Popular", "Newest", "Food", "Rides", "Tools"].map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap ${
+                    activeTab === tab
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {tab}
+                </button>
+              )
+            )}
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
