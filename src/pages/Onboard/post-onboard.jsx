@@ -157,7 +157,7 @@ export default function CoSplitzOnboarding() {
     } else {
       // COMPLETE → SHOW LOADING → NAVIGATE
       setIsLoading(true);
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/kyc-flow"), 1500);
     }
   };
 
