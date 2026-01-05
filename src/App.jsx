@@ -143,7 +143,7 @@ const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
 const CreateSplitz = lazy(() => import("./pages/Dashboard/CreateSplitz"));
 const Notification = lazy(() => import("./pages/Dashboard/Notification"));
 const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
-// const SplitzDetail = lazy(() => import("./pages/Dashboard/SplitDetailPage"));
+const SplitzDetail = lazy(() => import("./pages/Dashboard/SplitzDetail"));
 const AllSplits = lazy(() => import("./pages/Dashboard/AllSplitsPage"));
 const MySplits = lazy(() => import("./pages/Dashboard/MySplitsPage"));
 
@@ -194,7 +194,7 @@ export default function App() {
             <Route path="mysplitz" element={<MySplitz />} />
             <Route path="allsplits" element={<AllSplits />} />
             <Route path="my-splits" element={<MySplits />} />
-            {/* <Route path="split/:id" element={<SplitzDetail />} /> */}
+            <Route path="/splitz-details/:id" element={<SplitzDetail />} />
             <Route path="splitz-success" element={<Successful />} />
 
             {/* Settings */}
