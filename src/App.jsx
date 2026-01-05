@@ -194,7 +194,7 @@ export default function App() {
             <Route path="mysplitz" element={<MySplitz />} />
             <Route path="allsplits" element={<AllSplits />} />
             <Route path="my-splits" element={<MySplits />} />
-            <Route path="/splitz-details/:id" element={<SplitzDetail />} />
+            <Route path="splitz-details/:id" element={<SplitzDetail />} />
             <Route path="splitz-success" element={<Successful />} />
 
             {/* Settings */}
