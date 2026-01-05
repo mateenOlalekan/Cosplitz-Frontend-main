@@ -8,7 +8,7 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   const getStarted = () => {
-    navigate("/signup");
+    navigate("/pre-onboard");
   };
 
   useEffect(() => {
