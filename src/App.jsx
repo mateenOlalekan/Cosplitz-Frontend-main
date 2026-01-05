@@ -142,7 +142,7 @@ const Successful = lazy(() => import("./pages/Dashboard/SplitzSuccessful"));
 const Wallet = lazy(() => import("./pages/Dashboard/Wallet"));
 const CreateSplitz = lazy(() => import("./pages/Dashboard/CreateSplitz"));
 const Notification = lazy(() => import("./pages/Dashboard/Notification"));
-const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
+const MySplitz = lazy(() => import("./pages/Dashboard/MySplitzPage"));
 // const SplitzDetail = lazy(() => import("./pages/Dashboard/SplitDetailPage"));
 const AllSplits = lazy(() => import("./pages/Dashboard/AllSplitsPage"));
 const MySplits = lazy(() => import("./pages/Dashboard/MySplitsPage"));
