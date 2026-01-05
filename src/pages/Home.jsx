@@ -10,10 +10,10 @@
      <>
       <Navbar />
         <main className="flex flex-col scroll-smooth">
-            {/* <Hero />
+            <Hero />
             <Work />
             <Why />
-            <Who /> */}
+            <Who />
         </main>
       <Footer />
      </>
