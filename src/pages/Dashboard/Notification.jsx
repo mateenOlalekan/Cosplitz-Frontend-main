@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, CircleX, Filter } from "lucide-react";
 import Avatar from "../../assets/Avatar.svg";
+import SelectedHeader from "../../components/Headers/LocationHeader";
 
 export default function CosplitzNotifications() {
   const [activeTab, setActiveTab] = useState("all");
@@ -24,6 +25,7 @@ export default function CosplitzNotifications() {
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-50 overflow-hidden">
+      <SelectedHeader/>
       <div className="flex-1 overflow-y-auto">
 
         {/* Container */}

@@ -1,4 +1,4 @@
-// src/services/api.js - UPDATED & FIXED
+// src/services/api.js - FIXED
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 function getAuthToken() {
@@ -61,23 +61,33 @@ async function request(path, options = {}) {
 
   // Handle 401 - Unauthorized
   if (response.status === 401) {
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (e) {
-      console.warn("Failed to clear storage:", e);
-    }
+    // ✅ FIX: Don't redirect during registration/verification flows
+    const isAuthFlow = 
+      window.location.pathname.includes("/register") ||
+      window.location.pathname.includes("/verify") ||
+      path.includes("/verify_otp") ||
+      path.includes("/otp/");
 
-    if (!window.location.pathname.includes("/login")) {
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 100);
+    if (!isAuthFlow) {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn("Failed to clear storage:", e);
+      }
+
+      if (!window.location.pathname.includes("/login")) {
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 100);
+      }
     }
 
     return {
       status: 401,
       data: json || { message: "Unauthorized" },
       unauthorized: true,
+      error: true, // ✅ Mark as error
     };
   }
 
@@ -107,7 +117,7 @@ async function request(path, options = {}) {
 }
 
 export const authService = {
-  /** REGISTER — POST /api/register/ */
+  /** REGISTER – POST /api/register/ */
   register: async (userData) => {
     return await request("/register/", {
       method: "POST",
@@ -115,7 +125,7 @@ export const authService = {
     });
   },
 
-  /** LOGIN — POST /api/login/ */
+  /** LOGIN – POST /api/login/ */
   login: async (credentials) => {
     return await request("/login/", {
       method: "POST",
@@ -123,17 +133,17 @@ export const authService = {
     });
   },
 
-  /** USER INFO — GET /api/user/info */
+  /** USER INFO – GET /api/user/info */
   getUserInfo: async () => {
     return await request("/user/info", { method: "GET" });
   },
 
-  /** GET OTP — GET /api/otp/{id}/ */
+  /** GET OTP – GET /api/otp/{id}/ */
   getOTP: async (userId) => {
     return await request(`/otp/${userId}/`, { method: "GET" });
   },
 
-  /** VERIFY OTP — POST /api/verify_otp */
+  /** VERIFY OTP – POST /api/verify_otp */
   verifyOTP: async (identifier, otp) => {
     // Accept either email or userId
     const body = /@/.test(identifier) 
@@ -146,7 +156,7 @@ export const authService = {
     });
   },
 
-  /** RESEND OTP — Same as getOTP */
+  /** RESEND OTP – Same as getOTP */
   resendOTP: async (userId) => {
     return await authService.getOTP(userId);
   },
@@ -174,9 +184,6 @@ export const authService = {
       body: data,
     }),
 };
-
-
-
 
 export const dashboardService = {
   getOverview: async () =>
