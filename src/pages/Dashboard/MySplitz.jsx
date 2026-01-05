@@ -204,25 +204,7 @@ function MySplitz() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="border-b border-gray-200">
-        <div className="flex space-x-6 md:space-x-8 px-4 md:px-6 overflow-x-auto">
-          {allfiter.map((item) => (
-            <button
-              key={item}
-              onClick={() => setFilter(item)}
-              className={`flex-shrink-0 pb-3 relative ${
-                filter === item
-                  ? 'text-green-700 border-b-2 border-green-700 font-semibold'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <span className="text-sm md:text-base">
-                {item} ({filterCounts[item]})
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       {/* Search & Filter */}
       <div className="flex items-center justify-end gap-2 px-4 md:px-6 mt-4">
@@ -244,7 +226,26 @@ function MySplitz() {
           <ListFilter size={18} />
         </button>
       </div>
-
+      <div className="border-b border-gray-200">
+        <div className="flex space-x-6 md:space-x-8 px-4 md:px-6 overflow-x-auto">
+          {allfiter.map((item) => (
+            <button
+              key={item}
+              onClick={() => setFilter(item)}
+              className={`flex-shrink-0 pb-3 relative ${
+                filter === item
+                  ? 'text-green-700 border-b-2 border-green-700 font-semibold'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <span className="text-sm md:text-base">
+                {item} ({filterCounts[item]})
+              </span>
+            </button>
+          ))}
+        </div>
+      </div> 
+      
       {/* Table */}
       <div className="px-4 md:px-6 mt-6 flex-1">
         {filteredData.length > 0 ? (
