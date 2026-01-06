@@ -35,7 +35,7 @@ function AllSplitsPage() {
         </div>
 
         {/* Tab Filters */}
-        {/* <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
           {tabFilters.map((tab) => (
             <button
               key={tab}
@@ -49,7 +49,7 @@ function AllSplitsPage() {
               {tab}
             </button>
           ))}
-        </div> */}
+        </div>
 
         {/* Splits Grid with REAL DATA - Matching the UI exactly */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
