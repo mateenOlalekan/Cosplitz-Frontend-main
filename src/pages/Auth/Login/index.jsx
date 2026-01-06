@@ -1,7 +1,7 @@
 // src/pages/Auth/Login/index.jsx - CREATE THIS FILE
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../../../services/api";
+import { authService } from "../../../services/authApi";
 import { useAuthStore } from "../../../store/authStore";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
