@@ -7,6 +7,7 @@ import Overlay3 from "../../assets/Overlay2.svg";
 import Overlay4 from "../../assets/Overlay3.svg";
 
 import { deals } from "../../Data/Alldata";
+import AllSplitsPage from "../Splitz/AllSplitsPage";
 
 const categories = [
   { icon: Overlay1, label: "Split Expenses" },
@@ -51,16 +52,14 @@ const Header = () => {
 
       {/* 🟨 Special Deals */}
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-gray-900">
-          #SpecialForYou
-        </h2>
+        <h2 className="text-lg font-bold text-gray-900">#SpecialForYou</h2>
 
         <div className="carousel carousel-end rounded-box gap-3 overflow-x-auto">
           {deals.map((deal, idx) => (
             <div
               key={idx}
-              className="carousel-item relative flex bg-[#1F8225] flex-col justify-between 
-              rounded-2xl overflow-hidden text-white shadow-lg hover:shadow-xl 
+              className="carousel-item relative flex bg-[#1F8225] flex-col justify-between
+              rounded-2xl overflow-hidden text-white shadow-lg hover:shadow-xl
               transition-all duration-300 h-fit min-w-[260px]"
             >
               <div className="absolute inset-0 opacity-90" />
@@ -81,9 +80,7 @@ const Header = () => {
 
                 {/* Deal Content */}
                 <div className="mb-4">
-                  <h3 className="text-base font-semibold mb-1">
-                    {deal.title}
-                  </h3>
+                  <h3 className="text-base font-semibold mb-1">{deal.title}</h3>
                   <p className="text-emerald-100 text-sm leading-snug">
                     {deal.description}
                   </p>
@@ -117,8 +114,8 @@ const Header = () => {
       {/* 🟦 Create Splitz Banner */}
       <section className="flex flex-col">
         <div
-          className="w-full bg-linear-to-r from-[#096A0F] to-[#1F8225] 
-          px-5 py-5 rounded-lg flex flex-col sm:flex-row 
+          className="w-full bg-linear-to-r from-[#096A0F] to-[#1F8225]
+          px-5 py-5 rounded-lg flex flex-col sm:flex-row
           sm:justify-between sm:items-center gap-4"
         >
           <div className="flex flex-col text-white">
@@ -132,8 +129,8 @@ const Header = () => {
 
           <button
             onClick={CreateSplitz}
-            className="bg-white text-[#096A0F] w-full sm:w-36 
-            py-2.5 rounded-md text-sm font-medium shadow 
+            className="bg-white text-[#096A0F] w-full sm:w-36
+            py-2.5 rounded-md text-sm font-medium shadow
             hover:bg-gray-50 transition"
           >
             Create Splitz

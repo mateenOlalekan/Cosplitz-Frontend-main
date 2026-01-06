@@ -131,7 +131,9 @@ const VerifyEmail = lazy(() => import("./pages/Auth/VerifyEmail"));
 const PasswordResetSuccess = lazy(() => import("./pages/Auth/PasswordReset"));
 
 /* Dashboard Layout */
-const DashboardLayout = lazy(() => import("./components/Layout/DashboardLayout"));
+const DashboardLayout = lazy(() =>
+  import("./components/Layout/DashboardLayout")
+);
 
 /* Dashboard Pages */
 const Overview = lazy(() => import("./pages/Dashboard/Overview"));
@@ -144,19 +146,29 @@ const CreateSplitz = lazy(() => import("./pages/Dashboard/CreateSplitz"));
 const Notification = lazy(() => import("./pages/Dashboard/Notification"));
 const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
 const SplitzDetail = lazy(() => import("./pages/Dashboard/SplitzDetail"));
-const AllSplits = lazy(() => import("./pages/Dashboard/AllSplitsPage"));
+const AllSplits = lazy(() => import("./components/Splitz/AllSplitsPage"));
 const MySplits = lazy(() => import("./pages/Dashboard/MySplitsPage"));
 
 /* Settings */
-const SettingsLayout = lazy(() => import("./pages/Dashboard/Settings/SettingsLayout"));
+const SettingsLayout = lazy(() =>
+  import("./pages/Dashboard/Settings/SettingsLayout")
+);
 const MyProfile = lazy(() => import("./pages/Dashboard/Settings/MyProfile"));
-const NotificationSettings = lazy(() => import("./pages/Dashboard/Settings/Notifications"));
-const Verification = lazy(() => import("./pages/Dashboard/Settings/Verification"));
+const NotificationSettings = lazy(() =>
+  import("./pages/Dashboard/Settings/Notifications")
+);
+const Verification = lazy(() =>
+  import("./pages/Dashboard/Settings/Verification")
+);
 const Support = lazy(() => import("./pages/Dashboard/Settings/Support"));
-const ResetPassword = lazy(() => import("./pages/Dashboard/Settings/ResetPassword"));
+const ResetPassword = lazy(() =>
+  import("./pages/Dashboard/Settings/ResetPassword")
+);
 
 /* KYC */
-const KYCConfirmation = lazy(() => import("./pages/Identification/KYCConfirmation"));
+const KYCConfirmation = lazy(() =>
+  import("./pages/Identification/KYCConfirmation")
+);
 
 /* 404 */
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -175,7 +187,10 @@ export default function App() {
         {/* Password */}
         <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
+        <Route
+          path="/password-reset-success"
+          element={<PasswordResetSuccess />}
+        />
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
