@@ -124,7 +124,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Share2, Eye } from "lucide-react";
-import CheckLast from "../../assets/CheckLast.svg";
+import CheckLast from "../../../assets/CheckLast.svg";
 
 function SplitzSuccessful() {
   const navigate = useNavigate();

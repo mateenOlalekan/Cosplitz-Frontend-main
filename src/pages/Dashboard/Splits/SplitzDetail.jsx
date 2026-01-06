@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import useSplitStore from "../../store/splitStore";
-import useAuthStore from "../../store/authStore";
+import useSplitStore from "../../../store/splitStore";
+import useAuthStore from "../../../store/authStore";
 
 function SplitzDetail() {
   const { id } = useParams();

@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import { ChevronDown, Bell, Settings, MapPin, ListFilter, Search } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import screen from "../../assets/screen.svg";
-import useSplitStore from "../../store/splitStore";
-import useAuthStore from "../../store/authStore";
+import screen from "../../../assets/screen.svg";
+import useSplitStore from "../../../store/splitStore";
+import useAuthStore from "../../../store/authStore";
 
 function MySplitz() {
   const navigate = useNavigate();
