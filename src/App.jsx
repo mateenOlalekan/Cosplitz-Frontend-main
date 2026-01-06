@@ -82,10 +82,7 @@ export default function App() {
         {/* Password Recovery */}
         <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route
-          path="/password-reset-success"
-          element={<PasswordResetSuccess />}
-        />
+        <Route path="/password-reset-success" element={<PasswordResetSuccess />}        />
 
         {/* ============================================
             PROTECTED ROUTES (Require Authentication)

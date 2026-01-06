@@ -1,6 +1,7 @@
 import { Menu} from "lucide-react";
 import {useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg";
+import locationHeader from "./LocationHeader";
 
 function Header({ setSidebarOpen, sidebarOpen, isMobile }) {
   return (
@@ -29,6 +30,7 @@ function Header({ setSidebarOpen, sidebarOpen, isMobile }) {
           </div>
         </div>
       ) : ("")}
+      <locationHeader/>
     </header>
   );
 }
