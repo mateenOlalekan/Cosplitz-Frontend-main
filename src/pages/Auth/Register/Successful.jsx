@@ -24,7 +24,7 @@ function Successful() {
       <motion.button
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => navigate("/post-onboarding")}
+        onClick={() => navigate("/dashboard/post-onboarding")}
         className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition-colors"
       >
         Continue to Onboarding
