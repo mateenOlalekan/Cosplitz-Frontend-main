@@ -35,11 +35,11 @@ const Notification = lazy(() => import("./pages/Dashboard/Notification"));
 
 /* Splitz Pages */
 const CreateSplitz = lazy(() => import("./pages/Dashboard/CreateSplitz"));
-// const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
-// const SplitzDetail = lazy(() => import("./pages/Dashboard/SplitzDetail"));
+const MySplitz = lazy(() => import("./pages/Dashboard/MySplitz"));
+const SplitzDetail = lazy(() => import("./pages/Dashboard/SplitzDetail"));
 
-// const AllSplits = lazy(() => import("./components/Splitz/AllSplitsPage"));
-// const MySplits = lazy(() => import("./pages/Dashboard/MySplits"));
+const AllSplits = lazy(() => import("./components/Splitz/AllSplitsPage"));
+const MySplits = lazy(() => import("./pages/Dashboard/MySplits"));
 const SplitzSuccessful = lazy(() => import("./pages/Dashboard/SplitzSuccessful")); // ✅ Updated import name for clarity
 
 /* Settings */
@@ -106,10 +106,10 @@ export default function App() {
                 SPLITZ ROUTES
             ============================================ */}
             <Route path="create-splitz" element={<CreateSplitz />} />
-            {/* <Route path="mysplitz" element={<MySplitz />} />
+            <Route path="mysplitz" element={<MySplitz />} />
             <Route path="allsplits" element={<AllSplits />} />
             <Route path="my-splits" element={<MySplits />} />
-            <Route path="splitz-details/:id" element={<SplitzDetail />} /> */}
+            <Route path="splitz-details/:id" element={<SplitzDetail />} />
             
             {/* ✅ SUCCESS PAGE - Already configured correctly! */}
             <Route path="splitz-success" element={<SplitzSuccessful />} />

@@ -539,11 +539,6 @@ export default function EmailVerificationStep({
           "Verify Email"
         )}
       </button>
-
-      {/* Help text */}
-      <p className="text-xs text-gray-500 text-center mt-4 max-w-xs">
-        Didn't receive the code? Check your spam folder or click resend after the timer expires.
-      </p>
     </div>
   );
 }
