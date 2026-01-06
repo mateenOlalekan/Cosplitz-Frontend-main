@@ -246,41 +246,7 @@ function Overview({ setSidebarOpen, sidebarOpen }) {
 
   return (
     <div className="w-full min-h-screen bg-white transition-all duration-300 p-3 md:p-4">
-      {/* Dashboard Header */}
-      <div className="w-full flex flex-col pb-4">
-        <div className="flex flex-col">
-          <div className="w-full flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#67707E]">
-              <MapPin size={17} />
-              <div className="text-sm font-medium">
-                Ikeja, Lagos, Nigeria
-              </div>
-            </div>
 
-            {/* Action Icons */}
-            <div className="flex items-center gap-2">
-              {/* Notification */}
-              <Link
-                to="/dashboard/notification"
-                className="relative p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell size={17} className="text-[#67707E]" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              </Link>
-
-              {/* Settings */}
-              <Link
-                to="/dashboard/settings"
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                aria-label="Settings"
-              >
-                <Settings size={17} className="text-[#67707E]" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Search and Filter */}
       <div className="w-full flex flex-col gap-3 space-y-2">

@@ -49,7 +49,6 @@ export default function Wallet() {
 
   return (
     <div className="min-h-screen px-4 md:px-6 py-6">
-      <SelectedHeader/>
       <div className="max-w-4xl mx-auto space-y-8">
 
         {/* Wallet Balance */}

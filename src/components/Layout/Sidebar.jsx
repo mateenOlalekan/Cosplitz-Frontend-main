@@ -44,7 +44,7 @@ const Sidebar = ({ sidebarOpen, isMobile, setSidebarOpen }) => {
       {
         icon: Share2,
         label: "My Splits",
-        url: "/dashboard/my-splits",
+        url: "/dashboard/mysplitz",
         count: notifications.splits,
       },
       {

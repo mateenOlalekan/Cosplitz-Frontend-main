@@ -6,7 +6,7 @@ import { MoreVertical, ChevronDown, Filter } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { format } from 'date-fns';
 import AnalyticsCard from './AnalyticsCard';
-import SelectedHeader from "../../components/Headers/LocationHeader";
+
 
 // Mock data for the chart
 const savingsData = [
@@ -29,7 +29,7 @@ const AnalyticsDashboard = () => {
 
   return (
     <div className="flex flex-col">
-      <SelectedHeader/>
+
     <div className="p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
