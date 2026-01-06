@@ -1,4 +1,4 @@
-// src/services/api.js - UPDATED & FIXED
+// src/services/api.js - DEBUGGED & FIXED
 const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 function getAuthToken() {
@@ -44,9 +44,10 @@ async function request(path, options = {}) {
   try {
     response = await fetch(url, finalOptions);
   } catch (err) {
+    console.error("Network error:", err);
     return {
       status: 0,
-      data: { message: "Network error. Please try again." },
+      data: { message: "Network error. Please check your connection and try again." },
       error: true,
     };
   }
@@ -56,35 +57,56 @@ async function request(path, options = {}) {
     const text = await response.text();
     json = text ? JSON.parse(text) : null;
   } catch {
-    json = { message: "Invalid JSON response from server." };
+    json = { message: "Invalid response from server." };
   }
+
+  // ✅ FIX: Don't redirect during registration/verification flows
+  const isAuthFlow = 
+    window.location.pathname.includes("/register") ||
+    window.location.pathname.includes("/verify") ||
+    path.includes("/verify_otp") ||
+    path.includes("/otp/") ||
+    path.includes("/register");
 
   // Handle 401 - Unauthorized
   if (response.status === 401) {
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (e) {
-      console.warn("Failed to clear storage:", e);
-    }
+    // Don't clear storage or redirect during registration flow
+    if (!isAuthFlow) {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn("Failed to clear storage:", e);
+      }
 
-    if (!window.location.pathname.includes("/login")) {
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 100);
+      if (!window.location.pathname.includes("/login")) {
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 100);
+      }
     }
 
     return {
       status: 401,
       data: json || { message: "Unauthorized" },
-      unauthorized: true,
+      error: true,
+      unauthorized: !isAuthFlow, // Only mark as unauthorized if not in auth flow
     };
   }
 
-  // Handle 400 - Bad Request (for OTP errors)
+  // Handle 400 - Bad Request (for OTP errors, validation errors)
   if (response.status === 400) {
     return {
       status: 400,
+      data: json,
+      error: true,
+    };
+  }
+
+  // Handle 409 - Conflict (duplicate email)
+  if (response.status === 409) {
+    return {
+      status: 409,
       data: json,
       error: true,
     };
@@ -94,7 +116,7 @@ async function request(path, options = {}) {
   if (!response.ok) {
     return {
       status: response.status,
-      data: json,
+      data: json || { message: `Request failed with status ${response.status}` },
       error: true,
     };
   }
@@ -107,7 +129,7 @@ async function request(path, options = {}) {
 }
 
 export const authService = {
-  /** REGISTER — POST /api/register/ */
+  /** REGISTER – POST /api/register/ */
   register: async (userData) => {
     return await request("/register/", {
       method: "POST",
@@ -115,7 +137,7 @@ export const authService = {
     });
   },
 
-  /** LOGIN — POST /api/login/ */
+  /** LOGIN – POST /api/login/ */
   login: async (credentials) => {
     return await request("/login/", {
       method: "POST",
@@ -123,17 +145,17 @@ export const authService = {
     });
   },
 
-  /** USER INFO — GET /api/user/info */
+  /** USER INFO – GET /api/user/info */
   getUserInfo: async () => {
     return await request("/user/info", { method: "GET" });
   },
 
-  /** GET OTP — GET /api/otp/{id}/ */
+  /** GET OTP – GET /api/otp/{id}/ */
   getOTP: async (userId) => {
     return await request(`/otp/${userId}/`, { method: "GET" });
   },
 
-  /** VERIFY OTP — POST /api/verify_otp */
+  /** VERIFY OTP – POST /api/verify_otp */
   verifyOTP: async (identifier, otp) => {
     // Accept either email or userId
     const body = /@/.test(identifier) 
@@ -146,7 +168,7 @@ export const authService = {
     });
   },
 
-  /** RESEND OTP — Same as getOTP */
+  /** RESEND OTP – Same as getOTP */
   resendOTP: async (userId) => {
     return await authService.getOTP(userId);
   },
