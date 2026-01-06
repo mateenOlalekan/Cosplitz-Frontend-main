@@ -7,9 +7,9 @@ import Overlay3 from "../../assets/Overlay2.svg";
 import Overlay4 from "../../assets/Overlay3.svg";
 import useSplitStore from "../../store/splitStore";
 import useAuthStore from "../../store/authStore";
-import DashOverview from "../../components/Headers/Overview";
+// import DashOverview from "../../components/Headers/Overview";
 
-function Overview({ setSidebarOpen, sidebarOpen }) {
+function Overview() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All Active");
   const [hidden, setHidden] = useState(false);
@@ -407,7 +407,7 @@ function Overview({ setSidebarOpen, sidebarOpen }) {
           ? "opacity-0 translate-y-4 scale-95 pointer-events-none hidden"
           : "opacity-100 translate-y-0 scale-100 block"}
       `}>
-        <DashOverview />
+        {/* <DashOverview /> */}
       </div>
 
       {/* Main Content */}
