@@ -1,7 +1,7 @@
 import { Search, Filter, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import SplitCard from "../SplitCard";
+import SplitCard from "./SplitzCard";
 
 import { Heart, Share2, Users, Clock, MapPin } from "lucide-react";
 
