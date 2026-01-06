@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import loginlogo from "../../../assets/login.jpg";
 import logo from "../../../assets/logo.svg";
-import { authService } from "../../../services/api";
+import { authService } from "../../../services/authApi";
 import { useAuthStore } from "../../../store/authStore";
 import EmailVerificationStep from "./EmailVerificationStep";
 import RegistrationForm from "./RegistrationForm";

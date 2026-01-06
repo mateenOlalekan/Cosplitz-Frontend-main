@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { authService } from "../../../services/api";
+import { authService } from "../../../services/authApi";
 import { ArrowLeft, Mail } from "lucide-react";
 
 export default function EmailVerificationStep({
