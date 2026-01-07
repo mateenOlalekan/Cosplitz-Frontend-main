@@ -73,8 +73,8 @@ async function request(path, options = {}) {
     if (!isAuthFlow) {
       try {
         // Clear both storages to ensure token removal regardless of where it was stored
-        try { sessionStorage.clear(); } catch (e) { /* ignore */ }
-        try { localStorage.removeItem("authToken"); localStorage.removeItem("userInfo"); } catch (e) { /* ignore */ }
+        try { sessionStorage.clear(); } catch { /* ignore */ }
+        try { localStorage.removeItem("authToken"); localStorage.removeItem("userInfo"); } catch { /* ignore */ }
       } catch (e) {
         console.warn("Failed to clear storage:", e);
       }
@@ -281,8 +281,8 @@ export const authService = {
       
       // Clear storage regardless of response
       try {
-        try { sessionStorage.clear(); } catch (e) { /* ignore */ }
-        try { localStorage.removeItem("authToken"); localStorage.removeItem("userInfo"); } catch (e) { /* ignore */ }
+        try { sessionStorage.clear(); } catch { /* ignore */ }
+        try { localStorage.removeItem("authToken"); localStorage.removeItem("userInfo"); } catch { /* ignore */ }
       } catch (e) {
         console.warn("Failed to clear storage:", e);
       }

@@ -34,6 +34,7 @@ const Notification = lazy(() => import("./pages/Dashboard/Notification"));
 /* Splitz Pages */
 const CreateSplitz = lazy(() => import("./pages/Dashboard/Splits/CreateSplitz"));
 const MySplitz = lazy(() => import("./pages/Dashboard/Splits/MySplitz"));
+const Allsplitz = lazy(() => import("./components/Splitz/AllSplitsPage"));
 const SplitzDetail = lazy(() => import("./pages/Dashboard/Splits/SplitzDetail"));
 const SplitzSuccessful = lazy(() => import("./pages/Dashboard/Splits/SplitzSuccessful")); // 
 
@@ -88,6 +89,7 @@ export default function App() {
                 SPLITZ ROUTES
             ============================================ */}
             <Route path="create-splitz" element={<CreateSplitz />} />
+            <Route path="allsplits" element={<Allsplitz/>}/>
             <Route path="mysplitz" element={<MySplitz />} />
             <Route path="splitz-details/:id" element={<SplitzDetail />} />
             <Route path="splitz-success" element={<SplitzSuccessful />} />
