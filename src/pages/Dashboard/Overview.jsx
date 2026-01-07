@@ -583,7 +583,7 @@ import React from 'react'
 
 function Overview() {
   return (
-    <div>Overview</div>
+    <div className='w-full flex flex-col p-4'>Overview</div>
   )
 }
 

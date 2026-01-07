@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Search, CircleX, Filter } from "lucide-react";
 import Avatar from "../../assets/Avatar.svg";
-import SelectedHeader from "../../components/Headers/LocationHeader";
+import SelectedHeader from "../../components/Headers/Location";
 
 export default function CosplitzNotifications() {
   const [activeTab, setActiveTab] = useState("all");
@@ -25,7 +25,6 @@ export default function CosplitzNotifications() {
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-50 overflow-hidden">
-      <SelectedHeader/>
       <div className="flex-1 overflow-y-auto">
 
         {/* Container */}
@@ -48,7 +47,7 @@ export default function CosplitzNotifications() {
                 Notifications
               </h1>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-stretch sm:items-center gap-3 w-full sm:w-auto">
 
                 {/* Search Box */}
                 <div className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-4 py-2 flex-1 sm:flex-none focus-within:ring-2 focus-within:ring-green-500">
@@ -62,7 +61,7 @@ export default function CosplitzNotifications() {
 
                 {/* Filter Icon */}
                 <Filter
-                  size={26}
+                  size={40}
                   className="cursor-pointer border border-gray-200 rounded-lg p-2 bg-white"
                 />
               </div>

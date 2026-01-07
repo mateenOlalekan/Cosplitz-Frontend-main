@@ -1,6 +1,7 @@
 import { Menu} from "lucide-react";
 import {useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg";
+import Location from "../Headers/Location";
 
 function Header({ setSidebarOpen, sidebarOpen, isMobile }) {
   return (
@@ -8,7 +9,7 @@ function Header({ setSidebarOpen, sidebarOpen, isMobile }) {
       
       {/* ====== Mobile Top Bar ====== */}
       {isMobile ? (
-        <div className="px-4 py-2.5">
+        <div className="px-4 py-4">
           {/* Logo and Menu Row */}
           <div className="flex items-center justify-between mb-2">
             {/* Logo */}
@@ -29,6 +30,7 @@ function Header({ setSidebarOpen, sidebarOpen, isMobile }) {
           </div>
         </div>
       ) : ("")}
+      <Location/>
     </header>
   );
 }

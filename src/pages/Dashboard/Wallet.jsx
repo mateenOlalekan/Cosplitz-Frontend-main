@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, Plus } from "lucide-react";
 import paymenticon from "../../assets/paymentcard.svg";
-import SelectedHeader from "../../components/Headers/LocationHeader";
+import SelectedHeader from "../../components/Headers/Location";
 
 export default function Wallet() {
   const [activeTab, setActiveTab] = useState("All");

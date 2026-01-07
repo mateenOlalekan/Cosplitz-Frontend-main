@@ -6,7 +6,7 @@ const ProtectedRoute = () => {
 
   if (loading) return null; // or loader if you want
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

@@ -137,6 +137,7 @@ const Header = () => {
           </button>
         </div>
       </section>
+      <AllSplitsPage/>
     </div>
   );
 };
