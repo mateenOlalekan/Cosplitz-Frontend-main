@@ -3,7 +3,10 @@ const API_BASE_URL = "https://cosplitz-backend.onrender.com/api";
 
 function getAuthToken() {
   try {
-    return sessionStorage.getItem("authToken") || null;
+    // Prefer sessionStorage (short-lived) but fall back to localStorage
+    return (
+      sessionStorage.getItem("authToken") || localStorage.getItem("authToken") || null
+    );
   } catch {
     return null;
   }
@@ -69,7 +72,9 @@ async function request(path, options = {}) {
   if (response.status === 401) {
     if (!isAuthFlow) {
       try {
-        sessionStorage.clear();
+        // Clear both storages to ensure token removal regardless of where it was stored
+        try { sessionStorage.clear(); } catch (e) { /* ignore */ }
+        try { localStorage.removeItem("authToken"); localStorage.removeItem("userInfo"); } catch (e) { /* ignore */ }
       } catch (e) {
         console.warn("Failed to clear storage:", e);
       }
@@ -184,12 +189,8 @@ export const authService = {
       });
       
       if (response.success && response.data?.token) {
-        // Store token in sessionStorage
-        try {
-          sessionStorage.setItem("authToken", response.data.token);
-        } catch (e) {
-          console.warn("Failed to store token:", e);
-        }
+        // Token storage is delegated to the client (auth store).
+        // Keep auth API free of direct storage side-effects.
       }
       
       return response;
@@ -280,7 +281,8 @@ export const authService = {
       
       // Clear storage regardless of response
       try {
-        sessionStorage.clear();
+        try { sessionStorage.clear(); } catch (e) { /* ignore */ }
+        try { localStorage.removeItem("authToken"); localStorage.removeItem("userInfo"); } catch (e) { /* ignore */ }
       } catch (e) {
         console.warn("Failed to clear storage:", e);
       }

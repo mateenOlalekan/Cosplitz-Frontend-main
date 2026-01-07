@@ -14,6 +14,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -40,8 +41,8 @@ export default function Login() {
       console.log("Login response:", response);
       
       if (response.success && response.data?.token) {
-        // Store token
-        setToken(response.data.token);
+        // Store token according to "remember me" selection
+        setToken(response.data.token, remember);
         
         // Get user info
         try {
@@ -188,11 +189,13 @@ export default function Login() {
 
               <div className="flex justify-between items-center">
                 <label className="flex gap-2 text-sm text-gray-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="rounded focus:ring-green-500"
-                  />
-                  <span>Remember me</span>
+                    <input
+                      type="checkbox"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="rounded focus:ring-green-500"
+                    />
+                    <span>Remember me</span>
                 </label>
                 <Link
                   to="/forgot-password"
