@@ -102,7 +102,7 @@ export default function App() {
               <Route path="profile" element={<MyProfile />} />
               <Route path="notifications" element={<NotificationSettings />} />
               <Route path="verification" element={<Verification />} />
-              <Route path="reset-password" element={<ResetPassword />} />
+              <Route path="reset-password" element={<ResetPassword/>} />
               <Route path="support" element={<Support />} />
             </Route>
           </Route>

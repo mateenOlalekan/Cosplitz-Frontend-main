@@ -47,7 +47,7 @@ export default function DashboardLayout() {
         />
 
         {/* Outlet renders nested dashboard pages */}
-        <main className="flex-1 overflow-y-auto bg-white transition-all duration-700 ease-in-out">
+        <main className="flex-1 overflow-y-auto bg-[#F7F5F9] transition-all duration-700 ease-in-out">
           <Outlet />
         </main>
       </div>
