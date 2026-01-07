@@ -210,7 +210,7 @@ export default function EmailVerificationStep({
   };
 
   return (
-    <div className="flex flex-col items-center gap-5 py-8 relative w-full">
+    <div className="flex flex-col items-center gap-5 py-4 relative w-full">
       {/* Back button */}
       <button
         onClick={onBack}
@@ -298,7 +298,7 @@ export default function EmailVerificationStep({
         type="button"
         disabled={loading || otp.some((d) => d === "")}
         onClick={() => handleVerify()}
-        className={`w-full py-3 rounded-lg font-semibold mt-4 transition-all ${
+        className={`w-full py-3 rounded-lg font-semibold mt-2 transition-all ${
           loading || otp.some((d) => d === "")
             ? "bg-gray-300 text-gray-500 cursor-not-allowed"
             : "bg-green-600 text-white hover:bg-green-700 active:scale-[0.98]"
