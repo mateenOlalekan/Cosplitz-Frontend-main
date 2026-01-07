@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, Send, ArrowLeft, MoreVertical, Phone, Video } from "lucide-react";
-import Header from "../../components/Headers/LocationHeader"
+
 
 export default function MessagingApp() {
   const [selectedContact, setSelectedContact] = useState(null);
