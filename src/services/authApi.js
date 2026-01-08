@@ -147,7 +147,7 @@ async function request(path, options = {}) {
 }
 
 export const authService = {
-  /** REGISTER – POST /api/register/ */
+  /** REGISTER â€“ POST /api/register/ */
   register: async (userData) => {
     try {
       const response = await request("/register/", {
@@ -177,7 +177,7 @@ export const authService = {
     }
   },
 
-  /** LOGIN – POST /api/login/ */
+  /** LOGIN â€“ POST /api/login/ */
   login: async (credentials) => {
     try {
       const response = await request("/login/", {
@@ -204,7 +204,7 @@ export const authService = {
     }
   },
 
-  /** USER INFO – GET /api/user/info */
+  /** USER INFO â€“ GET /api/user/info */
   getUserInfo: async () => {
     try {
       return await request("/user/info", { method: "GET" });
@@ -218,7 +218,7 @@ export const authService = {
     }
   },
 
-  /** GET OTP – GET /api/otp/{id}/ */
+  /** GET OTP â€“ GET /api/otp/{id}/ */
   getOTP: async (userId) => {
     try {
       if (!userId) {
@@ -239,7 +239,7 @@ export const authService = {
     }
   },
 
-  /** VERIFY OTP – POST /api/verify_otp */
+  /** VERIFY OTP â€“ POST /api/verify_otp */
   verifyOTP: async (identifier, otp) => {
     try {
       if (!identifier || !otp) {
@@ -269,7 +269,7 @@ export const authService = {
     }
   },
 
-  /** RESEND OTP – Same as getOTP */
+  /** RESEND OTP â€“ Same as getOTP */
   resendOTP: async (userId) => {
     return await authService.getOTP(userId);
   },
