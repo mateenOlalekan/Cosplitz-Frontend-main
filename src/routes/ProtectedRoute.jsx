@@ -1,12 +1,34 @@
+// import { Navigate, Outlet } from "react-router-dom";
+// import useAuthStore from "../store/authStore";
+
+// const ProtectedRoute = () => {
+//   const { user, isAuthenticated, isLoading } = useAuthStore();
+
+//   if (isLoading) return null; 
+
+//   if (!isAuthenticated() || !user) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   return <Outlet />;
+// };
+
+// export default ProtectedRoute;
 import { Navigate, Outlet } from "react-router-dom";
-import useAuthStore from "../store/authStore";
+import { useAuthStore } from "../store/authStore";
+import SplashScreen from "../components/Other/Loading";
 
 const ProtectedRoute = () => {
-  const { user, isAuthenticated, loading } = useAuthStore();
+  // Get helper function and state from store
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-  if (loading) return null; // or loader if you want
+  // Optional: You can replace 'null' with a <LoadingSpinner /> component
+  if (isLoading) {
+    return <SplashScreen/>
+  }
 
-  if (!isAuthenticated) {
+  // Use the store's check function
+  if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
 

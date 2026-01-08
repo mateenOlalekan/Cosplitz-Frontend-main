@@ -10,6 +10,7 @@ import { Eye, EyeOff } from "lucide-react";
 import logo from "../../../assets/logo.svg";
 import LeftPanel from "../../../components/Other/LeftPanel";
 
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

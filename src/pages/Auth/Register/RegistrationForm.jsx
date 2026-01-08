@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
@@ -6,13 +6,17 @@ import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
 import PasswordValidation from "./PasswordValidation";
 
+// Note: Zod schema was defined but not used in the original component logic
+// (which used manual validation). I have kept the manual validation logic
+// to ensure the UI behaves exactly as before.
+
 function RegistrationForm({
-  formData,
+  formData, 
   handleInputChange,
-  handleFormSubmit,
+  handleFormSubmit, 
   handleSocialRegister,
-  loading,
-  error,
+  loading, // This is now passed from Store's isLoading
+  error,   // This is now passed from Store's error
 }) {
   const [showPassword, setShowPassword] = useState(false);
 

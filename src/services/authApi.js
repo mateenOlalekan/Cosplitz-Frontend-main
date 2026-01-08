@@ -339,126 +339,128 @@ export const authService = {
   },
 };
 
-export const dashboardService = {
-  getOverview: async () => {
-    try {
-      return await request("/dashboard/overview", { method: "GET" });
-    } catch (err) {
-      console.error("Dashboard overview error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load dashboard." },
-        error: true,
-      };
-    }
-  },
 
-  getAnalytics: async (period = "monthly") => {
-    try {
-      return await request(`/dashboard/analytics?period=${period}`, {
-        method: "GET",
-      });
-    } catch (err) {
-      console.error("Analytics error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load analytics." },
-        error: true,
-      };
-    }
-  },
-
-  createSplit: async (splitData) => {
-    try {
-      return await request("/splits/create", {
-        method: "POST",
-        body: splitData,
-      });
-    } catch (err) {
-      console.error("Create split error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to create split." },
-        error: true,
-      };
-    }
-  },
-
-  getWalletBalance: async () => {
-    try {
-      return await request("/wallet/balance", { method: "GET" });
-    } catch (err) {
-      console.error("Wallet balance error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load wallet balance." },
-        error: true,
-      };
-    }
-  },
-
-  getNotifications: async () => {
-    try {
-      return await request("/notifications", { method: "GET" });
-    } catch (err) {
-      console.error("Notifications error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load notifications." },
-        error: true,
-      };
-    }
-  },
-};
-
-export const adminService = {
-  getDashboardStats: async () => {
-    try {
-      return await request("/admin/dashboard", { method: "GET" });
-    } catch (err) {
-      console.error("Admin dashboard error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load admin dashboard." },
-        error: true,
-      };
-    }
-  },
-
-  getUsers: async (page = 1, limit = 20) => {
-    try {
-      return await request(`/admin/users?page=${page}&limit=${limit}`, {
-        method: "GET",
-      });
-    } catch (err) {
-      console.error("Admin users error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load users." },
-        error: true,
-      };
-    }
-  },
-
-  getSplits: async (page = 1, limit = 20) => {
-    try {
-      return await request(`/admin/splits?page=${page}&limit=${limit}`, {
-        method: "GET",
-      });
-    } catch (err) {
-      console.error("Admin splits error:", err);
-      return {
-        status: 0,
-        data: { message: "Failed to load splits." },
-        error: true,
-      };
-    }
-  },
-};
 
 export default {
   request,
   authService,
-  dashboardService,
-  adminService,
+  // dashboardService,
+  // adminService,
 };
+
+// export const dashboardService = {
+//   getOverview: async () => {
+//     try {
+//       return await request("/dashboard/overview", { method: "GET" });
+//     } catch (err) {
+//       console.error("Dashboard overview error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load dashboard." },
+//         error: true,
+//       };
+//     }
+//   },
+
+//   getAnalytics: async (period = "monthly") => {
+//     try {
+//       return await request(`/dashboard/analytics?period=${period}`, {
+//         method: "GET",
+//       });
+//     } catch (err) {
+//       console.error("Analytics error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load analytics." },
+//         error: true,
+//       };
+//     }
+//   },
+
+//   createSplit: async (splitData) => {
+//     try {
+//       return await request("/splits/create", {
+//         method: "POST",
+//         body: splitData,
+//       });
+//     } catch (err) {
+//       console.error("Create split error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to create split." },
+//         error: true,
+//       };
+//     }
+//   },
+
+//   getWalletBalance: async () => {
+//     try {
+//       return await request("/wallet/balance", { method: "GET" });
+//     } catch (err) {
+//       console.error("Wallet balance error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load wallet balance." },
+//         error: true,
+//       };
+//     }
+//   },
+
+//   getNotifications: async () => {
+//     try {
+//       return await request("/notifications", { method: "GET" });
+//     } catch (err) {
+//       console.error("Notifications error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load notifications." },
+//         error: true,
+//       };
+//     }
+//   },
+// };
+
+// export const adminService = {
+//   getDashboardStats: async () => {
+//     try {
+//       return await request("/admin/dashboard", { method: "GET" });
+//     } catch (err) {
+//       console.error("Admin dashboard error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load admin dashboard." },
+//         error: true,
+//       };
+//     }
+//   },
+
+//   getUsers: async (page = 1, limit = 20) => {
+//     try {
+//       return await request(`/admin/users?page=${page}&limit=${limit}`, {
+//         method: "GET",
+//       });
+//     } catch (err) {
+//       console.error("Admin users error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load users." },
+//         error: true,
+//       };
+//     }
+//   },
+
+//   getSplits: async (page = 1, limit = 20) => {
+//     try {
+//       return await request(`/admin/splits?page=${page}&limit=${limit}`, {
+//         method: "GET",
+//       });
+//     } catch (err) {
+//       console.error("Admin splits error:", err);
+//       return {
+//         status: 0,
+//         data: { message: "Failed to load splits." },
+//         error: true,
+//       };
+//     }
+//   },
+// };
