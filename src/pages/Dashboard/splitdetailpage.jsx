@@ -1,9 +1,16 @@
 // pages/SplitDetailPage.jsx
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Users, Calendar, MapPin, DollarSign, UserPlus, ChevronLeft } from 'lucide-react';
-import useSplitStore from '../../stores/splitStore';
-import { splitService } from '../../services/splitService';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  Users,
+  Calendar,
+  MapPin,
+  DollarSign,
+  UserPlus,
+  ChevronLeft,
+} from "lucide-react";
+import useSplitStore from "../../store/splitStore";
+import { splitService } from "../../services/splitService";
 
 const SplitDetailPage = () => {
   const { id } = useParams();
@@ -18,41 +25,41 @@ const SplitDetailPage = () => {
 
   const fetchSplitDetails = async () => {
     if (!id) return;
-    
+
     try {
       const splitId = parseInt(id);
       const data = await splitService.getSplitDetails(splitId);
       const participants = await splitService.getSplitParticipants(splitId);
-      
+
       setCurrentSplit({
         ...data,
         participants: participants || [],
       });
     } catch (error) {
-      console.error('Error fetching split details:', error);
+      console.error("Error fetching split details:", error);
     }
   };
 
   const handleJoinSplit = async () => {
     if (!id || !currentUserId) return;
-    
+
     try {
       setIsJoining(true);
       await splitService.joinSplit(parseInt(id), currentUserId);
-      
+
       const newParticipant = {
         id: Date.now(),
         user: currentUserId,
-        username: 'Current User',
-        email: 'user@example.com',
+        username: "Current User",
+        email: "user@example.com",
         joined_at: new Date().toISOString(),
       };
-      
+
       addParticipant(parseInt(id), newParticipant);
-      alert('Successfully joined the split!');
+      alert("Successfully joined the split!");
     } catch (error) {
-      console.error('Error joining split:', error);
-      alert('Failed to join split. Please try again.');
+      console.error("Error joining split:", error);
+      alert("Failed to join split. Please try again.");
     } finally {
       setIsJoining(false);
     }
@@ -100,7 +107,7 @@ const SplitDetailPage = () => {
               />
             </div>
           )}
-          
+
           <div className="p-6">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -113,19 +120,19 @@ const SplitDetailPage = () => {
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar size={16} />
-                    {new Date(currentSplit.start_date).toLocaleDateString()} - 
+                    {new Date(currentSplit.start_date).toLocaleDateString()} -
                     {new Date(currentSplit.end_date).toLocaleDateString()}
                   </span>
                 </div>
               </div>
-              
+
               <button
                 onClick={handleJoinSplit}
                 disabled={isJoining}
                 className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-70"
               >
                 <UserPlus size={20} />
-                {isJoining ? 'Joining...' : 'Join Split'}
+                {isJoining ? "Joining..." : "Join Split"}
               </button>
             </div>
 
@@ -135,33 +142,40 @@ const SplitDetailPage = () => {
                 <DollarSign size={20} className="text-green-600" />
                 <div>
                   <p className="text-sm text-gray-600">Total Amount</p>
-                  <p className="font-semibold text-gray-900">₦{currentSplit.amount?.toLocaleString()}</p>
+                  <p className="font-semibold text-gray-900">
+                    ₦{currentSplit.amount?.toLocaleString()}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 border rounded-lg">
                 <Users size={20} className="text-blue-600" />
                 <div>
                   <p className="text-sm text-gray-600">Participants</p>
                   <p className="font-semibold text-gray-900">
-                    {(currentSplit.participants?.length || 0)}/{currentSplit.max_participants}
+                    {currentSplit.participants?.length || 0}/
+                    {currentSplit.max_participants}
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 border rounded-lg">
                 <MapPin size={20} className="text-red-600" />
                 <div>
                   <p className="text-sm text-gray-600">Location</p>
-                  <p className="font-semibold text-gray-900">{currentSplit.location}</p>
+                  <p className="font-semibold text-gray-900">
+                    {currentSplit.location}
+                  </p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 border rounded-lg">
                 <Calendar size={20} className="text-purple-600" />
                 <div>
                   <p className="text-sm text-gray-600">Split Method</p>
-                  <p className="font-semibold text-gray-900">{currentSplit.split_method}</p>
+                  <p className="font-semibold text-gray-900">
+                    {currentSplit.split_method}
+                  </p>
                 </div>
               </div>
             </div>
@@ -181,7 +195,7 @@ const SplitDetailPage = () => {
             <Users size={24} />
             Participants ({currentSplit.participants?.length || 0})
           </h2>
-          
+
           {currentSplit.participants && currentSplit.participants.length > 0 ? (
             <div className="space-y-4">
               {currentSplit.participants.map((participant) => (
@@ -199,11 +213,14 @@ const SplitDetailPage = () => {
                       <p className="font-medium text-gray-900">
                         {participant.username}
                       </p>
-                      <p className="text-sm text-gray-600">{participant.email}</p>
+                      <p className="text-sm text-gray-600">
+                        {participant.email}
+                      </p>
                     </div>
                   </div>
                   <div className="text-sm text-gray-500">
-                    Joined {new Date(participant.joined_at).toLocaleDateString()}
+                    Joined{" "}
+                    {new Date(participant.joined_at).toLocaleDateString()}
                   </div>
                 </div>
               ))}

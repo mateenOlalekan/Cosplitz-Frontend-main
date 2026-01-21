@@ -112,20 +112,31 @@ function RegistrationForm({
           <input
             type="checkbox"
             checked={formData.agreeToTerms}
-            onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
+            onChange={(e) =>
+              handleInputChange("agreeToTerms", e.target.checked)
+            }
             className="rounded focus:ring-green-500"
           />
           <span>
             I agree to the{" "}
-            <a href="/terms" className="text-green-600 hover:underline font-medium">
+            <a
+              href="/terms"
+              className="text-green-600 hover:underline font-medium"
+            >
               Terms
             </a>
             ,{" "}
-            <a href="/privacy" className="text-green-600 hover:underline font-medium">
+            <a
+              href="/privacy"
+              className="text-green-600 hover:underline font-medium"
+            >
               Privacy
             </a>{" "}
             &{" "}
-            <a href="/fees" className="text-green-600 hover:underline font-medium">
+            <a
+              href="/fees"
+              className="text-green-600 hover:underline font-medium"
+            >
               Fees
             </a>
             .
@@ -153,7 +164,10 @@ function RegistrationForm({
 
         <p className="text-center text-sm text-gray-600 mt-3">
           Already have an account?{" "}
-          <Link to="/login" className="text-green-600 hover:underline font-medium">
+          <Link
+            to="/login"
+            className="text-green-600 hover:underline font-medium"
+          >
             Log In
           </Link>
         </p>

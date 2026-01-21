@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import loginlogo from "../../../assets/loginmain.jpg";
-import logo from "../../../assets/newlogo.svg";
+import loginlogo from "../../assets/loginmain.jpg";
+import logo from "../../assets/newlogo.svg";
 import { useNavigate } from "react-router-dom";
 
-export default function PasswordResetSuccess() {
+export default function ForgetPassword() {
   const navigate = useNavigate();
 
   // Added missing field + state
@@ -68,8 +68,6 @@ export default function PasswordResetSuccess() {
           />
         </div>
 
-
-
         {/* === FORM CONTENT === */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -115,18 +113,15 @@ export default function PasswordResetSuccess() {
                 Log In
               </span>
             </div>
-          {/* === BUTTON === */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            className="mt-4 w-full max-w-lg border-2 border-[#1F8225]  text-[#1F8225] rounded-2xl py-3 font-medium  transition duration-300"
-          >
-            Send Code
-          </motion.button>
-          
+            {/* === BUTTON === */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="mt-4 w-full max-w-lg border-2 border-[#1F8225]  text-[#1F8225] rounded-2xl py-3 font-medium  transition duration-300"
+            >
+              Send Code
+            </motion.button>
           </div>
-
-
         </motion.div>
 
         <p className="text-gray-400 text-xs mt-6"></p>

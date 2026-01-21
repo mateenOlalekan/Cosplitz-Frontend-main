@@ -1,202 +1,201 @@
-// src/pages/Auth/Login/index.jsx - CREATE THIS FILE
-import React, { useState } from "react";
+// src/pages/Auth/Login/index.jsx
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../../../services/api";
-import { useAuthStore } from "../../../store/authStore";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { FcGoogle } from "react-icons/fc";
 import { PiAppleLogoBold } from "react-icons/pi";
 import { Eye, EyeOff } from "lucide-react";
-import loginlogo from "../../../assets/login.jpg";
-import logo from "../../../assets/logo.svg";
+
+import { useLoginMutation } from "../../../services/queries/auth";
+import { useAuthStore } from "../../../store/authStore";
+import { loginSchema } from "../../../schemas/authSchemas";
 import LeftPanel from "../LeftPanel";
+import logo from "../../../assets/logo.svg"; // ✅ FIXED PATH
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
   const navigate = useNavigate();
-  const setError = useAuthStore((state) => state.setError);
-  const clearError = useAuthStore((state) => state.clearError);
-  const error = useAuthStore((state) => state.error);
-  const setUser = useAuthStore((state) => state.setUser);
-  const setToken = useAuthStore((state) => state.setToken);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const {
+    setError,
+    clearError,
+    error,
+    setUser,
+    setToken,
+  } = useAuthStore();
+
+  const loginMutation = useLoginMutation({
+    onError: (err) => {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Login failed. Please check your credentials.";
+
+      setError(message);
+    },
+  });
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
+
+  const email = watch("email");
+  const password = watch("password");
+
+  // Clear global error only when user starts correcting input
+  useEffect(() => {
+    if (error && (email.length > 2 || password.length > 2)) {
+      clearError();
+    }
+  }, [email, password, error, clearError]);
+
+  const onSubmit = async ({ email, password }) => {
     clearError();
-    setLoading(true);
 
-    if (!email || !password) {
-      setError("Please fill in both email and password.");
-      setLoading(false);
-      return;
+    const response = await loginMutation.mutateAsync({
+      email,
+      password,
+    });
+
+    /**
+     * Expected response:
+     * {
+     *   message: string,
+     *   token: string,
+     *   refresh_token?: string,
+     *   user?: object
+     * }
+     */
+
+    if (!response?.token) return;
+
+    setToken(response.token);
+
+    if (response.refresh_token) {
+      localStorage.setItem("refreshToken", response.refresh_token);
     }
 
-    try {
-      const response = await authService.login({ email, password });
-      
-      console.log("Login response:", response);
-      
-      if (response.success && response.data?.token) {
-        // Store token
-        setToken(response.data.token);
-        
-        // Get user info
-        try {
-          const userInfo = await authService.getUserInfo();
-          if (userInfo.success) {
-            setUser(userInfo.data);
-          } else {
-            // Fallback user data
-            setUser({
-              email: email,
-              name: email.split("@")[0],
-              role: "user"
-            });
-          }
-        } catch (userInfoError) {
-          console.warn("Could not fetch user info:", userInfoError);
-          // Set basic user data
-          setUser({
-            email: email,
-            name: email.split("@")[0],
-            role: "user"
-          });
-        }
-        
-        // Redirect to dashboard
-        navigate("/dashboard");
-      } else {
-        setError(response.data?.message || "Login failed. Please check your credentials.");
+    setUser(
+      response.user ?? {
+        email,
+        name: email.split("@")[0],
+        role: "user",
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    );
+
+    navigate("/dashboard");
   };
 
   const handleSocialLogin = (provider) => {
-    console.log(`Social login with ${provider}`);
     setError(`${provider} login coming soon!`);
   };
 
   return (
     <div className="flex bg-[#F7F5F9] w-full h-screen justify-center overflow-hidden md:px-6 md:py-4 rounded-2xl">
       <div className="flex max-w-screen-2xl w-full h-full rounded-xl overflow-hidden">
+
         {/* LEFT */}
         <LeftPanel />
 
         {/* RIGHT */}
-        <div className="flex flex-1 flex-col items-center p-3  overflow-y-auto">
-          <div className="w-full mb-4 flex justify-center md:justify-start items-center md:items-start">
+        <div className="flex flex-1 flex-col items-center p-3 overflow-y-auto">
+          <div className="w-full mb-4 flex justify-center md:justify-start">
             <img src={logo} alt="Logo" className="h-10 md:h-12" />
           </div>
 
-          <div className="w-full max-w-2xl p-5 rounded-xl shadow-none md:shadow-md border-none md:border border-gray-100 bg-white space-y-6">
-            <h1 className="text-2xl sm:text-3xl text-center font-bold text-gray-900">
+          <div className="w-full max-w-2xl p-5 rounded-xl md:shadow-md md:border bg-white space-y-6">
+            <h1 className="text-3xl text-center font-bold text-gray-900">
               Welcome Back
             </h1>
-            <p className="text-gray-500 text-center text-sm mt-1 mb-4">
+
+            <p className="text-gray-500 text-center text-sm">
               Sign in to continue sharing expenses.
             </p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg mb-3 text-center">
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg text-center">
                 {error}
               </div>
             )}
 
-            <div className="grid grid-cols-1  gap-2 mb-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={() => handleSocialLogin("google")}
-                className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <FcGoogle size={20} />
-                <span className="text-gray-700 text-sm">Sign in with Google</span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={() => handleSocialLogin("apple")}
-                className="flex items-center justify-center gap-3 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <PiAppleLogoBold size={20} />
-                <span className="text-gray-700 text-sm">Sign in with Apple</span>
-              </motion.button>
+            {/* SOCIAL LOGIN */}
+            <div className="grid gap-2">
+              <SocialButton
+                icon={<FcGoogle size={20} />}
+                label="Sign in with Google"
+                onClick={() => handleSocialLogin("Google")}
+              />
+              <SocialButton
+                icon={<PiAppleLogoBold size={20} />}
+                label="Sign in with Apple"
+                onClick={() => handleSocialLogin("Apple")}
+              />
             </div>
 
-            <div className="flex items-center my-4">
-              <div className="flex-grow border-t border-gray-300"></div>
-              <span className="mx-2 text-gray-500 text-sm">Or</span>
-              <div className="flex-grow border-t border-gray-300"></div>
-            </div>
+            <Divider />
 
-            <form onSubmit={handleLogin} className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) clearError();
-                  }}
-                  placeholder="Enter your email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none transition-colors"
-                  required
-                />
-              </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
+              {/* EMAIL */}
+              <InputField
+                label="Email Address"
+                type="email"
+                placeholder="Enter your email"
+                error={errors.email?.message}
+                register={register("email")}
+              />
+
+              {/* PASSWORD */}
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">
                   Password *
                 </label>
-                <div className="flex items-center border border-gray-300 px-3 rounded-lg focus-within:ring-2 focus-within:ring-green-500 transition-colors">
+                <div
+                  className={`flex items-center border px-3 rounded-lg focus-within:ring-2 ${
+                    errors.password
+                      ? "border-red-500 focus-within:ring-red-500"
+                      : "border-gray-300 focus-within:ring-green-500"
+                  }`}
+                >
                   <input
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      if (error) clearError();
-                    }}
+                    {...register("password")}
+                    className="w-full py-2 outline-none text-gray-900 placeholder:text-gray-400"
                     placeholder="Enter your password"
-                    className="w-full py-2 outline-none"
-                    required
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors ml-2"
+                    onClick={() => setShowPassword((p) => !p)}
+                    className="text-gray-400 hover:text-gray-600 ml-2"
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-between items-center">
-                <label className="flex gap-2 text-sm text-gray-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="rounded focus:ring-green-500"
-                  />
-                  <span>Remember me</span>
+                <label className="flex gap-2 text-sm text-gray-600">
+                  <input type="checkbox" {...register("rememberMe")} />
+                  Remember me
                 </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-green-600 hover:underline font-medium"
-                >
+                <Link to="/forgot-password" className="text-sm text-green-600">
                   Forgot Password?
                 </Link>
               </div>
@@ -205,24 +204,15 @@ export default function Login() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={loading}
-                className={`w-full bg-green-600 text-white py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  loading ? "opacity-60 cursor-not-allowed" : "hover:bg-green-700"
-                }`}
+                disabled={loginMutation.isPending}
+                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold disabled:opacity-60"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Signing In...
-                  </span>
-                ) : (
-                  "Sign In"
-                )}
+                {loginMutation.isPending ? "Signing In..." : "Sign In"}
               </motion.button>
 
-              <p className="text-center text-sm text-gray-600 mt-3">
+              <p className="text-center text-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link to="/register" className="text-green-600 hover:underline font-medium">
+                <Link to="/register" className="text-green-600 font-medium">
                   Sign Up
                 </Link>
               </p>
@@ -230,6 +220,56 @@ export default function Login() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* =======================
+   Small Reusable Components
+======================= */
+
+function SocialButton({ icon, label, onClick }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      type="button"
+      onClick={onClick}
+      className="flex items-center justify-center gap-3 px-3 py-2 border rounded-lg hover:bg-gray-50"
+    >
+      {icon}
+      <span className="text-sm text-gray-700">{label}</span>
+    </motion.button>
+  );
+}
+
+function Divider() {
+  return (
+    <div className="flex items-center my-4">
+      <div className="flex-grow border-t" />
+      <span className="mx-2 text-gray-500 text-sm">Or</span>
+      <div className="flex-grow border-t" />
+    </div>
+  );
+}
+
+function InputField({ label, type, placeholder, error, register }) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-gray-700 block mb-1">
+        {label} *
+      </label>
+      <input
+        type={type}
+        placeholder={placeholder}
+        {...register}
+        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none text-gray-900 placeholder:text-gray-400 ${
+          error
+            ? "border-red-500 focus:ring-red-500"
+            : "border-gray-300 focus:ring-green-500"
+        }`}
+      />
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }

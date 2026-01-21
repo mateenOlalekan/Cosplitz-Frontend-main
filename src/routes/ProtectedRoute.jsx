@@ -2,8 +2,7 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-const Loading = React.lazy(() => import("../components/Loading"));
- // Import directly
+import Loading from "../components/Loading";
 
 const ProtectedRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -11,7 +10,7 @@ const ProtectedRoute = () => {
   if (isLoading) {
     return <Loading />;
   }
-  
+
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
